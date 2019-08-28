@@ -1,4 +1,4 @@
-﻿argcomplete==1.9.3
+argcomplete==1.9.3
 attrs==19.1.0
 boto3==1.9.81
 botocore==1.12.81
@@ -10,7 +10,6 @@ git+https://github.com/dag-hammarskjold-library/dlx
 docutils==0.14
 durationpy==0.5
 Flask==1.0.2
-Flask-MongoAlchemy==0.7.2
 future==0.16.0
 hjson==3.0.1
 idna==2.8
@@ -22,10 +21,10 @@ kappa==0.6.0
 lambda-packages==0.20.0
 marctools==1.0
 MarkupSafe==1.1.0
-MongoAlchemy==0.19
+mongoengine==0.18.2
 mongomock==3.17.0
 placebo==0.8.2
-pymongo==2.8.1
+pymongo==3.9.0
 pyrsistent==0.15.4
 python-dateutil==2.6.1
 python-slugify==1.2.4

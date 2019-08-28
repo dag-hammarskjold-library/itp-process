@@ -2,13 +2,15 @@ from flask import Flask, render_template, request, abort, jsonify, Response, ses
 from requests import get
 import boto3, re, time, os, pymongo
 #from flask import Flask
-from flask_mongoalchemy import MongoAlchemy
+#from flask_mongoalchemy import MongoAlchemy
 #from flask_admin import Admin
 #from flask_admin.contrib.sqla import ModelView
 #from flask_login import UserMixin
 #from bson.objectid import ObjectId
+from mongoengine import connect, Document, StringField
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from app.config import DevelopmentConfig as Config
 
 ###############################################################################################
 # Create FLASK APPLICATION
@@ -16,60 +18,22 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-###############################################################################################
-# small features for the managemement of our database
-###############################################################################################
-
-# list of import
-import json
-
-# Check if all the parameters are define properly for the connection
-def checkParams():
-    try:
-        with open("dbparam.json") as json_data:
-            myData=json.load(json_data)
-            #myCon,myDatabase=myData['myCon'],myData['myDatabase']
-            myCon=myData["myCon"]
-            #check if all the fields are populated
-            if (myCon != "" and myDatabase != "" ):
-                return True
-            else:
-                return False
-    except:
-        return False
-
-# Return all the parameters for the connection string to the database
-def returnParameter():
-    if checkParams:
-        with open("dbparam.json") as json_data:
-            myData=json.load(json_data)
-            return myData["myCon"],myData["myDatabase"]
-
-####################################################
-# MONGO SETTING
-####################################################
-
-# FLASK SETTINGS
-if checkParams:
-    app.config['MONGOALCHEMY_CONNECTION_STRING'],app.config['MONGOALCHEMY_DATABASE']=returnParameter()
-else:
-    print(" Issue with the database connectivity !!! ")
-    exit
-
-db = MongoAlchemy(app)
-
+#app.config['MONGOALCHEMY_CONNECTION_STRING'] = Config.DB
+#app.config['MONGOALCHEMY_DATABASE'] = 'undlFiles'
+#db = MongoAlchemy(app)
 # generation secret key
 app.secret_key=b'a=pGw%4L1tB{aK6'
+db = connect(host=Config.connect_string)
 
 #################################################
 # USER CLASS  
 ####################################################
 
-class Itpp_User(db.Document):
+class Itpp_User(Document):
     """ Definition of the class for the management of the Users """
-    username= db.StringField()
-    password = db.StringField()
-    email =db.StringField()
+    username= StringField()
+    password = StringField()
+    email = StringField()
 
 ####################################################
 # BASIC RUTINES AND ROUTES
