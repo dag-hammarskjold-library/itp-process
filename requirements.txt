@@ -19,7 +19,6 @@ jmespath==0.9.3
 jsonschema==3.0.2
 kappa==0.6.0
 lambda-packages==0.20.0
-marctools==1.0
 MarkupSafe==1.1.0
 mongoengine==0.18.2
 mongomock==3.17.0
@@ -38,6 +37,6 @@ tqdm==4.19.1
 troposphere==2.4.1
 Unidecode==1.0.23
 urllib3==1.24.2
-Werkzeug==0.15.3
+Werkzeug==0.14.1
 wsgi-request-logger==0.4.6
 zappa==0.47.1
