@@ -10,7 +10,7 @@ import boto3, re, time, os, pymongo
 from mongoengine import connect, Document, StringField
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from app.config import DevelopmentConfig as Config
+from config import DevelopmentConfig as Config
 
 ###############################################################################################
 # Create FLASK APPLICATION
@@ -25,30 +25,43 @@ app = Flask(__name__)
 app.secret_key=b'a=pGw%4L1tB{aK6'
 db = connect(host=Config.connect_string)
 
-#################################################
-# USER CLASS  
-####################################################
-
-class Itpp_User(Document):
-    """ Definition of the class for the management of the Users """
-    username= StringField()
-    password = StringField()
-    email = StringField()
-
 ####################################################
 # BASIC RUTINES AND ROUTES
 ####################################################  
 
 def calcRecord(Rs):
     """ JUST RETURN THE NUMBER OF RECORSET OF ONE RECORDSET PASSED AS PARAMETER """
-    myRs=Rs.query.all()
+    #myRs=Rs.query.all()
     recup=0
-    for x in myRs:
-        recup=recup +1
+    #for x in myRs:
+    #    recup=recup +1
     return recup
 
-@app.route("/")
+@app.route("/main")
 def main():
+    """ Default route of the application (Login) """
+    myUser=session["username"]
+    return render_template('main.html',myUser=myUser)
+
+@app.route("/administration")
+def administration():
+    try:
+        if "username" in session:
+            myLog=Itpp_Log.query.all()
+            total=0
+            #for rec in myLog:
+            #    total=total+1
+            myRecord=total
+            return render_template('administration.html',myLog=myLog,myRecord=myRecord)
+        else:
+            flash('Unknown user !!! ','error')
+            return render_template('login.html')
+    except:
+        return redirect(url_for('appError'))
+
+@app.route("/")
+@app.route("/login")
+def login():
     """ Default route of the application (Login) """
     return render_template('login.html')
 
@@ -56,6 +69,12 @@ def main():
 def logout():
     """ In order to manage the logout of the application """ 
     try:
+        # Creation Log
+        #myLog=Itpp_Log(
+        #    when=datetime.datetime.now(),
+        #    description="Logout the application !!!",
+        #    user=session["username"])
+        #myLog.save()
         # Release the session's variables
         session.pop("username",None)
         session.pop("email",None)
@@ -88,15 +107,12 @@ def listeUser():
     """ List of User """
     try:
         if "username" in session:
-            if "username" in session:
-                myUser=Utilisateur.query.all()
-                total=0
-                for rec in myUser:
-                    total=total+1
-                myRecord=total
-                return render_template('listeuser.html',myUser=myUser,myRecord=myRecord)
-            else:
-                return render_template('login.html')   
+            myUser=Itpp_User.query.all()
+            total=0
+            #for rec in myUser:
+            #    total=total+1
+            myRecord=total
+            return render_template('listeuser.html',myUser=myUser,myRecord=myRecord)
         else:
             flash('Unknown user !!! ','error')
             return render_template('login.html')
@@ -110,17 +126,23 @@ def createUser():
     try:
         if "username" in session:
             if request.method == 'POST':
-                myUser=Utilisateur(
-                    firstname=request.form["inputFirstName"],
-                    lastname=request.form["inputLastName"],
-                    username=request.form["inputUserName"],
-                    password=request.form["inputPassword"],
-                    email=request.form["inputEmail"])
-                myUser.save()
-                flash('User saved !!! ', 'message')
+                #myUser=Itpp_User(
+                #    username=request.form["inputUser"],
+                #    password=request.form["inputPassword"],
+                #    email=request.form["inputEmail"])
+                #myUser.save()
+                    
+                # Creation Log
+                #myLog=Itpp_Log(
+                #    when=datetime.datetime.now(),
+                #    description="New User added !!!",
+                #    user=session["username"])
+                #myLog.save()
+
+                flash('New User Saved in the database !!! ', 'message')
                 return redirect(url_for('listeUser'))
             if request.method == 'GET':
-                return render_template('newuser.html')
+                return render_template('user.html')
         else:
             flash('Unknown user !!! ','error')
             return render_template('login.html')
@@ -133,14 +155,18 @@ def updateUser():
     """ User update """
     try:
         if "username" in session:
-            myUser=Utilisateur.query.filter(Utilisateur.email==session["email"]).first()
-            myUser.firstname=request.form["inputFirstName"]
-            myUser.lastname=request.form["inputLastName"]
-            myUser.username=request.form["inputUserName"]
-            myUser.password=request.form["inputPassword"]
-            myUser.email=request.form["inputEmail"]
-            myUser.save()
-            flash('User updated !!! ', 'message')
+            #myUser=Itpp_User.query.filter(Itpp_User.email==session["email"]).first()
+            #myUser.username=request.form["inputUser"]
+            #myUser.password=request.form["inputPassword"]
+            #myUser.email=request.form["inputEmail"]
+            #myUser.save()
+            #flash('User updated !!! ', 'message')
+            # Creation Log
+            #myLog=Itpp_Log(
+            #        when=datetime.datetime.now(),
+            #        description="User {} Updated !!!".format(myUser.username),
+            #        user=session["username"])
+            #myLog.save()
             return redirect(url_for('listeUser'))
         else:
             flash('Unknown user !!! ','error')
@@ -156,7 +182,7 @@ def displayUser(email):
         if "username" in session:
             if request.method == 'GET':
                 session["email"]=email
-                myUser=Utilisateur.query.filter(Utilisateur.email==email).first()
+                myUser=Itpp_User.query.filter(Itpp_User.email==email).first()
                 return render_template('updateuser.html',myUser=myUser)
         else:
             flash('Unknown user !!! ','error')
@@ -171,9 +197,15 @@ def deleteUser(email):
     try:      
         if "username" in session:
             if request.method == 'GET':
-                myUserToDelete=Utilisateur.query.filter(Utilisateur.email==email).first()
-                myUserToDelete.remove()
+                myUserToDelete=Itpp_User.query.filter(Itpp_User.email==email).first()
+                #myUserToDelete.remove()
                 flash('User deleted !!! ', 'message')
+                # Creation Log
+                #myLog=Itpp_Log(
+                #when=datetime.datetime.now(),
+                #description="User {} deleted !!!".format(myUserToDelete.username),
+                #user=session["username"])
+                #myLog.save()
                 return redirect(url_for('listeUser'))
         else:
             flash('Unknown user !!! ','error')
@@ -182,32 +214,39 @@ def deleteUser(email):
         return redirect(url_for('appError'))
 
 # check of the user exists
-@app.route("/checkuser", methods=['POST'])
+@app.route("/checkUser", methods=['POST'])
 def checkUser():
     """ User check Identification """
     try: 
         # Tip for admin
         if (request.form["inputEmail"]=="admin@un.org" and request.form["inputPassword"]=="admin"):
             session["username"]="admin"
-            return redirect(url_for('menu'))
+            session["email"]="admin@un.org"
+            # Creation Log
+            #myLog=Itpp_Log(
+            #    when=datetime.datetime.now(),
+            #    description="New Connection !!!",
+            #    user=session["username"])
+            #myLog.save()
+            return redirect(url_for('main'))
 
         # Normal way
-        myResult=Utilisateur.query.filter(Utilisateur.email==request.form["inputEmail"],Utilisateur.password==request.form["inputPassword"]).first()
+        
+        myResult=Itpp_User.query.filter(Itpp_User.email==request.form["inputEmail"],Itpp_User.password==request.form["inputPassword"]).first()
         if myResult:
             session["username"]=myResult.username
-            return redirect(url_for('menu'))
+            # Creation Log
+            #myLog=Itpp_Log(
+            #    when=datetime.datetime.now(),
+            #    description="New Connection !!!",
+            #    user=session["username"])
+            #myLog.save()
+            return redirect(url_for('main'))
         else:
             flash('Unknown user !!! ','error')
             return render_template('login.html')
     except:
         return redirect(url_for('appError'))
-
-# And start building your routes.
-@app.route('/')
-def index():
-    return_data = "bar"
-    return(render_template('index.html', data=return_data))
-
 
 ####################################################
 # START APPLICATION

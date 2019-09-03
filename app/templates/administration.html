@@ -1,0 +1,40 @@
+{% extends 'base.html' %} {% block content %}
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1000px;
+    }
+</style>
+
+<div class="container customize ">
+    <h3>Log Panel <span class="badge badge-pill badge-primary">{{myRecord}}</span> entries </h3>
+    <hr>
+    <div class="div-scroll table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">When</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">User</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for Log in myLog %}
+                <tr>
+                    <td>{{ Log.when }}</td>
+                    <td>{{ Log.description }}</td>
+                    <td>{{ Log.user }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href="{{url_for('main')}}"> Go back to the menu </a>
+    </div>
+</div>
+<hr>
+
+</div>
+{% endblock %}
