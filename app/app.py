@@ -10,7 +10,7 @@ import boto3, re, time, os, pymongo
 from mongoengine import connect, Document, StringField
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from config import DevelopmentConfig as Config
+from app.config import DevelopmentConfig as Config
 
 ###############################################################################################
 # Create FLASK APPLICATION
