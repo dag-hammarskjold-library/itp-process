@@ -5,6 +5,40 @@
     <h1>ITP Process main features</h1>
     <hr>
     <h3 class="text-primary"> Connected user : {{myUser}}</h3>
+    <hr>
+    <div class="shadow">
+        <table class="table table-bordered table-responsive">
+            <thead>
+                <tr>
+                    <th scope="col">Batch file</th>
+                    <th scope="col">S/</th>
+                    <th scope="col">A/</th>
+                    <th scope="col">E/</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td>XXX</td>
+                    <td>XXX</td>
+                    <td>XXX</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>XXX</td>
+                    <td>XXX</td>
+                    <td>XXX</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>XXX</td>
+                    <td>XXX</td>
+                    <td>XXX</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <hr>
     <div class="card-deck mb-3 text-center shadow mt-5 mb-5">
         <div class="card mb-4 shadow-sm">
             <div class="card-header">
@@ -29,7 +63,7 @@
                     <li>Update process information</li>
                     <li>Delete process</li>
                 </ul>
-                <button type="button" class="btn btn-lg btn-block btn-primary">Open </button>
+                <a href="{{url_for('listeProcess')}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Open</a>
             </div>
         </div>
         <div class="card mb-4 shadow-sm">
@@ -42,7 +76,7 @@
                     <li>Update rule information</li>
                     <li>Delete rule</li>
                 </ul>
-                <button type="button" class="btn btn-lg btn-block btn-primary">Open </button>
+                <a href="{{url_for('listeRule')}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Open</a>
             </div>
         </div>
         <div class="card mb-4 shadow-sm">
@@ -56,7 +90,7 @@
                     <li>XXXXXXXXXXXX</li>
                     <li>XXXXXXXXXXXX</li>
                 </ul>
-                <button type="button" class="btn btn-lg btn-block btn-primary">Open </button>
+
             </div>
         </div>
         <div class="card mb-4 shadow-sm">

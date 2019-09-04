@@ -1,0 +1,55 @@
+{% extends 'base.html' %} {% block content %}
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1200px;
+    }
+</style>
+
+<div class="container customize ">
+    <h3>List of Rule <span class="badge badge-pill badge-primary">{{myRecord}}</span></h3>
+    <hr>
+    <div>
+        <!-- Simple Message -->
+        {% with mails = get_flashed_messages(category_filter=["message"]) %} {% if mails %}
+        <div class="alert alert-success" role="alert">
+            <ul>
+                {%- for msg in mails %}
+                <li>{{ msg }}</li>
+                {% endfor -%}
+            </ul>
+        </div>
+        {% endif %} {% endwith %}
+    </div>
+    <div class="div-scroll table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Field</th>
+                    <th scope="col">Field</th>
+                    <th scope="col">Field</th>
+                    <th scope="col">Field</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>value</td>
+                    <td>value</td>
+                    <td>value</td>
+                    <td><i class="fas fa-edit"><a href="">  Edit </a></i> | <i class="fas fa-trash-alt"><a href=""> Delete </a></i></td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href=""> Create a new rule | </a>
+        <a href="{{url_for('main')}}"> Go back to the menu </a>
+    </div>
+</div>
+<hr>
+
+</div>
+{% endblock %}

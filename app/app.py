@@ -47,12 +47,13 @@ def main():
 def administration():
     try:
         if "username" in session:
-            myLog=Itpp_Log.query.all()
+            #myLog=Itpp_Log.query.all()
             total=0
             #for rec in myLog:
             #    total=total+1
             myRecord=total
-            return render_template('administration.html',myLog=myLog,myRecord=myRecord)
+            #return render_template('administration.html',myLog=myLog,myRecord=myRecord)
+            return render_template('administration.html')
         else:
             flash('Unknown user !!! ','error')
             return render_template('login.html')
@@ -247,6 +248,52 @@ def checkUser():
             return render_template('login.html')
     except:
         return redirect(url_for('appError'))
+
+####################################################
+# RULE MANAGEMENT ROUTES
+####################################################  
+
+@app.route("/listerule")
+def listeRule():
+    """ List of Rule """
+    try:
+        if "username" in session:
+            #myUser=Itpp_User.query.all()
+            total=0
+            #for rec in myUser:
+            #    total=total+1
+            myRecord=total
+            #return render_template('listerule.html',myUser=myUser,myRecord=myRecord)
+            return render_template('listerule.html')
+        else:
+            flash('Unknown user !!! ','error')
+            return render_template('login.html')
+    except:
+        return redirect(url_for('appError'))
+
+
+####################################################
+# PROCESS MANAGEMENT ROUTES
+####################################################  
+
+@app.route("/listeprocess")
+def listeProcess():
+    """ List of Process """
+    try:
+        if "username" in session:
+            #myUser=Itpp_User.query.all()
+            total=0
+            #for rec in myUser:
+            #    total=total+1
+            myRecord=total
+            #return render_template('listprocess.html',myUser=myUser,myRecord=myRecord)
+            return render_template('listeprocess.html')
+        else:
+            flash('Unknown user !!! ','error')
+            return render_template('login.html')
+    except:
+        return redirect(url_for('appError'))
+
 
 ####################################################
 # START APPLICATION
