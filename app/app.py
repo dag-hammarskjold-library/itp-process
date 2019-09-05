@@ -10,7 +10,7 @@ import boto3, re, time, os, pymongo
 from mongoengine import connect, Document, StringField
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from app.config import DevelopmentConfig as Config
+from config import DevelopmentConfig as Config
 
 ###############################################################################################
 # Create FLASK APPLICATION
@@ -108,12 +108,13 @@ def listeUser():
     """ List of User """
     try:
         if "username" in session:
-            myUser=Itpp_User.query.all()
+            #myUser=Itpp_User.query.all()
             total=0
             #for rec in myUser:
             #    total=total+1
             myRecord=total
-            return render_template('listeuser.html',myUser=myUser,myRecord=myRecord)
+            #return render_template('listeuser.html',myUser=myUser,myRecord=myRecord)
+            return render_template('listeuser.html')
         else:
             flash('Unknown user !!! ','error')
             return render_template('login.html')
@@ -253,6 +254,41 @@ def checkUser():
 # RULE MANAGEMENT ROUTES
 ####################################################  
 
+
+@app.route("/createrule", methods=['GET', 'POST'])
+def createRule():
+    """ Rule creation """
+    try:
+        if "username" in session:
+            if request.method == 'POST':
+                #myUser=Itpp_User(
+                #    username=request.form["inputUser"],
+                #    password=request.form["inputPassword"],
+                #    email=request.form["inputEmail"])
+                #myUser.save()
+                    
+                # Creation Log
+                #myLog=Itpp_Log(
+                #    when=datetime.datetime.now(),
+                #    description="New User added !!!",
+                #    user=session["username"])
+                #myLog.save()
+
+                flash('New Rule Saved in the database !!! ', 'message')
+                return redirect(url_for('listeRule'))
+            if request.method == 'GET':
+                return render_template('createrule.html')
+        else:
+            flash('Unknown user !!! ','error')
+            return render_template('login.html')
+    except:
+        return redirect(url_for('appError'))
+
+# special one
+@app.route("/createrule01", methods=['GET', 'POST'])
+def createRule01():
+    return render_template('createrule01.html')
+
 @app.route("/listerule")
 def listeRule():
     """ List of Rule """
@@ -293,6 +329,37 @@ def listeProcess():
             return render_template('login.html')
     except:
         return redirect(url_for('appError'))
+
+
+
+@app.route("/createprocess", methods=['GET', 'POST'])
+def createProcess():
+    """ Process creation """
+#try:
+    if "username" in session:
+        if request.method == 'POST':
+            #myUser=Itpp_User(
+            #    username=request.form["inputUser"],
+            #    password=request.form["inputPassword"],
+            #    email=request.form["inputEmail"])
+            #myUser.save()
+                
+            # Creation Log
+            #myLog=Itpp_Log(
+            #    when=datetime.datetime.now(),
+            #    description="New User added !!!",
+            #    user=session["username"])
+            #myLog.save()
+
+            flash('New Process Saved in the database !!! ', 'message')
+            return redirect(url_for('listeProcess'))
+        if request.method == 'GET':
+            return render_template('createprocess.html')
+    else:
+        flash('Unknown user !!! ','error')
+        return render_template('login.html')
+#except:
+#    return redirect(url_for('appError'))
 
 
 ####################################################

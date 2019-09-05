@@ -1,0 +1,87 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1000px;
+    }
+</style>
+
+<div class="container customize ">
+
+    <h1 class="mt-1"> Process creation </h1>
+
+    <hr>
+
+    <form class="mt-5 orm-signin" method="POST" action="{{url_for('createRule')}}">
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label for="exampleInputUser">Name</label>
+                    <input type="text" class="form-control" id="inputUser" name="inputUser" aria-describedby="emailHelp" placeholder="Enter the name of the rule">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputUser">Body</label>
+                    <input type="text" class="form-control" id="inputUser" name="inputUser" aria-describedby="emailHelp" placeholder="Enter the name of the rule">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputUser">Session</label>
+                    <input type="text" class="form-control" id="inputUser" name="inputUser" aria-describedby="emailHelp" placeholder="Enter the name of the rule">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputUser">Type</label>
+                    <select multiple class="form-control" id="sort">
+                                <option>iexport</option>
+                                <option>itpsubj</option>
+                                <option>itpits</option>
+                                <option>itpage</option>
+                                <option>itpdsl</option>
+                                <option>itpmeet</option>
+                                <option>itpres</option>
+                                <option>itpvot</option>
+                                <option>itpsor</option>
+                                <option>itpipx</option>
+                                <option>itpreps</option>
+                            </select>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputUser">Other field</label>
+                    <input type="text" class="form-control" id="inputUser" name="inputUser" aria-describedby="emailHelp" placeholder="Enter the name of the rule">
+                </div>
+            </div>
+            <div class="col">
+                <label for="exampleInputUser">Rules available for the process</label>
+                <select multiple class="form-control" id="sort">
+                                        <option>Rule available</option>
+                                        <option>Rule available</option>
+                                        <option>Rule available</option>
+                                        <option>Rule available</option>
+                                        <option>Rule available</option>
+                                    </select>
+                <br>
+                <button type="submit" class="btn btn-primary mb-5">Add rule to the process</button>
+                <br>
+                <label for="exampleInputUser">Rules selected for the process</label>
+                <select multiple class="form-control" id="sort">
+                                        <option>Rule selected</option>
+                                        <option>Rule selected</option>
+                                        <option>Rule selected</option>
+                                     </select>
+                <br>
+                <div>
+                    <button type="submit" class="btn btn-primary mt-1">Create the process</button>
+                    <button type="submit" class="btn btn-primary mt-1">Clone the process</button>
+                    <button type="submit" class="btn btn-primary mt-1">Other action</button>
+                </div>
+
+                <div class="text-bold text-right font-weight-bold">
+                    <hr>
+                    <a href="{{url_for('listeRule')}}"> List of Rules </a>
+                </div>
+
+            </div>
+
+    </form>
+    </div>
+
+    {% endblock %}S

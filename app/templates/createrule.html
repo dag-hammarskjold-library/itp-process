@@ -1,0 +1,68 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1000px;
+    }
+</style>
+
+<div class="container customize ">
+
+    <h1 class="mt-1"> Rule creation </h1>
+
+    <hr>
+
+    <form class="mt-5 orm-signin" method="POST" action="{{url_for('createRule')}}">
+        <div class="row">
+            <div class="col-sm">
+                <div class="form-group">
+                    <label for="exampleInputUser">Name</label>
+                    <input type="text" class="form-control" id="inputUser" name="inputUser" aria-describedby="emailHelp" placeholder="Enter the name of the rule">
+                </div>
+                <div class="form-group">
+                    <label for="category">Logic</label>
+                    <select multiple class="form-control" id="category" rows="3">
+                                <option>Extract</option>
+                                <option>Filter</option>
+                                <option>Process</option>
+                                <option>Sort</option>
+                                <option>Group</option>
+                                <option>Output</option>
+                            </select>
+                </div>
+
+            </div>
+            <div class="col-sm">
+                <div class="form-group">
+                    <label for="exampleInputUser">Field involved</label>
+                    <input type="text" class="form-control" id="inputUser" name="inputUser" aria-describedby="emailHelp" placeholder="Enter the name of the rule">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputUser">Sort option</label>
+                    <select multiple class="form-control" id="sort">
+                            <option>Ascending</option>
+                            <option>Descending</option>
+                        </select> </div>
+                <div class="form-group">
+                    <label for="exampleInputUser">Other field</label>
+                    <input type="text" class="form-control" id="inputUser" name="inputUser" aria-describedby="emailHelp" placeholder="Enter the name of the rule">
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mb-5">Create the rule</button>
+        <div>
+            <a href="{{url_for('createRule01')}}"> Create rule other version </a>
+        </div>
+
+    </form>
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href="{{url_for('listeRule')}}"> List of Rules </a>
+    </div>
+
+</div>
+
+
+
+{% endblock %}
