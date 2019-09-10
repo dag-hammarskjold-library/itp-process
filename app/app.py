@@ -202,8 +202,18 @@ def checkUser():
 def list_sections():
     pass
 
-@app.route('/sections/<id>', methods=['GET', 'POST', 'PATCH','DELETE'])
+@app.route('/sections/<id>')
 def get_section_by_id(id):
+    pass
+
+@app.route('/sections/<id>/update', methods=['PATCH'])
+@login_required
+def update_section(id):
+    pass
+
+@app.route('/sections/<id>/delete', methods=['DELETE'])
+@login_required
+def delete_section(id):
     pass
 
 @app.route('/sections/new')
