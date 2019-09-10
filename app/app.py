@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
+from functools import wraps
 from requests import get
 import boto3, re, time, os, pymongo
 from mongoengine import connect, Document, StringField
@@ -17,7 +18,7 @@ app.secret_key=b'a=pGw%4L1tB{aK6'
 db = connect(host=Config.connect_string)
 
 ####################################################
-# BASIC RUTINES AND ROUTES
+# BASIC ROUTINES AND ROUTES
 ####################################################  
 
 def calcRecord(Rs):
@@ -25,13 +26,24 @@ def calcRecord(Rs):
     recup=0
     return recup
 
-@app.route("/main")
-def main():
-    """ Default route of the application (Login) """
-    myUser=session["username"]
-    return render_template('main.html',myUser=myUser)
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if 'logged_in' in session:
+            return f(*args, **kwargs)
+        else:
+            flash("You are not authorized to view this resource. Please login first.")
+            return redirect(url_for('login'))
+    return wrap
+# Deprecating this route, should just use / instead
+#@app.route("/main")
+#def main():
+#    """ Default route of the application (Login) """
+#    myUser=session["username"]
+#    return render_template('main.html',myUser=myUser)
 
 @app.route("/administration")
+@login_required
 def administration():
     try:
         if "username" in session:
@@ -181,6 +193,23 @@ def checkUser():
             return render_template('login.html')
     except:
         return redirect(url_for('appError'))
+
+####################################################
+# Section management routes
+####################################################
+
+@app.route('/sections')
+def list_sections():
+    pass
+
+@app.route('/sections/<id>', methods=['GET', 'POST', 'PATCH','DELETE'])
+def get_section_by_id(id):
+    pass
+
+@app.route('/sections/new')
+@login_required
+def create_section():
+    pass
 
 ####################################################
 # RULE MANAGEMENT ROUTES
