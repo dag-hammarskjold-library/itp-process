@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
 from requests import get
-import boto3, re, time, os, pymongo
+import boto3, re, os, pymongo
 #from flask import Flask
 #from flask_mongoalchemy import MongoAlchemy
 #from flask_admin import Admin
@@ -10,7 +10,8 @@ import boto3, re, time, os, pymongo
 from mongoengine import connect, Document, StringField
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from app.config import DevelopmentConfig as Config
+from config import DevelopmentConfig as Config
+import time
 
 ###############################################################################################
 # Create FLASK APPLICATION
@@ -41,7 +42,8 @@ def calcRecord(Rs):
 def main():
     """ Default route of the application (Login) """
     myUser=session["username"]
-    return render_template('main.html',myUser=myUser)
+    myTime=session["startSession"]
+    return render_template('main.html',myUser=myUser,myTime=myTime)
 
 @app.route("/administration")
 def administration():
@@ -224,6 +226,7 @@ def checkUser():
         if (request.form["inputEmail"]=="admin@un.org" and request.form["inputPassword"]=="admin"):
             session["username"]="admin"
             session["email"]="admin@un.org"
+            session["startSession"]=time.asctime( time.localtime(time.time()))
             # Creation Log
             #myLog=Itpp_Log(
             #    when=datetime.datetime.now(),
