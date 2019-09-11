@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
 from functools import wraps
 from requests import get
-import boto3, re, time, os, pymongo
+import boto3, re, time, os, pymongo, json
 from mongoengine import connect, Document, StringField
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
+from app.models import Section, Rule
 
 ###############################################################################################
 # Create FLASK APPLICATION
@@ -15,7 +16,8 @@ app = Flask(__name__)
 
 # generation secret key
 app.secret_key=b'a=pGw%4L1tB{aK6'
-db = connect(host=Config.connect_string)
+# To do: Clean up model based references
+#db = connect(host=Config.connect_string)
 
 ####################################################
 # BASIC ROUTINES AND ROUTES
@@ -35,12 +37,12 @@ def login_required(f):
             flash("You are not authorized to view this resource. Please login first.")
             return redirect(url_for('login'))
     return wrap
-# Deprecating this route, should just use / instead
-#@app.route("/main")
-#def main():
-#    """ Default route of the application (Login) """
-#    myUser=session["username"]
-#    return render_template('main.html',myUser=myUser)
+# Deprecate this route, should just use / or /login instead
+@app.route("/main")
+def main():
+    """ Default route of the application (Login) """
+    myUser=session["username"]
+    return render_template('main.html',myUser=myUser)
 
 @app.route("/administration")
 @login_required
@@ -200,11 +202,18 @@ def checkUser():
 
 @app.route('/sections')
 def list_sections():
-    pass
+    return_data = []
+    for s in Section.objects:
+        print(s.name)
+        return_data.append(json.loads(s.to_json()))
+    return jsonify(return_data)
 
-@app.route('/sections/<id>')
-def get_section_by_id(id):
-    pass
+@app.route('/sections/<name>')
+def get_section_by_id(name):
+    return_data = []
+    for s in Section.objects(name=name):
+        return_data.append(json.loads(s.to_json()))
+    return jsonify(return_data)
 
 @app.route('/sections/<id>/update', methods=['PATCH'])
 @login_required
