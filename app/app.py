@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, abort, jsonify, Response, ses
 from requests import get
 import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
-from models import Itpp_log,Itpp_user
+from app.models import Itpp_log,Itpp_user
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config

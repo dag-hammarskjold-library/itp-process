@@ -1,6 +1,6 @@
 from mongoengine import *
 import time
-from config import DevelopmentConfig as Config
+from app.config import DevelopmentConfig as Config
 
 class Itpp_user(Document):
     """
