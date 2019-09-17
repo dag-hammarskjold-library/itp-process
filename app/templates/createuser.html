@@ -19,7 +19,7 @@
 
     <hr>
 
-    <form class="mt-5 orm-signin" method="POST" action="{{url_for('createUser')}}">
+    <form class="mt-5 orm-signin" method="POST" action="{{url_for('create_users')}}">
         <div class="form-group">
             <label for="exampleInputUser">User name</label>
             <input type="text" class="form-control" name="inputUserName" aria-describedby="Enter username" placeholder="Enter username">
@@ -40,7 +40,7 @@
 
     <hr>
     <div class="text-bold text-right font-weight-bold">
-        <a href="{{url_for('listeUser')}}"> List of Users </a>
+        <a href="{{url_for('list_users')}}"> List of Users </a>
     </div>
 
 </div>

@@ -23,10 +23,10 @@ app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
 
 ####################################################
-# BASIC RUTINES AND ROUTES
+# BASIC ROUTINES AND ROUTES
 ####################################################  
 
-@app.route("/main")
+@app.route("/")
 def main():
     """ Default route of the application (Login) """
     myUser=session["username"]
@@ -37,7 +37,6 @@ def main():
 def administration():
     return render_template('administration.html')
 
-@app.route("/")
 @app.route("/login")
 def login():
     """ Default route of the application (Login) """
@@ -46,7 +45,6 @@ def login():
 @app.route("/logout")
 def logout():
     return render_template('login.html')
-
 
 # bad url
 @app.errorhandler(404) 
@@ -63,26 +61,29 @@ def appError():
 # USER MANAGEMENT ROUTES
 ####################################################  
 
-@app.route("/listeuser")
-def listeUser():
+@app.route("/users", methods=['GET'])
+def list_users():
     return render_template('listeuser.html')
 
-
-@app.route("/createuser", methods=['GET', 'POST'])
-def createUser():
+# Create a user
+@app.route("/users/create", methods=['GET', 'POST'])
+def create_user():
     return render_template('createuser.html')
 
-@app.route("/updateuser", methods=['POST'])
-def updateUser():
+# Retrieve a user
+@app.route("/users/<id>", methods=['GET'])
+def get_user_by_id(id):
+    #return render_template('updateuser.html')
+    return jsonify({"status":"Okay"})
+
+# Update a user
+@app.route("/users/<id>/update", methods=['GET','PUT'])
+def update_user(id):
     return redirect(url_for('listeUser'))
 
-@app.route("/displayuser/<email>", methods=['GET'])
-def displayUser(email):
-    return render_template('updateuser.html')
-
-#delete the user
-@app.route("/delete/<email>", methods=['GET'])
-def deleteUser(email):
+# Delete a user
+@app.route("/users/<id>/delete", methods=['DELETE'])
+def delete_user(id):
     return redirect(url_for('listeUser'))
 
 # check of the user exists
@@ -98,16 +99,77 @@ def checkUser():
 
 
 ####################################################
-# PROCESS MANAGEMENT ROUTES
+# SECTIONS MANAGEMENT ROUTES
 ####################################################  
 
-@app.route("/listeprocess")
-def listeProcess():
+@app.route("/sections", methods=['GET'])
+def list_sections():
     return render_template('listeprocess.html')
 
-@app.route("/createprocess", methods=['GET', 'POST'])
-def createProcess():
+@app.route("/sections/new", methods=['GET', 'POST'])
+def create_section():
     return render_template('createprocess.html')
+
+@app.route("/sections/<id>", methods=['GET'])
+def get_section_by_id(id):
+    return jsonify({"status":"Okay"})
+
+@app.route("/sections/<id>/update")
+def update_section(id):
+    return jsonify({"status":"Okay"})
+
+@app.route("/sections/<id>/delete")
+def delete_section(id):
+    return jsonify({"status":"Okay"})
+
+####################################################
+# Rules Management
+####################################################
+
+@app.route("/rules", methods=['GET'])
+def list_rules():
+    return jsonify({"status":"Okay"})
+
+@app.route("/rules/new", methods=['GET', 'POST'])
+def create_rule():
+    return jsonify({"status":"Okay"})
+
+@app.route("/rules/<id>", methods=['GET'])
+def get_rule_by_id(id):
+    return jsonify({"status":"Okay"})
+
+@app.route("/rules/<id>/update")
+def update_rule(id):
+    return jsonify({"status":"Okay"})
+
+@app.route("/rules/<id>/delete")
+def delete_rule(id):
+    return jsonify({"status":"Okay"})
+
+####################################################
+# Reports Management
+####################################################
+
+@app.route("/reports", methods=['GET'])
+def list_reports():
+    return jsonify({"status":"Okay"})
+
+#@app.route("/report/new", methods=['GET', 'POST'])
+#def create_rule():
+#    return jsonify({"status":"Okay"})
+
+@app.route("/reports/<id>", methods=['GET'])
+def get_report_by_id(id):
+    return jsonify({"status":"Okay"})
+
+#@app.route("/rules/<id>/update")
+#def update_rule(id):
+#    return jsonify({"status":"Okay"})
+
+#@app.route("/rules/<id>/delete")
+#def delete_rule(id):
+#    return jsonify({"status":"Okay"})
+
 ####################################################
 # START APPLICATION
 ####################################################  
