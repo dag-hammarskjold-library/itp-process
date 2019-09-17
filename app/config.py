@@ -1,5 +1,7 @@
 from dlx import DB, Bib, Auth
+from mongoengine import connect
 import boto3
+import re
 
 '''
 This is your application configuration file. Use it to set your various configurations,
@@ -35,13 +37,14 @@ class Config(object):
 
     client = boto3.client('ssm')
     connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
-    #print(connect_string)
+    dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
+    collection_prefix = ''
 
-    DB = DB.connect(connect_string)
     
 class ProductionConfig(Config):
     DEBUG = False
     
 class DevelopmentConfig(Config):
     # Provide overrides for production settings here.
+    collection_prefix = 'dev_'
     DEBUG = True
