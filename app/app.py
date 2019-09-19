@@ -61,30 +61,83 @@ def appError():
 # USER MANAGEMENT ROUTES
 ####################################################  
 
-@app.route("/users", methods=['GET'])
+@app.route("/users")
 def list_users():
-    return render_template('listeuser.html')
+    users = Itpp_user.objects
+    return render_template('listeuser.html', users=users)
 
 # Create a user
 @app.route("/users/create", methods=['GET', 'POST'])
 def create_user():
-    return render_template('createuser.html')
+    if request.method == 'POST':
+        # Get, sanitize, and validate the data
+        email = request.form.get('email')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        created = datetime.now()
+
+        user = Itpp_user(email=email, username=username, password=password, created=created)
+        # This still allows submission of a blank user document. We need more validation.
+        try:
+            user.save(validate=True)
+            flash("The user was created successfully.")
+            return redirect(url_for('list_users'))
+        except:
+            flash("An error occurred trying to create the user. Please review the information and try again.")
+            return redirect(url_for('create_user'))
+    else:
+        return render_template('createuser.html')
 
 # Retrieve a user
-@app.route("/users/<id>", methods=['GET'])
+@app.route("/users/<id>")
 def get_user_by_id(id):
+    
     #return render_template('updateuser.html')
     return jsonify({"status":"Okay"})
 
 # Update a user
-@app.route("/users/<id>/update", methods=['GET','PUT'])
+@app.route("/users/<id>/update", methods=['GET','POST'])
 def update_user(id):
-    return redirect(url_for('listeUser'))
+    try:
+        user = Itpp_user.objects(email=id)[0]
+    except IndexError:
+        flash("The user was not found.")
+        return redirect(url_for('list_users'))
+    if request.method == 'POST':
+        email = request.form.get('email')
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        user.email = email  #unsure if this is a good idea
+        user.username = username
+        user.password = password
+        user.updated = datetime.now()
+
+        try:
+            user.save(validate=True)
+            flash("The user was updated successfully.")
+            return redirect(url_for('list_users'))
+        except:
+            flash("An error occurred trying to create the user. Please review the information and try again.")
+            return render_template('updateuser.html',user=user)
+    else:
+        return render_template('updateuser.html',user=user)
 
 # Delete a user
-@app.route("/users/<id>/delete", methods=['DELETE'])
+@app.route("/users/<id>/delete")
 def delete_user(id):
-    return redirect(url_for('listeUser'))
+    try:
+        user = Itpp_user.objects(email=id)[0]
+    except IndexError:
+        flash("The user was not found.")
+        return redirect(url_for('list_users'))
+    try:
+        user.delete()
+        flash("User was successfully deleted.")
+        return redirect(url_for('list_users'))
+    except:
+        flash("Ubable to delete user.")
+        return redirect(url_for('list_users'))
 
 # check of the user exists
 @app.route("/checkUser", methods=['POST'])
