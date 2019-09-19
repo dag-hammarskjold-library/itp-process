@@ -23,10 +23,10 @@ app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
 
 ####################################################
-# BASIC RUTINES AND ROUTES
+# BASIC ROUTINES AND ROUTES
 ####################################################  
 
-@app.route("/main")
+@app.route("/")
 def main():
     """ Default route of the application (Login) """
     myUser=session["username"]
@@ -37,7 +37,6 @@ def main():
 def administration():
     return render_template('administration.html')
 
-@app.route("/")
 @app.route("/login")
 def login():
     """ Default route of the application (Login) """
@@ -46,7 +45,6 @@ def login():
 @app.route("/logout")
 def logout():
     return render_template('login.html')
-
 
 # bad url
 @app.errorhandler(404) 
@@ -63,27 +61,83 @@ def appError():
 # USER MANAGEMENT ROUTES
 ####################################################  
 
-@app.route("/listeuser")
-def listeUser():
-    return render_template('listeuser.html')
+@app.route("/users")
+def list_users():
+    users = Itpp_user.objects
+    return render_template('listeuser.html', users=users)
 
+# Create a user
+@app.route("/users/create", methods=['GET', 'POST'])
+def create_user():
+    if request.method == 'POST':
+        # Get, sanitize, and validate the data
+        email = request.form.get('email')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        created = datetime.now()
 
-@app.route("/createuser", methods=['GET', 'POST'])
-def createUser():
-    return render_template('createuser.html')
+        user = Itpp_user(email=email, username=username, password=password, created=created)
+        # This still allows submission of a blank user document. We need more validation.
+        try:
+            user.save(validate=True)
+            flash("The user was created successfully.")
+            return redirect(url_for('list_users'))
+        except:
+            flash("An error occurred trying to create the user. Please review the information and try again.")
+            return redirect(url_for('create_user'))
+    else:
+        return render_template('createuser.html')
 
-@app.route("/updateuser", methods=['POST'])
-def updateUser():
-    return redirect(url_for('listeUser'))
+# Retrieve a user
+@app.route("/users/<id>")
+def get_user_by_id(id):
+    
+    #return render_template('updateuser.html')
+    return jsonify({"status":"Okay"})
 
-@app.route("/displayuser/<email>", methods=['GET'])
-def displayUser(email):
-    return render_template('updateuser.html')
+# Update a user
+@app.route("/users/<id>/update", methods=['GET','POST'])
+def update_user(id):
+    try:
+        user = Itpp_user.objects(email=id)[0]
+    except IndexError:
+        flash("The user was not found.")
+        return redirect(url_for('list_users'))
+    if request.method == 'POST':
+        email = request.form.get('email')
+        username = request.form.get('username')
+        password = request.form.get('password')
 
-#delete the user
-@app.route("/delete/<email>", methods=['GET'])
-def deleteUser(email):
-    return redirect(url_for('listeUser'))
+        user.email = email  #unsure if this is a good idea
+        user.username = username
+        user.password = password
+        user.updated = datetime.now()
+
+        try:
+            user.save(validate=True)
+            flash("The user was updated successfully.")
+            return redirect(url_for('list_users'))
+        except:
+            flash("An error occurred trying to create the user. Please review the information and try again.")
+            return render_template('updateuser.html',user=user)
+    else:
+        return render_template('updateuser.html',user=user)
+
+# Delete a user
+@app.route("/users/<id>/delete")
+def delete_user(id):
+    try:
+        user = Itpp_user.objects(email=id)[0]
+    except IndexError:
+        flash("The user was not found.")
+        return redirect(url_for('list_users'))
+    try:
+        user.delete()
+        flash("User was successfully deleted.")
+        return redirect(url_for('list_users'))
+    except:
+        flash("Ubable to delete user.")
+        return redirect(url_for('list_users'))
 
 # check of the user exists
 @app.route("/checkUser", methods=['POST'])
@@ -98,16 +152,77 @@ def checkUser():
 
 
 ####################################################
-# PROCESS MANAGEMENT ROUTES
+# SECTIONS MANAGEMENT ROUTES
 ####################################################  
 
-@app.route("/listeprocess")
-def listeProcess():
+@app.route("/sections", methods=['GET'])
+def list_sections():
     return render_template('listeprocess.html')
 
-@app.route("/createprocess", methods=['GET', 'POST'])
-def createProcess():
+@app.route("/sections/new", methods=['GET', 'POST'])
+def create_section():
     return render_template('createprocess.html')
+
+@app.route("/sections/<id>", methods=['GET'])
+def get_section_by_id(id):
+    return jsonify({"status":"Okay"})
+
+@app.route("/sections/<id>/update")
+def update_section(id):
+    return jsonify({"status":"Okay"})
+
+@app.route("/sections/<id>/delete")
+def delete_section(id):
+    return jsonify({"status":"Okay"})
+
+####################################################
+# Rules Management
+####################################################
+
+@app.route("/rules", methods=['GET'])
+def list_rules():
+    return jsonify({"status":"Okay"})
+
+@app.route("/rules/new", methods=['GET', 'POST'])
+def create_rule():
+    return jsonify({"status":"Okay"})
+
+@app.route("/rules/<id>", methods=['GET'])
+def get_rule_by_id(id):
+    return jsonify({"status":"Okay"})
+
+@app.route("/rules/<id>/update")
+def update_rule(id):
+    return jsonify({"status":"Okay"})
+
+@app.route("/rules/<id>/delete")
+def delete_rule(id):
+    return jsonify({"status":"Okay"})
+
+####################################################
+# Reports Management
+####################################################
+
+@app.route("/reports", methods=['GET'])
+def list_reports():
+    return jsonify({"status":"Okay"})
+
+#@app.route("/report/new", methods=['GET', 'POST'])
+#def create_rule():
+#    return jsonify({"status":"Okay"})
+
+@app.route("/reports/<id>", methods=['GET'])
+def get_report_by_id(id):
+    return jsonify({"status":"Okay"})
+
+#@app.route("/rules/<id>/update")
+#def update_rule(id):
+#    return jsonify({"status":"Okay"})
+
+#@app.route("/rules/<id>/delete")
+#def delete_rule(id):
+#    return jsonify({"status":"Okay"})
+
 ####################################################
 # START APPLICATION
 ####################################################  

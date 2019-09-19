@@ -8,22 +8,12 @@ class Itpp_user(Document):
     """
     # definition of the list of fields of the class
 
-    userMail = StringField(max_length=200, required=True)
-    userUserName = StringField(max_length=200)
-    userPassword = StringField(max_length=200)
-    userStatus = StringField(max_length=200)
-    userCreationDate = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-
-   # meta = {
-   #         'indexes': [
-   #             'userMail',
-   #             '$userMail',  
-   #             '#userMail',
-   #             'userPassword',
-   #             '$userPassword',  
-   #             '#userPassword'
-   #         ]
-   #     }
+    email = StringField(max_length=200, required=True, unique=True)
+    username = StringField(max_length=200)
+    password = StringField(max_length=200)
+    status = StringField(max_length=200)
+    created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    updated = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
 
 class Itpp_log(Document):
     """

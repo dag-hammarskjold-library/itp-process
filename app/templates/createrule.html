@@ -13,7 +13,7 @@
 
     <hr>
 
-    <form class="mt-5 orm-signin" method="POST" action="{{url_for('createRule')}}">
+    <form class="mt-5 orm-signin" method="POST" action="{{url_for('create_rule')}}">
         <div class="row">
             <div class="col-sm">
                 <div class="form-group">
@@ -51,14 +51,11 @@
             </div>
         </div>
         <button type="submit" class="btn btn-primary mb-5">Create the rule</button>
-        <div>
-            <a href="{{url_for('createRule01')}}"> Create rule other version </a>
-        </div>
 
     </form>
     <hr>
     <div class="text-bold text-right font-weight-bold">
-        <a href="{{url_for('listeRule')}}"> List of Rules </a>
+        <a href="{{url_for('list_rules')}}"> List of Rules </a>
     </div>
 
 </div>

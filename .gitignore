@@ -5,3 +5,4 @@ __pycache__/
 *.log
 dbparam.json
 app_old.py
+.DS_Store
