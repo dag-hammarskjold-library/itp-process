@@ -32,10 +32,12 @@ login_manager.init_app(app)
 ####################################################  
 
 @app.route("/")
-@login_required
 def main():
     user = current_user
-    return render_template('main.html',myUser=user)
+    if current_user:
+        return render_template('main.html',myUser=user)
+    else:
+        return redirect(url_for('login'))
 
 @app.route("/administration")
 @login_required
