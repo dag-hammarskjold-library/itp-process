@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
-from flask_login import LoginManager, current_user, login_user, login_required
+from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from requests import get
 import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
@@ -64,7 +64,8 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
-    return render_template('login.html')
+    logout_user()
+    return redirect(url_for('login'))
 
 # bad url
 @app.errorhandler(404) 
@@ -98,7 +99,8 @@ def create_user():
         password = request.form.get('password')
         created = datetime.now()
 
-        user = Itpp_user(email=email, username=username, password=password, created=created)
+        user = Itpp_user(email=email, username=username, created=created)
+        user.set_password(password)
         # This still allows submission of a blank user document. We need more validation.
         try:
             user.save(validate=True)
@@ -134,8 +136,8 @@ def update_user(id):
 
         user.email = email  #unsure if this is a good idea
         user.username = username
-        user.password = password
         user.updated = datetime.now()
+        user.set_password(password)
 
         try:
             user.save(validate=True)
