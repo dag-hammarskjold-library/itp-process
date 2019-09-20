@@ -5,6 +5,7 @@ import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
+from app.reports import reports
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
@@ -285,27 +286,40 @@ def delete_rule(id):
 # Reports Management
 ####################################################
 
-@app.route("/reports", methods=['GET'])
+@app.route("/reports")
 @login_required
 def list_reports():
-    return jsonify({"status":"Okay"})
+    return jsonify({"status":"Okay", "reports":reports})
 
-#@app.route("/report/new", methods=['GET', 'POST'])
-#def create_rule():
-#    return jsonify({"status":"Okay"})
 
-@app.route("/reports/<id>", methods=['GET'])
-@login_required
-def get_report_by_id(id):
-    return jsonify({"status":"Okay"})
+@app.route("/reports/<name>")
+#@login_required
+def get_report_by_id(name):
+    # check the reports whitelist
+    matches = False
+    report = None
+    form = None
+    for r in reports:
+        if r.name == name:
+            matches = True
+            report = r
+            form = report.form_class()
+    if not matches:
+        abort(400)
+    if request.args:
+        #parse the args
+        form = report.form_class(formdata=request.args)
+        return render_template('report.html', report=report, form=form)
+    else:
+        results = []        
+        return render_template('report.html', report=report, form=form)
 
-#@app.route("/rules/<id>/update")
-#def update_rule(id):
-#    return jsonify({"status":"Okay"})
-
-#@app.route("/rules/<id>/delete")
-#def delete_rule(id):
-#    return jsonify({"status":"Okay"})
+@app.route('/_run_report')
+def _run_report():
+    '''
+    This is intended to be run via AJAX call
+    '''
+    return jsonify({"results":"foo"})
 
 ####################################################
 # START APPLICATION
