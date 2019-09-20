@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
+from flask_login import LoginManager, current_user, login_user, login_required
 from requests import get
 import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user
+from app.forms import LoginForm
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
@@ -22,27 +24,45 @@ app = Flask(__name__)
 app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
 ####################################################
 # BASIC ROUTINES AND ROUTES
 ####################################################  
 
 @app.route("/")
+@login_required
 def main():
-    """ Default route of the application (Login) """
-    myUser=session["username"]
-    myTime=session["startSession"]
-    return render_template('main.html',myUser=myUser,myTime=myTime)
+    user = current_user
+    return render_template('main.html',myUser=user)
 
 @app.route("/administration")
+@login_required
 def administration():
     return render_template('administration.html')
 
-@app.route("/login")
+@login_manager.user_loader
+def load_user(id):
+    return Itpp_user.objects.get(id=id)
+
+@app.route("/login", methods=['GET','POST'])
 def login():
     """ Default route of the application (Login) """
-    return render_template('login.html')
+    if current_user.is_authenticated:
+        return redirect(url_for('main'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = Itpp_user.objects(email=form.email.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=form.remember_me.data)
+        return redirect(url_for('main'))
+    return render_template('login.html', title='Sign In', form=form)
 
 @app.route("/logout")
+@login_required
 def logout():
     return render_template('login.html')
 
@@ -62,12 +82,14 @@ def appError():
 ####################################################  
 
 @app.route("/users")
+@login_required
 def list_users():
     users = Itpp_user.objects
     return render_template('listeuser.html', users=users)
 
 # Create a user
 @app.route("/users/create", methods=['GET', 'POST'])
+@login_required
 def create_user():
     if request.method == 'POST':
         # Get, sanitize, and validate the data
@@ -90,6 +112,7 @@ def create_user():
 
 # Retrieve a user
 @app.route("/users/<id>")
+@login_required
 def get_user_by_id(id):
     
     #return render_template('updateuser.html')
@@ -97,9 +120,10 @@ def get_user_by_id(id):
 
 # Update a user
 @app.route("/users/<id>/update", methods=['GET','POST'])
+@login_required
 def update_user(id):
     try:
-        user = Itpp_user.objects(email=id)[0]
+        user = Itpp_user.objects(id=id)[0]
     except IndexError:
         flash("The user was not found.")
         return redirect(url_for('list_users'))
@@ -125,9 +149,10 @@ def update_user(id):
 
 # Delete a user
 @app.route("/users/<id>/delete")
+@login_required
 def delete_user(id):
     try:
-        user = Itpp_user.objects(email=id)[0]
+        user = Itpp_user.objects(id=id)[0]
     except IndexError:
         flash("The user was not found.")
         return redirect(url_for('list_users'))
@@ -141,6 +166,7 @@ def delete_user(id):
 
 # check of the user exists
 @app.route("/checkUser", methods=['POST'])
+@login_required
 def checkUser():
     """ User check Identification """
     if (request.form["inputEmail"]=="admin@un.org" and request.form["inputPassword"]=="admin"):
@@ -156,22 +182,27 @@ def checkUser():
 ####################################################  
 
 @app.route("/sections", methods=['GET'])
+@login_required
 def list_sections():
     return render_template('listeprocess.html')
 
 @app.route("/sections/new", methods=['GET', 'POST'])
+@login_required
 def create_section():
     return render_template('createprocess.html')
 
 @app.route("/sections/<id>", methods=['GET'])
+@login_required
 def get_section_by_id(id):
     return jsonify({"status":"Okay"})
 
 @app.route("/sections/<id>/update")
+@login_required
 def update_section(id):
     return jsonify({"status":"Okay"})
 
 @app.route("/sections/<id>/delete")
+@login_required
 def delete_section(id):
     return jsonify({"status":"Okay"})
 
@@ -180,22 +211,27 @@ def delete_section(id):
 ####################################################
 
 @app.route("/rules", methods=['GET'])
+@login_required
 def list_rules():
     return jsonify({"status":"Okay"})
 
 @app.route("/rules/new", methods=['GET', 'POST'])
+@login_required
 def create_rule():
     return jsonify({"status":"Okay"})
 
 @app.route("/rules/<id>", methods=['GET'])
+@login_required
 def get_rule_by_id(id):
     return jsonify({"status":"Okay"})
 
 @app.route("/rules/<id>/update")
+@login_required
 def update_rule(id):
     return jsonify({"status":"Okay"})
 
 @app.route("/rules/<id>/delete")
+@login_required
 def delete_rule(id):
     return jsonify({"status":"Okay"})
 
@@ -204,6 +240,7 @@ def delete_rule(id):
 ####################################################
 
 @app.route("/reports", methods=['GET'])
+@login_required
 def list_reports():
     return jsonify({"status":"Okay"})
 
@@ -212,6 +249,7 @@ def list_reports():
 #    return jsonify({"status":"Okay"})
 
 @app.route("/reports/<id>", methods=['GET'])
+@login_required
 def get_report_by_id(id):
     return jsonify({"status":"Okay"})
 
