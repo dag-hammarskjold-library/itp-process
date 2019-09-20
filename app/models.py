@@ -34,3 +34,36 @@ class Itpp_log(Document):
     logUserName = StringField(max_length=200) # User performing the action
     logDescription = StringField(max_length=500) # Description of the action performed
     logCreationDate = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))) # date of the action performed
+
+class Itpp_rule(EmbeddedDocument):
+    '''
+    This is an attempt to model the basic shape of a "rule", which is then 
+    embedded into the Section document. For ease of use, it is assumed here 
+    that command refers to a DLX function name, so that we can minimize the 
+    code necessary to actually run the command.
+    For instance:
+    module = 'Bib'
+    command = 'match_fields'
+    paramaters = '191,('b','A'),('c','72')
+    Would eventually unpack to:
+    
+    Bib.match_fields(('191,('b','A'),('c','72')))
+    This is achieved via getattr. Assuming section is an Itpp_section object:
+    for rule in section.rules:
+        result = getattr(rule.module, rule.command)(rule.parameters)
+    '''
+    name = StringField()
+    module = StringField
+    command = StringField()
+    parameters = StringField()
+
+class Itpp_section(Document):
+    """
+    This provides fields for section building in the ITP Process app
+    It has an embedded document list to hold a defined set of rules that apply
+    to the section.
+    """
+    name = StringField()
+    itp_body = StringField()
+    itp_session = StringField()
+    rules = EmbeddedDocumentListField(Itpp_rule)

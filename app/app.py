@@ -3,7 +3,7 @@ from flask_login import LoginManager, current_user, login_user, login_required, 
 from requests import get
 import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
-from app.models import Itpp_log,Itpp_user
+from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -183,25 +183,67 @@ def checkUser():
 # SECTIONS MANAGEMENT ROUTES
 ####################################################  
 
-@app.route("/sections", methods=['GET'])
+@app.route("/sections")
 @login_required
 def list_sections():
-    return render_template('listeprocess.html')
+    sections = Itpp_section.objects
+    return render_template('listeprocess.html', sections=sections)
 
 @app.route("/sections/new", methods=['GET', 'POST'])
 @login_required
 def create_section():
-    return render_template('createprocess.html')
+    if request.method == 'POST':
+        # Get, sanitize, and validate the data
+        name = request.form.get('section_name')
+        itp_body = request.form.get('body')
+        itp_session = request.form.get('session')
+        rules = request.form.get('rules')
 
-@app.route("/sections/<id>", methods=['GET'])
+        section = Itpp_section(name=name, itp_body=itp_body, itp_session=itp_session, rules=rules)
+        try:
+            section.save(validate=True)
+            flash("The section was created successfully.")
+            return redirect(url_for('list_sections'))
+        except:
+            flash("An error occurred trying to create the section. Please review the information and try again.")
+            return redirect(url_for('create_section'))
+    else:
+        return render_template('createprocess.html')
+
+@app.route("/sections/<id>")
 @login_required
 def get_section_by_id(id):
+    # To do
     return jsonify({"status":"Okay"})
 
 @app.route("/sections/<id>/update")
 @login_required
 def update_section(id):
-    return jsonify({"status":"Okay"})
+    try:
+        section = Itpp_section.objects(id=id)[0]
+    except IndexError:
+        flash("The section was not found.")
+        return redirect(url_for('list_sections'))
+    if request.method == 'POST':
+        name = request.form.get('section_name')
+        itp_body = request.form.get('itp_body')
+        itp_session = request.form.get('itp_session')
+        rules = request.form.get('rules')
+
+        section.name = name
+        section.itp_body = body
+        section.itp_session = itp_session
+        section.rules = rules
+
+        try:
+            section.save(validate=True)
+            flash("The section was updated successfully.")
+            return redirect(url_for('list_sections'))
+        except:
+            flash("An error occurred trying to create the section. Please review the information and try again.")
+            return render_template('updateprocess.html',section=section)
+    else:
+        return render_template('updatprocess.html',section=section)
 
 @app.route("/sections/<id>/delete")
 @login_required
