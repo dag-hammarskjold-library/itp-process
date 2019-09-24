@@ -39,7 +39,6 @@ class Config(object):
     connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
     dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
     collection_prefix = ''
-
     
 class ProductionConfig(Config):
     DEBUG = False
