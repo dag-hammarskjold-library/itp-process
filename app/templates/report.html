@@ -22,7 +22,7 @@
                 {% endfor %}
                 {{ form.hidden_tag() }}
             </div>
-            <button type="submit" class="btn btn-primary mb-5">Show Results</button>
+            <button id="getResults" type="submit" class="btn btn-primary mb-5">Show Results</button>
         </form>
     </div>
 </div>
@@ -57,5 +57,12 @@
     <hr>
     <a href="{{url_for('main')}}"> Go back to the menu </a>
 </div>
+
+<script type="text/javascript">
+    $('#getResults').addEventListener("click", function(e){ 
+        e.preventDefault();
+        // Use the form fields to call /_run_report and get json results
+    });
+</script>
 
 {% endblock %}
