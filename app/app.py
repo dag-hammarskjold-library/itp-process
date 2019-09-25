@@ -36,7 +36,7 @@ login_manager.init_app(app)
 def main():
     user = current_user
     if current_user:
-        return render_template('main.html',myUser=user)
+        return render_template('main.html',myUser=user,reports=reports)
     else:
         return redirect(url_for('login'))
 
@@ -307,19 +307,38 @@ def get_report_by_id(name):
     if not matches:
         abort(400)
     if request.args:
+        
         #parse the args
         form = report.form_class(formdata=request.args)
-        return render_template('report.html', report=report, form=form)
+
+        # Call of the DLX function passing the arguments of the request
+
+        # Assign the result of the search in one variable the result should be a list of list
+
+        # The size of the list should depend of the family report (report name)
+
+        resultsSearch=[
+            ["yls1","yls1","yls1"],
+            ["yls2","yls2","yls2"],
+            ["yls3","yls3","yls3"],
+            ["yls4","yls4","yls4"],
+            ["yls5","yls5","yls5"],
+            ["yls6","yls6","yls6"],
+            ["yls7","yls7","yls7"],
+            ["yls8","yls8","yls8"],
+            ["yls9","yls9","yls9"],
+            ["yls10","yls10","yls10"]
+        ]
+        #Render the form with the values needed
+        return render_template('report.html', report=report, form=form, resultsSearch=resultsSearch)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
 
+
 @app.route('/_run_report')
 def _run_report():
-    '''
-    This is intended to be run via AJAX call
-    '''
-    return jsonify({"results":"foo"})
+    pass
 
 ####################################################
 # START APPLICATION

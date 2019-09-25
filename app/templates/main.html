@@ -122,9 +122,11 @@
             </div>
             <div class="card-body">
                 <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                    <li>XXXX</li>
-                    <li>XXXX</li>
-                    <li>XXXX</li>
+                    <!-- Implement the loop for generating the links for the reports -->
+                    {% for report in reports %}
+                    <li> <a href="{{url_for('get_report_by_id',name=report.name)}}">{{report.title}}</a></li>
+                    {% endfor %}
+
                 </ul>
             </div>
         </div>

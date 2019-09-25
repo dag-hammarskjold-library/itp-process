@@ -6,6 +6,11 @@
         width: 1000px;
     }
 </style>
+<style type="text/css">
+    .customize1 {
+        width: 1000px;
+    }
+</style>
 <div class="container customize shadow">
     <div class="container mt-4 mb-4">
         <h1>{{report['title']}}</h1>
@@ -19,33 +24,30 @@
                 <div class="form-group col">
                     {{ field.label }} {{ field(size=32) }}
                 </div>
-                {% endfor %}
-                {{ form.hidden_tag() }}
+                {% endfor %} {{ form.hidden_tag() }}
             </div>
             <button id="getResults" type="submit" class="btn btn-primary mb-5">Show Results</button>
         </form>
     </div>
 </div>
-<div class="container customize shadow">
+<div class="container customize1 shadow">
     <div class="container mt-4 mb-4" id="results">
         <h3> Result(s) </h3>
         <hr>
         <table id="myTable" class="table">
             <thead>
                 <tr>
-                    <th scope="col">#</th>
                     <th scope="col">Record Type</th>
-                    <th scope="col">Bib#</th>
+                    <th scope="col">Record ID</th>
                     <th scope="col">Document Symbol</th>
                 </tr>
             </thead>
             <tbody>
-                {% for result in results %}
+                {% for result in resultsSearch %}
                 <tr>
-                    <th scope="row">1</th>
-                    <td>Bib</td>
-                    <td>1042980</td>
-                    <td>@A/2015/Add.1</td>
+                    <td>{{result[0]}}</td>
+                    <td>{{result[1]}}</td>
+                    <td>{{result[2]}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -53,16 +55,15 @@
     </div>
 </div>
 <br>
+<div id="output"></div>
+<br>
 <div class="container">
     <hr>
     <a href="{{url_for('main')}}"> Go back to the menu </a>
 </div>
 
-<script type="text/javascript">
-    $('#getResults').addEventListener("click", function(e){ 
-        e.preventDefault();
-        // Use the form fields to call /_run_report and get json results
-    });
+<script>
 </script>
+
 
 {% endblock %}
