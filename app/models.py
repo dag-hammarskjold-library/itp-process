@@ -67,3 +67,12 @@ class Itpp_section(Document):
     itp_body = StringField()
     itp_session = StringField()
     rules = EmbeddedDocumentListField(Itpp_rule)
+
+class Itpp_document(Document):
+    itp_body = StringField()
+    itp_session = StringField()
+    filter_fields = ListField()
+
+class Itpp_snapshot(Document):
+    name = StringField()
+    documents = EmbeddedDocumentListField(Itpp_document)
