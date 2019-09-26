@@ -9,6 +9,7 @@ from app.reports import reports
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
+from dlx import DB, Bib, Auth
 import time
 
 
@@ -24,6 +25,7 @@ app = Flask(__name__)
 
 app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
+DB.connect(Config.connect_string)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -209,10 +211,31 @@ def list_snapshots():
     pass
 @app.route('/snapshots/<id>')
 def get_snapshot_by_id(id):
+    b = 'A'
+    s = '72'
+
     pass
 @app.route('/snapshots/create')
 def create_snapshot():
-    pass
+    if request.args:
+        '''
+        params = []
+        sessions = request.args.get('sessions').split(',')
+        for s in sessions:
+            params.append(('191','r',s))
+
+        f,s,v = params[0]
+        records = Bib.match_value(f,s,v)
+        results = []
+        for r in records:
+            # do something
+            pass
+        '''
+        
+        return jsonify({'arguments':request.args})
+    else:
+        return jsonify({'status':'arguments required'})
+
 @app.route('/snapshots/<id>/delete')
 def delete_snapshot(id):
     pass

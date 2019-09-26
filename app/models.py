@@ -37,42 +37,33 @@ class Itpp_log(Document):
 
 class Itpp_rule(EmbeddedDocument):
     '''
-    This is an attempt to model the basic shape of a "rule", which is then 
-    embedded into the Section document. For ease of use, it is assumed here 
-    that command refers to a DLX function name, so that we can minimize the 
-    code necessary to actually run the command.
-    For instance:
-    module = 'Bib'
-    command = 'match_fields'
-    paramaters = '191,('b','A'),('c','72')
-    Would eventually unpack to:
-    
-    Bib.match_fields(('191,('b','A'),('c','72')))
-    This is achieved via getattr. Assuming section is an Itpp_section object:
-    for rule in section.rules:
-        result = getattr(rule.module, rule.command)(rule.parameters)
+    Rule model
     '''
-    name = StringField()
-    module = StringField
-    command = StringField()
-    parameters = StringField()
+    rule_type = StringField()
 
-class Itpp_section(Document):
+
+class Itpp_section(EmbeddedDocument):
     """
-    This provides fields for section building in the ITP Process app
-    It has an embedded document list to hold a defined set of rules that apply
-    to the section.
+    Section model
     """
     name = StringField()
-    itp_body = StringField()
-    itp_session = StringField()
     rules = EmbeddedDocumentListField(Itpp_rule)
 
-class Itpp_document(Document):
+class Itpp_document(EmbeddedDocument):
+    """
+    ITP sub-document model
+    """
     itp_body = StringField()
     itp_session = StringField()
-    filter_fields = ListField()
+    auth_filter_fields = ListField()
+    bib_filter_fields = ListField()
+    sections = EmbeddedDocumentListField(Itpp_section)
 
 class Itpp_snapshot(Document):
+    """
+    ITP Snapshot model
+    """
     name = StringField()
     documents = EmbeddedDocumentListField(Itpp_document)
+
+    meta = {'collection': Config.collection_prefix + 'section'}
