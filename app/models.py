@@ -35,35 +35,57 @@ class Itpp_log(Document):
     logDescription = StringField(max_length=500) # Description of the action performed
     logCreationDate = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))) # date of the action performed
 
-class Itpp_rule(EmbeddedDocument):
-    '''
-    Rule model
-    '''
-    rule_type = StringField()
-
-
-class Itpp_section(EmbeddedDocument):
-    """
-    Section model
-    """
-    name = StringField()
-    rules = EmbeddedDocumentListField(Itpp_rule)
-
-class Itpp_document(EmbeddedDocument):
-    """
-    ITP sub-document model
-    """
-    itp_body = StringField()
-    itp_session = StringField()
-    auth_filter_fields = ListField()
-    bib_filter_fields = ListField()
-    sections = EmbeddedDocumentListField(Itpp_section)
 
 class Itpp_snapshot(Document):
     """
     ITP Snapshot model
+
+    An ITP Snapshot definition is a body and session (per spec, we use the 
+    Authority# in the submission form), as well as the list of fields we are 
+    using to filter the extracted records.
+
+    It also consists of a list of the records that are extracted and filtered
+    with the definition aspects.
     """
     name = StringField()
-    documents = EmbeddedDocumentListField(Itpp_document)
+    created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    body_session_auth = StringField()
+    filter_fields = ListField()
+    extracted_records = ListField()
 
-    meta = {'collection': Config.collection_prefix + 'section'}
+    meta = {'collection': Config.collection_prefix + 'Itpp_snapshot'}
+
+class Itpp_document(Document):
+    """
+    This is where the ITP Document building happens. A document is a collection
+    of snapshots (typically three), each with its attendant sections and rules.
+    """
+    name = StringField()
+    created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    updated = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    snapshots = ListField(ReferenceField(Itpp_snapshot))
+
+    meta = {'collection': Config.collection_prefix + 'Itpp_document' }
+
+class Itpp_rule(EmbeddedDocument):
+    '''
+    Rule model
+    This is still very inadequate and doesn't really allow us to do much
+    It will require a better understanding of the target serialization.
+    '''
+    rule_name = StringField()
+    rule_type = StringField()
+
+class Itpp_section(Document):
+    """
+    Section model
+
+    A section consists of a data source (snapshot) and a collection of rules, 
+    such as which fields to display, group, and sort; and any transformations 
+    necessary to construct the final output.
+    """
+    name = StringField()
+    data_source = ReferenceField(Itpp_snapshot)
+    rules = EmbeddedDocumentListField(Itpp_rule)
+
+    meta = {'collection': Config.collection_prefix + 'Itpp_sectiom' }
