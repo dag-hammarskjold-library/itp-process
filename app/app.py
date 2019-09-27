@@ -312,33 +312,67 @@ def get_report_by_id(name):
         form = report.form_class(formdata=request.args)
 
         # Call of the DLX function passing the arguments of the request
-
         # Assign the result of the search in one variable the result should be a list of list
-
+        
+        results = _run_report(request.args)
+            
         # The size of the list should depend of the family report (report name)
 
-        resultsSearch=[
-            ["yls1","yls1","yls1"],
-            ["yls2","yls2","yls2"],
-            ["yls3","yls3","yls3"],
-            ["yls4","yls4","yls4"],
-            ["yls5","yls5","yls5"],
-            ["yls6","yls6","yls6"],
-            ["yls7","yls7","yls7"],
-            ["yls8","yls8","yls8"],
-            ["yls9","yls9","yls9"],
-            ["yls10","yls10","yls10"]
-        ]
         #Render the form with the values needed
-        return render_template('report.html', report=report, form=form, resultsSearch=resultsSearch)
+        return render_template('report.html', report=report, form=form, resultsSearch=results)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
 
 
-@app.route('/_run_report')
-def _run_report():
-    pass
+#@app.route('/_run_report')
+def _run_report(args):
+    from dlx import DB
+    from dlx.marc.record import Bib, Auth, Matcher
+    DB.connect(Config.connect_string)
+    
+    auth_id = int(args['authority'])
+    auth = Auth.match_id(auth_id)
+    try:
+        body = auth.get_value('190','b')
+        session = auth.get_value('190','c')
+    except:
+        return('Auth not found')
+        
+    what_is_this_supposed_to_be = args['field']
+    
+    #return(
+    #'''
+    #Parsing args...<br>body: "{}"<br>session: "{}"<br>missing field: "{}"<br><br>Is the "missing field" supposed to be just a tag? Or a tag and subfield?
+    #'''.format(body,session,what_is_this_supposed_to_be))
+    
+    matchers = [
+        Matcher(
+            '191',('b',body),('c',session)
+        ),
+        Matcher(
+            '930',('a','VOT'),modifier='not'
+        ),
+        Matcher(
+            '930',('a','ITS'),modifier='not'
+        ),
+        Matcher(
+            '991',('z','I'),modifier='not'
+        )
+    ]
+    
+    results = []
+    
+    for bib in Bib.match(*matchers):
+        results.append(
+            [
+                bib.get_value('930','a'),
+                bib.id,
+                bib.symbol()
+            ]
+        )
+        
+    return results
 
 ####################################################
 # START APPLICATION
