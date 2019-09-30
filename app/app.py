@@ -5,7 +5,7 @@ import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
-from app.reports import reports
+from app.reports import ReportList
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
@@ -299,7 +299,8 @@ def get_report_by_id(name):
     matches = False
     report = None
     form = None
-    for r in reports:
+    #for r in reports:
+    for r in ReportList.reports:
         if r.name == name:
             matches = True
             report = r
@@ -314,7 +315,7 @@ def get_report_by_id(name):
         # Call of the DLX function passing the arguments of the request
         # Assign the result of the search in one variable the result should be a list of list
         
-        results = _run_report(request.args)
+        results = _run_report(report,request.args)
             
         # The size of the list should depend of the family report (report name)
 
@@ -326,44 +327,37 @@ def get_report_by_id(name):
 
 
 #@app.route('/_run_report')
-def _run_report(args):
+def _run_report(report,args):
+    # most of this code will ultimately be somewhere else
     from dlx import DB
     from dlx.marc.record import Bib, Auth, Matcher
     DB.connect(Config.connect_string)
     
-    auth_id = int(args['authority'])
-    auth = Auth.match_id(auth_id)
     try:
+        auth_id = int(args['authority'])
+        auth = Auth.match_id(auth_id)
+    except ValueError:
+        body,session = args['authority'].split('/')
+        auth = next(Auth.match(Matcher('190',('b',body+'/'),('c',session))),None)
+        
+    if auth is None:
+        return([['Auth not found']])
+    else:
         body = auth.get_value('190','b')
         session = auth.get_value('190','c')
-    except:
-        return('Auth not found')
         
-    what_is_this_supposed_to_be = args['field']
+    tag = args['field']
     
-    #return(
-    #'''
-    #Parsing args...<br>body: "{}"<br>session: "{}"<br>missing field: "{}"<br><br>Is the "missing field" supposed to be just a tag? Or a tag and subfield?
-    #'''.format(body,session,what_is_this_supposed_to_be))
-    
-    matchers = [
-        Matcher(
-            '191',('b',body),('c',session)
-        ),
-        Matcher(
-            '930',('a','VOT'),modifier='not'
-        ),
-        Matcher(
-            '930',('a','ITS'),modifier='not'
-        ),
-        Matcher(
-            '991',('z','I'),modifier='not'
-        )
-    ]
+    bibs = Bib.match(
+        Matcher('191',('b',body),('c',session)),
+        Matcher('930',('a','VOT'),modifier='not'),
+        Matcher('930',('a','ITS'),modifier='not'),
+        Matcher(tag,modifier='not_exists')
+    )
     
     results = []
     
-    for bib in Bib.match(*matchers):
+    for bib in bibs:
         results.append(
             [
                 bib.get_value('930','a'),
