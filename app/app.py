@@ -36,7 +36,7 @@ login_manager.init_app(app)
 def main():
     user = current_user
     if current_user:
-        return render_template('main.html',myUser=user,reports=reports)
+        return render_template('main.html',myUser=user,reports=ReportList.reports)
     else:
         return redirect(url_for('login'))
 
