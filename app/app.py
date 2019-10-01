@@ -5,7 +5,7 @@ import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
-from app.reports import reports
+from app.reports import ReportList
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
@@ -36,7 +36,7 @@ login_manager.init_app(app)
 def main():
     user = current_user
     if current_user:
-        return render_template('main.html',myUser=user,reports=reports)
+        return render_template('main.html',myUser=user,reports=ReportList.reports)
     else:
         return redirect(url_for('login'))
 
@@ -299,7 +299,8 @@ def get_report_by_id(name):
     matches = False
     report = None
     form = None
-    for r in reports:
+    #for r in reports:
+    for r in ReportList.reports:
         if r.name == name:
             matches = True
             report = r
@@ -312,33 +313,60 @@ def get_report_by_id(name):
         form = report.form_class(formdata=request.args)
 
         # Call of the DLX function passing the arguments of the request
-
         # Assign the result of the search in one variable the result should be a list of list
-
+        
+        results = _run_report(report,request.args)
+            
         # The size of the list should depend of the family report (report name)
 
-        resultsSearch=[
-            ["yls1","yls1","yls1"],
-            ["yls2","yls2","yls2"],
-            ["yls3","yls3","yls3"],
-            ["yls4","yls4","yls4"],
-            ["yls5","yls5","yls5"],
-            ["yls6","yls6","yls6"],
-            ["yls7","yls7","yls7"],
-            ["yls8","yls8","yls8"],
-            ["yls9","yls9","yls9"],
-            ["yls10","yls10","yls10"]
-        ]
         #Render the form with the values needed
-        return render_template('report.html', report=report, form=form, resultsSearch=resultsSearch)
+        return render_template('report.html', report=report, form=form, resultsSearch=results)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
 
 
-@app.route('/_run_report')
-def _run_report():
-    pass
+#@app.route('/_run_report')
+def _run_report(report,args):
+    # most of this code will ultimately be somewhere else
+    from dlx import DB
+    from dlx.marc.record import Bib, Auth, Matcher
+    DB.connect(Config.connect_string)
+    
+    try:
+        auth_id = int(args['authority'])
+        auth = Auth.match_id(auth_id)
+    except ValueError:
+        body,session = args['authority'].split('/')
+        auth = next(Auth.match(Matcher('190',('b',body+'/'),('c',session))),None)
+        
+    if auth is None:
+        return([['Auth not found']])
+    else:
+        body = auth.get_value('190','b')
+        session = auth.get_value('190','c')
+        
+    tag = args['field']
+    
+    bibs = Bib.match(
+        Matcher('191',('b',body),('c',session)),
+        Matcher('930',('a','VOT'),modifier='not'),
+        Matcher('930',('a','ITS'),modifier='not'),
+        Matcher(tag,modifier='not_exists')
+    )
+    
+    results = []
+    
+    for bib in bibs:
+        results.append(
+            [
+                bib.get_value('930','a'),
+                bib.id,
+                bib.symbol()
+            ]
+        )
+        
+    return results
 
 ####################################################
 # START APPLICATION
