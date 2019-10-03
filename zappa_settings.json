@@ -5,6 +5,6 @@
         "project_name": "itp-process",
         "runtime": "python3.6",
         "s3_bucket": "zappa-7la88m1as",
-        "timeout_seconds": 45
+        "timeout_seconds": 120
     }
 }
