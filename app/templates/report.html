@@ -22,19 +22,21 @@
             <div class="row">
                 {% for field in form if field.widget.input_type != 'hidden'%}
                 <div class="form-group col">
-                    {{ field.label }} {{ field(size=32) }}
+                    {{ field.label }} {{ field(class="form-control") }}
                 </div>
                 {% endfor %} {{ form.hidden_tag() }}
             </div>
             <button id="getResults" type="submit" class="btn btn-primary mb-5">Show Results</button>
         </form>
+
     </div>
+
 </div>
 <div class="container customize1 shadow">
     <div class="container mt-4 mb-4" id="results">
         <h3> Result(s) </h3>
         <hr>
-        <table id="myTable" class="table">
+        <table id="myTable" class="table table-striped">
             <thead>
                 <tr>
                     <th scope="col">Record Type</th>

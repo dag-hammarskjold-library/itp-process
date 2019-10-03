@@ -12,7 +12,7 @@ class ReportList(object):
         Report(
             name='missing_field',
             title='Missing Field Report',
-            description='This report returns bib numbers and document symbols based on a particular body and session for the specified field.',
+            description='This report returns bib numbers and document symbols based on a particular body and session for the specified field. For the authority field you can insert the number or use the format body/session (eg:A/72) is alsp available for the search.',
             form_class= MissingFieldReportForm
         ),
 
