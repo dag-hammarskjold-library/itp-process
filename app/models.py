@@ -35,6 +35,9 @@ class Itpp_log(Document):
     logDescription = StringField(max_length=500) # Description of the action performed
     logCreationDate = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))) # date of the action performed
 
+class Itpp_record(Document):
+    created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    record = DictField()
 
 class Itpp_snapshot(Document):
     """
@@ -51,7 +54,7 @@ class Itpp_snapshot(Document):
     created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
     body_session_auth = StringField()
     filter_fields = ListField()
-    extracted_records = ListField()
+    extracted_records = ListField(ReferenceField(Itpp_record))
 
     meta = {'collection': Config.collection_prefix + 'Itpp_snapshot'}
 
