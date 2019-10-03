@@ -36,7 +36,11 @@ class Itpp_log(Document):
     logCreationDate = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))) # date of the action performed
 
 class Itpp_record(Document):
+    snapshot_name = StringField()
+    snapshot_date = DateTimeField()
     created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    body_session_auth = StringField()
+    filter_fields = ListField()
     record = DictField()
 
 class Itpp_snapshot(Document):
