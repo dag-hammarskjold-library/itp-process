@@ -289,84 +289,25 @@ def delete_rule(id):
 @app.route("/reports")
 @login_required
 def list_reports():
-    return jsonify({"status":"Okay", "reports":reports})
-
+    return jsonify({"status":"Okay", "reports": [r.name for r in ReportList.reports]})
 
 @app.route("/reports/<name>")
 #@login_required
 def get_report_by_id(name):
-    # check the reports whitelist
-    matches = False
-    report = None
-    form = None
-    #for r in reports:
-    for r in ReportList.reports:
-        if r.name == name:
-            matches = True
-            report = r
-            form = report.form_class()
-    if not matches:
+    
+    report = next(filter(lambda r: name == r.name, ReportList.reports), None) 
+        
+    if report is None:
         abort(400)
+    
+    form = report.form_class(formdata=request.args)
+    
     if request.args:
-        
-        #parse the args
-        form = report.form_class(formdata=request.args)
-
-        # Call of the DLX function passing the arguments of the request
-        # Assign the result of the search in one variable the result should be a list of list
-        
-        results = _run_report(report,request.args)
-            
-        # The size of the list should depend of the family report (report name)
-
-        #Render the form with the values needed
+        results = report.execute(request.args)
         return render_template('report.html', report=report, form=form, resultsSearch=results)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
-
-
-#@app.route('/_run_report')
-def _run_report(report,args):
-    # most of this code will ultimately be somewhere else
-    from dlx import DB
-    from dlx.marc.record import Bib, Auth, Matcher
-    DB.connect(Config.connect_string)
-    
-    try:
-        auth_id = int(args['authority'])
-        auth = Auth.match_id(auth_id)
-    except ValueError:
-        body,session = args['authority'].split('/')
-        auth = next(Auth.match(Matcher('190',('b',body+'/'),('c',session))),None)
-        
-    if auth is None:
-        return([['Auth not found']])
-    else:
-        body = auth.get_value('190','b')
-        session = auth.get_value('190','c')
-        
-    tag = args['field']
-    
-    bibs = Bib.match(
-        Matcher('191',('b',body),('c',session)),
-        Matcher('930',('a','VOT'),modifier='not'),
-        Matcher('930',('a','ITS'),modifier='not'),
-        Matcher(tag,modifier='not_exists')
-    )
-    
-    results = []
-    
-    for bib in bibs:
-        results.append(
-            [
-                bib.get_value('930','a'),
-                bib.id,
-                bib.symbol()
-            ]
-        )
-        
-    return results
 
 ####################################################
 # START APPLICATION
