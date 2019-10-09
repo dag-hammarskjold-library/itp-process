@@ -297,7 +297,7 @@ def list_reports():
 #@login_required
 def get_report_by_id(name):
     
-    report = next(filter(lambda r: name == r.name, ReportList.reports), None) 
+    report = ReportList.get_by_name(name)
         
     if report is None:
         abort(400)
