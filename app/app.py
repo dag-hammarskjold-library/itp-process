@@ -24,6 +24,8 @@ app = Flask(__name__)
 
 app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
+URL_BY_DEFAULT = 'https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/'
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -304,7 +306,7 @@ def get_report_by_id(name):
     
     if request.args:
         results = report.execute(request.args)
-        return render_template('report.html', report=report, form=form, resultsSearch=results)
+        return render_template('report.html', report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
