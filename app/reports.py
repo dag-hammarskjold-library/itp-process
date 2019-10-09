@@ -16,7 +16,7 @@ class ReportList(object):
             form_class= MissingFieldReportForm
         ),
 
-        #Report(
+        #Report()
         #    name='missing_subfield',
         #    title='Missing Subfield Report',
         #    description= 'This report returns bib numbers and document symbols based on a particular body and session for the specified field and subfield.',
