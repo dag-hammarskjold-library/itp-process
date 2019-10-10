@@ -30,12 +30,14 @@ URL_BY_DEFAULT = 'https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/sy
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = "login"
 
 ####################################################
 # BASIC ROUTINES AND ROUTES
 ####################################################  
 
 @app.route("/")
+@login_required
 def main():
     user = current_user
     if current_user:
@@ -208,15 +210,18 @@ a section uses Rules to Display the values of specific fields, Grouped and
 Sorted.
 '''
 @app.route('/snapshots')
+@login_required
 def list_snapshots():
     pass
 @app.route('/snapshots/<id>')
+@login_required
 def get_snapshot_by_id(id):
     b = 'A'
     s = '72'
 
     pass
 @app.route('/snapshots/create')
+@login_required
 def create_snapshot():
     if request.args:
         '''
@@ -238,6 +243,7 @@ def create_snapshot():
         return jsonify({'status':'arguments required'})
 
 @app.route('/snapshots/<id>/delete')
+@login_required
 def delete_snapshot(id):
     pass
 
@@ -354,7 +360,7 @@ def list_reports():
     return jsonify({"status":"Okay", "reports": [r.name for r in ReportList.reports]})
 
 @app.route("/reports/<name>")
-#@login_required
+@login_required
 def get_report_by_id(name):
     
     report = ReportList.get_by_name(name)
