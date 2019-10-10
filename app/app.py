@@ -5,7 +5,7 @@ import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
-from app.reports import reports
+from app.reports import ReportList
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
@@ -25,7 +25,8 @@ app = Flask(__name__)
 
 app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
-DB.connect(Config.connect_string)
+URL_BY_DEFAULT = 'https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/'
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -38,7 +39,7 @@ login_manager.init_app(app)
 def main():
     user = current_user
     if current_user:
-        return render_template('main.html',myUser=user,reports=reports)
+        return render_template('main.html',myUser=user,reports=ReportList.reports)
     else:
         return redirect(url_for('login'))
 
@@ -350,56 +351,25 @@ def delete_rule(id):
 @app.route("/reports")
 @login_required
 def list_reports():
-    return jsonify({"status":"Okay", "reports":reports})
-
+    return jsonify({"status":"Okay", "reports": [r.name for r in ReportList.reports]})
 
 @app.route("/reports/<name>")
 #@login_required
 def get_report_by_id(name):
-    # check the reports whitelist
-    matches = False
-    report = None
-    form = None
-    for r in reports:
-        if r.name == name:
-            matches = True
-            report = r
-            form = report.form_class()
-    if not matches:
-        abort(400)
-    if request.args:
+    
+    report = ReportList.get_by_name(name)
         
-        #parse the args
-        form = report.form_class(formdata=request.args)
-
-        # Call of the DLX function passing the arguments of the request
-
-        # Assign the result of the search in one variable the result should be a list of list
-
-        # The size of the list should depend of the family report (report name)
-
-        resultsSearch=[
-            ["yls1","yls1","yls1"],
-            ["yls2","yls2","yls2"],
-            ["yls3","yls3","yls3"],
-            ["yls4","yls4","yls4"],
-            ["yls5","yls5","yls5"],
-            ["yls6","yls6","yls6"],
-            ["yls7","yls7","yls7"],
-            ["yls8","yls8","yls8"],
-            ["yls9","yls9","yls9"],
-            ["yls10","yls10","yls10"]
-        ]
-        #Render the form with the values needed
-        return render_template('report.html', report=report, form=form, resultsSearch=resultsSearch)
+    if report is None:
+        abort(400)
+    
+    form = report.form_class(formdata=request.args)
+    
+    if request.args:
+        results = report.execute(request.args)
+        return render_template('report.html', report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
-
-
-@app.route('/_run_report')
-def _run_report():
-    pass
 
 ####################################################
 # START APPLICATION
