@@ -9,6 +9,7 @@ from app.reports import ReportList
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
+from dlx import DB, Bib, Auth
 import time
 
 
@@ -183,6 +184,65 @@ def checkUser():
  
         return redirect(url_for('main'))
 
+####################################################
+# Snapshots MANAGEMENT ROUTES
+####################################################  
+'''
+Snapshots are the starting point of an ITP process. Once the ITP producer has 
+validated the MARC data for the three relevant bodies and their resepective 
+sessions, they will create a snapshot to begin the remaining part of the 
+process.
+
+The three bodies are A/ E/ and S/
+
+The snapshot function (TBC) performs an Extraction of all the records for the 
+three body/session identifiers and Filters the records to include only the 
+fields the ITP report will need. What is saved in the database is the set of 
+extracted and filtered records necessary to proceed.
+
+From a snapshot, the ITP producer may begin assembling the sections that are 
+part of each body/session document. 
+
+So, in modeling terms: a snapshot has 3 documents; a document has many sections;
+a section uses Rules to Display the values of specific fields, Grouped and 
+Sorted.
+'''
+@app.route('/snapshots')
+def list_snapshots():
+    pass
+@app.route('/snapshots/<id>')
+def get_snapshot_by_id(id):
+    b = 'A'
+    s = '72'
+
+    pass
+@app.route('/snapshots/create')
+def create_snapshot():
+    if request.args:
+        '''
+        params = []
+        sessions = request.args.get('sessions').split(',')
+        for s in sessions:
+            params.append(('191','r',s))
+
+        f,s,v = params[0]
+        records = Bib.match_value(f,s,v)
+        results = []
+        for r in records:
+            # do something
+            pass
+        '''
+        
+        return jsonify({'arguments':request.args})
+    else:
+        return jsonify({'status':'arguments required'})
+
+@app.route('/snapshots/<id>/delete')
+def delete_snapshot(id):
+    pass
+
+# do we need a route to update a snapshot? If the incoming data changes enough to 
+# warrant it, perhaps we should just delete the snapshot and start over.
 
 ####################################################
 # SECTIONS MANAGEMENT ROUTES
