@@ -111,7 +111,15 @@ class MissingSubfieldReport(Report):
         
         # list of lists
         return results
-        
+
+class ReportList(object):
+    reports = [
+       MissingFieldReport(),
+       MissingSubfieldReport()
+    ]
+    
+    def get_by_name(name):
+        return next(filter(lambda r: name == r.name, ReportList.reports), None)        
         
 ### utility functions
 
@@ -133,11 +141,3 @@ def _get_body_session(auth):
         session = auth.get_value('190','c')
     
     return (body,session)
-            
-### use for now
-
-class ReportList(object):
-    reports = [
-       MissingFieldReport(),
-       MissingSubfieldReport()
-    ]
