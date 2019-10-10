@@ -55,21 +55,6 @@ class Itpp_snapshot(Document):
 
     meta = {'collection': Config.collection_prefix + 'Itpp_snapshot'}
 
-class Itpp_itp(Document):
-    """
-    This is where the ITP Document building happens. A document is a collection
-    of snapshots (typically three), each with its attendant sections and rules.
-    """
-    name = StringField()
-    created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-    updated = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-    body = StringField()
-    itp_session = StringField()
-    body_session_auth = StringField()
-    sections = EmbeddedDocumentListField(Itpp_section)
-
-    meta = {'collection': Config.collection_prefix + 'Itpp_document' }
-
 class Itpp_rule(EmbeddedDocument):
     '''
     Rule model
@@ -79,7 +64,7 @@ class Itpp_rule(EmbeddedDocument):
     rule_name = StringField()
     process_order = StringField()
     rule_type = StringField() # e.g., group, sort, filter
-    parameters = SortedListField()
+    parameters = ListField()
 
 class Itpp_section(EmbeddedDocument):
     """
@@ -95,3 +80,18 @@ class Itpp_section(EmbeddedDocument):
     rules = EmbeddedDocumentListField(Itpp_rule)
 
     #meta = {'collection': Config.collection_prefix + 'Itpp_section' }
+
+class Itpp_itp(Document):
+    """
+    This is where the ITP Document building happens. A document is a collection
+    of snapshots (typically three), each with its attendant sections and rules.
+    """
+    name = StringField()
+    created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    updated = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    body = StringField()
+    itp_session = StringField()
+    body_session_auth = StringField()
+    sections = EmbeddedDocumentListField(Itpp_section)
+
+    meta = {'collection': Config.collection_prefix + 'Itpp_document' }

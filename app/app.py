@@ -296,7 +296,7 @@ def update_section(id):
         rules = request.form.get('rules')
 
         section.name = name
-        section.itp_body = body
+        section.itp_body = itp_body
         section.itp_session = itp_session
         section.rules = rules
 
