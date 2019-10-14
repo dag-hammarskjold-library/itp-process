@@ -6,7 +6,8 @@ from dlx import DB, marc, MARC, Bib, Auth
 from dlx.query import jmarc as Q
 
 from bson import SON
-
+DB.connect("mongodb://undlFilesAdmin:password@18.235.152.183:8080/?authSource=undlFiles")
+#connect to the DLX DB 
 class Data(object):
     jbib = {
         '_id' : 999,
@@ -1906,8 +1907,15 @@ class Data(object):
         ]
     }    
 
-            
-        
+
+#bibs=Bib.match_id(1161969)
+#for bib in bibs:
+#print(Bib.match_id(1161969).get_values("991"))
+	        
+for field in Bib.match_id(1161969).get_fields('991'):
+    for subfield in field.subfields:
+        print(Bib.serialize_subfield(subfield))
+		
 class Todo(TestCase):
    def setUp(self):
         #DB.connect('mongodb://.../?authSource=dummy',mock=True)

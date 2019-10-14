@@ -3,7 +3,7 @@ import json
 from dlx import DB, Bib, Auth
 import pymongo
 
-# extend the Bib class with itpp serialisation method
+# extend Bib class with itpp serialisation method
 class Bib_itpp (Bib):
     def to_itpp(self, sbflds):
         #temp_lst=[]
@@ -20,7 +20,7 @@ class Bib_itpp (Bib):
     #return temp_lst
         return temp_dict
 
-# 1. records for the ITP e.g. A72
+# 1. records for ITP e.g. A72
 #body=A/; session = 72
 def get_ITPP_Shapshot_records(body, session):
     bibs = Bib.match_fields_or(
@@ -29,7 +29,7 @@ def get_ITPP_Shapshot_records(body, session):
         )
     return bibs
 
-# 2. pull the list of subfields to extract from the section docuement and create sbflds list
+# 2. pull a list of subfields to extract from the section docuement and create sbflds list
 '''
 for doc in rules_coll.find({"$and":[{"body":"A"},{"session":"72"},{"name":"filter fields"}]}):
     itp_bib_fields.extend(doc["parameters"]["actions"]["bibs"])
@@ -39,8 +39,8 @@ set_itp_bib_fields=sorted(set(itp_bib_fields))
 '''
 sbflds=[]
 itpp_fields=[]
-
-# 3. prepare the proper structure of tuples for easier processing e.g.
+f=''
+# 3. prepare a proper structure of tuples for easier processing e.g.
 # [[(035,a)], [(089,a)], [(191,9), (191,a),  (191,b),  (191,c)]]
 for itp_field in sbflds:
     #temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
@@ -54,7 +54,7 @@ for itp_field in sbflds:
         f=itp_field.split("$")[0]
         s_f=itp_field.split("$")[1]
 
-# 4. Create a snapshot and insert it into a mongo DB
+# 4. Create a snapshot ; insert individual docs into a mongo DB
 for bib in get_ITPP_Shapshot_records('A/','72'):
     #bib=Bib.match_id('1161969')
     bib_dict={}
