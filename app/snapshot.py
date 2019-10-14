@@ -67,15 +67,5 @@ for bib in get_ITPP_Shapshot_records('A/','72'):
             field=elem[0]
             sbflds.extend(elem[1])
         bib_dict[field]=bib.to_itpp(sbflds)
-    #itpp_dict_list=[]  
-    #for itpp_subfields in itpp_fields:
-    #    itpp_dict_field={}
-    #    itpp_dict_subfield={}
-    #    for subfield in itpp_subfields:
-    #        itpp_dict_subfield[subfield[1]]=bib.get_value(subfield[0],subfield[1])
-    #    itpp_dict_field[subfield[0]]=itpp_dict_subfield
-    #    itpp_dict_list.insert(len(itpp_dict_list),itpp_dict_field)
-    #for dict in itpp_dict_list:
-    #    bib_dict.update(dict)
-#insert constructed dicts
-    itpp_list.insert(len(itpp_list),bib_dict)
+    
+    #save each record using mongoengine model or insert one in mongoDB
