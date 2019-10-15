@@ -1,0 +1,50 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1000px;
+    }
+</style>
+
+<div class="container customize ">
+
+    <h1 class="mt-1"> Section creation </h1>
+
+    <hr>
+
+    <form class="mt-5 orm-signin" method="POST" action="{{url_for('create_section')}}">
+        <div class="row">
+            <div class="col-sm">
+                <div class="form-group">
+                    <label for="rule_name">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Enter the name of the section">
+                </div>
+                <div class="form-group">
+                    <label for="process_order">Section Order</label>
+                    <input type="text" class="form-control" id="section_order" name="section_order" placeholder="Enter the section order">
+                </div>
+                <div class="form-group">
+                    <label for="process_order">Data source</label>
+                    <input type="text" class="form-control" id="data_source" name="data_source" placeholder="Enter the data source">
+                </div>
+                <div class="form-group">
+                    <label for="process_order">Rules</label>
+                    <input type="text" class="form-control" id="rules" name="rules" placeholder="Enter the rules">
+                </div>
+
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mb-5">Create the rule</button>
+
+    </form>
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href="{{url_for('list_sections')}}"> List of Section </a>
+    </div>
+
+</div>
+
+
+
+{% endblock %}
