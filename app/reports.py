@@ -58,13 +58,9 @@ class MissingFieldReport(Report):
         tag = args['field']
         
         bibs = Bib.match(
-            # these actaully are not necessary because ITS and VOT records don't have 191,
-            # so they're already exluded
-            #Matcher('930',('a','VOT'),modifier='not'),
-            #Matcher('930',('a','ITS'),modifier='not'),
-            
             Matcher('191',('b',body),('c',session)),
-            Matcher(tag,modifier='not_exists')
+            Matcher(tag,modifier='not_exists'),
+            project=['001','191','930']
         )
         
         results = []
@@ -101,7 +97,8 @@ class MissingSubfieldReport(Report):
         
         bibs = Bib.match(
             Matcher('191',('b',body),('c',session)),
-            Matcher(tag,(subfield,Regex('^.')),modifier='not')
+            Matcher(tag,(subfield,Regex('^.')),modifier='not'),
+            project=['001','191','930']
         )
         
         results = []
