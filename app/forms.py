@@ -36,7 +36,10 @@ class MissingFieldReportForm(FlaskForm):
                                         ('955','955'),('967','967'),('991','991'),('992','992'),
                                         ('993','993'),('995','995'),('996','996'),('999','999')]
     ,validators=[DataRequired()])
-
+    
+class SelectAuthority(FlaskForm):
+    authority = StringField('Authority', validators=[DataRequired()])
+  
 class MissingSubfieldReportForm(FlaskForm):
     authority = StringField('Authority ID', validators=[DataRequired()])
     field = SelectField('Field',choices=[
