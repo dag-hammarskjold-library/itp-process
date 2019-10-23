@@ -10,8 +10,8 @@ git+git://github.com/dag-hammarskjold-library/dlx
 docutils==0.14
 durationpy==0.5
 Flask==1.0.2
-flask-login==0.4.1
-flask-wtf==0.14.2
+Flask-Login==0.4.1
+Flask-WTF==0.14.2
 future==0.16.0
 hjson==3.0.1
 idna==2.8
@@ -41,4 +41,5 @@ Unidecode==1.0.23
 urllib3==1.24.2
 Werkzeug==0.15.6
 wsgi-request-logger==0.4.6
-zappa==0.47.1
+WTForms==2.2.1
+zappa==0.48.2
