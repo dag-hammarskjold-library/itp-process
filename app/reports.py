@@ -1,7 +1,7 @@
 from app.config import Config
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
 from dlx import DB, Bib, Auth
-from dlx.marc.record import Matcher
+from dlx.marc import Matcher
 from bson.regex import Regex
 
 DB.connect(Config.connect_string)
