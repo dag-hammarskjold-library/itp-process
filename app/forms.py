@@ -2,6 +2,18 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField,SelectField
 from wtforms.validators import DataRequired
 
+class SectionForm(FlaskForm):
+    '''
+    name = request.form.get('section_name')
+    itp_body = request.form.get('body')
+    itp_session = request.form.get('session')
+    rules = request.form.get('rules')
+    '''
+    name = StringField('Section Name', validators=[DataRequired()])
+    itp_body = StringField('ITP Body', validators=[DataRequired()])
+    itp_session = StringField('ITP Session', validators=[DataRequired()])
+    rules = SelectField('Rules')
+
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])

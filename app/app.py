@@ -257,8 +257,11 @@ def delete_snapshot(id):
 @app.route("/sections")
 @login_required
 def list_sections():
-    sections = Itpp_section.objects
-    return render_template('listeprocess.html', sections=sections)
+    try:
+        sections = Itpp_section.objects
+    except:
+        sections = []
+    return render_template('listesection.html', sections=sections)
 
 @app.route("/sections/new", methods=['GET', 'POST'])
 @login_required
@@ -279,13 +282,18 @@ def create_section():
             flash("An error occurred trying to create the section. Please review the information and try again.")
             return redirect(url_for('create_section'))
     else:
-        return render_template('createprocess.html')
+        return render_template('createsection.html')
 
 @app.route("/sections/<id>")
 @login_required
 def get_section_by_id(id):
-    # To do
-    return jsonify({"status":"Okay"})
+    try:
+        section = Itpp_section.objects(id=id)[0]
+    except IndexError:
+        flash("The section was not found.")
+        return redirect(url_for('list_sections'))
+
+    return render_template('createsection.html')
 
 @app.route("/sections/<id>/update")
 @login_required
