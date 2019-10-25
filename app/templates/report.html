@@ -42,7 +42,7 @@
                     </div>
                     {% endfor %} {{ form.hidden_tag() }}
                 </div>
-                <button id="getResults" type="submit" class="btn btn-primary mb-5" onclick="loading();">Show Results </button>
+                <button id="getResults" type="submit" class="btn btn-primary mb-5" onclick="loading();" disabled>Show Results </button>
             </form>
 
         </div>
@@ -82,12 +82,9 @@
 </div>
 
 <script type="text/javascript">
-    // <![CDATA[
-    function loading() {
+   function loading() {
         $("#loading").show();
-        //$("#content").hide();
-    }
-    // ]]>
+  }
 </script>
 <script>
 var someInput = document.querySelector('.form-control');
@@ -95,4 +92,16 @@ someInput.addEventListener('input', function () {
     someInput.value = someInput.value.toUpperCase();
 });
 </script>
+<script type="text/javascript">
+var someInput = document.querySelector('.form-control');
+    someInput.addEventListener('input', function(){
+        if(this.value.length > 0) { 
+            document.getElementById('getResults').disabled = false; 
+        } else { 
+            document.getElementById('getResults').disabled = true;
+        }
+    });
+</script>
+
+
 {% endblock %}
