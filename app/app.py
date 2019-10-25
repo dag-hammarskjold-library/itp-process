@@ -375,9 +375,10 @@ def get_report_by_id(name):
             results = report.execute(request.args)
         except:
             results = []
-            flash('Session authority not found')
+            #flash('Session authority not found')
+            errorMail='Session authority not found'
             
-        return render_template('report.html', report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT)
+        return render_template('report.html', report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT,errorMail=errorMail)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)

@@ -50,7 +50,11 @@
     </div>
     <div class="container customize1 shadow">
         <div class="container mt-4 mb-4" id="results">
+            {% if not errorMail %}
             <h3> <span class="badge badge-pill badge-primary">{{recordNumber}}</span> Result(s) </h3>
+            {% else %}    
+            <h5> <span class="alert alert-danger" role="alert">{{errorMail}} </span> </h5>
+            {% endif %}
             <hr>
             <table id="myTable" class="table table-striped sortable">
                 <thead>
@@ -72,6 +76,7 @@
             </table>
         </div>
     </div>
+
     <br>
     <div id="output"></div>
     <br>
