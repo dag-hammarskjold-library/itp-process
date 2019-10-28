@@ -371,6 +371,8 @@ def get_report_by_id(name):
     form = report.form_class(formdata=request.args)
     
     if request.args:
+        errorMail = None
+        
         try:
             results = report.execute(request.args)
         except:
