@@ -350,6 +350,10 @@ class AuthNotFound(Exception):
     def __init__(self,msg):
         super().__init__(msg)
 
+class InvalidInput(Exception):
+    def __init__(self,msg):
+        super().__init__(msg)
+
 ### utility functions
 
 def _get_body_session(string):
@@ -357,8 +361,11 @@ def _get_body_session(string):
         auth_id = int(string)
         auth = Auth.match_id(auth_id)
     except ValueError:
-        body,session = string.split('/')
-        auth = next(Auth.match(Matcher('190',('b',body+'/'),('c',session))),None)
+        try:
+            body,session = string.split('/')
+            auth = next(Auth.match(Matcher('190',('b',body+'/'),('c',session))),None)
+        except ValueError:
+            raise InvalidInput('Invalid session')
         
     if auth is None:
         raise AuthNotFound('Session authority not found')
