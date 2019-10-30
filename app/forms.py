@@ -1,18 +1,24 @@
 from flask_wtf import FlaskForm
+from flask_mongoengine.wtf import model_form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField,SelectField
 from wtforms.validators import DataRequired
+from app.models import Itpp_itp, Itpp_section, Itpp_rule
 
-class SectionForm(FlaskForm):
-    '''
-    name = request.form.get('section_name')
-    itp_body = request.form.get('body')
-    itp_session = request.form.get('session')
-    rules = request.form.get('rules')
-    '''
-    name = StringField('Section Name', validators=[DataRequired()])
-    itp_body = StringField('ITP Body', validators=[DataRequired()])
-    itp_session = StringField('ITP Session', validators=[DataRequired()])
-    rules = SelectField('Rules')
+#class SectionForm(FlaskForm):
+'''
+name = request.form.get('section_name')
+itp_body = request.form.get('body')
+itp_session = request.form.get('session')
+rules = request.form.get('rules')
+'''
+#name = StringField('Section Name', validators=[DataRequired()])
+#itp_body = StringField('ITP Body', validators=[DataRequired()])
+#itp_session = StringField('ITP Session', validators=[DataRequired()])
+#rules = SelectField('Rules')
+
+ItpForm = model_form(Itpp_itp)
+SectionForm = model_form(Itpp_section)
+RuleForm = model_form(Itpp_rule)
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])

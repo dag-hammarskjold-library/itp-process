@@ -4,7 +4,7 @@ from requests import get
 import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
-from app.forms import LoginForm
+from app.forms import LoginForm, SectionForm
 from app.reports import ReportList
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -266,6 +266,7 @@ def list_sections():
 @app.route("/sections/new", methods=['GET', 'POST'])
 @login_required
 def create_section():
+    form = SectionForm()
     if request.method == 'POST':
         # Get, sanitize, and validate the data
         name = request.form.get('section_name')
@@ -282,7 +283,7 @@ def create_section():
             flash("An error occurred trying to create the section. Please review the information and try again.")
             return redirect(url_for('create_section'))
     else:
-        return render_template('createsection.html')
+        return render_template('createsection.html', form=form)
 
 @app.route("/sections/<id>")
 @login_required
