@@ -5,7 +5,7 @@ import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
-from app.reports import ReportList, AuthNotFound
+from app.reports import ReportList, AuthNotFound, InvalidInput
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
@@ -371,17 +371,20 @@ def get_report_by_id(name):
     form = report.form_class(formdata=request.args)
     
     if request.args:
-        errorMail = None
+        warning = None
         
         try:
             results = report.execute(request.args)
+        except InvalidInput:
+            results = []
+            warning = 'Invalid input'
         except AuthNotFound:
             results = []
-            errorMail='Session authority not found'
+            warning = 'Session authority not found'
         except:
             raise
             
-        return render_template('report.html', report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT,errorMail=errorMail)
+        return render_template('report.html', report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT,errorMail=warning)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
