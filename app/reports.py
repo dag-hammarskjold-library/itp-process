@@ -54,7 +54,7 @@ class BibMissingField(Report):
         
         bibs = Bib.match(
             Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a','UND')),
+            Matcher('930',('a',Regex('^UND'))),
             Matcher(self.tag,modifier='not_exists'),
             project=[f[0] for f in self.output_fields]
         )
@@ -85,7 +85,7 @@ class BibMissingSubfield(Report):
         
         bibs = Bib.match(
             Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a','UND')),
+            Matcher('930',('a',Regex('^UND'))),
             Matcher(self.tag,(self.code,Regex('^.*')),modifier='not'),
             project=[f[0] for f in self.output_fields]
         )
@@ -291,7 +291,7 @@ class ReportList(object):
         # Missing subfield - 191$9
         BibMissingSubfield('191','9'),
         # Missing subfield - 991$d
-        BibMissingSubfield('191','d'),
+        BibMissingSubfield('991','d'),
         
         # Missing subfield value - 991$f X27
         # Missing subfield value - 991$z I
