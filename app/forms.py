@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
 from flask_mongoengine.wtf import model_form
-from wtforms import StringField, PasswordField, BooleanField, SubmitField,SelectField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, SelectMultipleField
+from wtforms.fields import SelectFieldBase
 from wtforms.validators import DataRequired
-from app.models import Itpp_itp, Itpp_section, Itpp_rule
+#from app.models import Itpp_itp, Itpp_section, Itpp_rule, Itpp_snapshot
 
 #class SectionForm(FlaskForm):
 '''
@@ -16,9 +17,20 @@ rules = request.form.get('rules')
 #itp_session = StringField('ITP Session', validators=[DataRequired()])
 #rules = SelectField('Rules')
 
-ItpForm = model_form(Itpp_itp)
-SectionForm = model_form(Itpp_section)
-RuleForm = model_form(Itpp_rule)
+#ItpForm = model_form(Itpp_itp)
+#SectionForm = model_form(Itpp_section, field_args={'rules': {SelectField(choices=Itpp_snapshot.objects)}})
+#RuleForm = model_form(Itpp_rule)
+
+class SectionForm(FlaskForm):
+    
+    name = StringField(validators=[DataRequired])
+    section_order = StringField()
+    data_source = SelectField(choices=[])
+    rules = SelectMultipleField(choices=[])
+
+    def set_choices(self, field, data):
+        this_f = getattr(self, field)
+        this_f.choices = data
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])

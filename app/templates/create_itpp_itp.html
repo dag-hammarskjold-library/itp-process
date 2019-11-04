@@ -1,0 +1,74 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1000px;
+    }
+</style>
+
+<div class="container customize ">
+
+    <h1 class="mt-1"> ITP Process - ITP Creation </h1>
+
+    <hr>
+
+    <form class="mt-5 orm-signin" method="POST" action="{{url_for('create_itpp_itp')}}">
+        <div class="row">
+            <div class="col-sm">
+                {% for field in form if field.widget.input_type != 'hidden'%}
+                <div class="form-group col col-xs-12">
+                    {{ field.label }} {{ field(class="form-control") }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if sections %}
+        <h3>Sections</h3>
+        <div class="row my-2">
+            <div class="col-sm">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Section Order</th>
+                            <th scope="col">Data Source</th>
+                            <th scope="col">Rules</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for section in sections %}
+                        <tr>
+                            <td>{{ section.name }}</td>
+                            <td>{{ section.section_order }}</td>
+                            <td>{{ section.data_source }}</td>
+                            <td>{{ section.rules|length }}</td>
+                            <td><i class="fas fa-edit"><a href="{{url_for('update_section', id=section.id)}}">  Edit </a></i> | <i class="fas fa-trash-alt"><a href="{{url_for('delete_section', itp_id=itp_id, section_id=section.id)}}"> Delete </a></i></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row my-2">
+            <div class="col-sm">
+                <div class="col col-xs-12">
+                    <button type="submit" class="btn btn-primary mb-5">Submit</button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href="{{url_for('list_itpp_itps')}}"> List of ITPP ITPs </a>
+    </div>
+
+</div>
+
+
+
+{% endblock %}

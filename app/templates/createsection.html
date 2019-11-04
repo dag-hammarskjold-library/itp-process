@@ -23,7 +23,23 @@
                 {% endfor %}
             </div>
         </div>
-        <button type="submit" class="btn btn-primary mb-5">Create the rule</button>
+        <div class="row">
+            <div class="col-sm">
+                <div class="col col-xs-12">
+                    <ul class="list-group list-group-horizontal">
+                        <li class="list-group-item"><a href="{{url_for('create_snapshot')}}">Create a Snapshot</a></li>
+                        <li class="list-group-item"><a href="{{url_for('create_rule')}}">Create a Rule</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="row my-2">
+            <div class="col-sm">
+                <div class="col col-xs-12">
+                    <button type="submit" class="btn btn-primary mb-5">Create the Section</button>
+                </div>
+            </div>
+        </div>
 
     </form>
     <hr>

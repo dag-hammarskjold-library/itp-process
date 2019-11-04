@@ -86,12 +86,18 @@ class Itpp_itp(Document):
     This is where the ITP Document building happens. A document is a collection
     of snapshots (typically three), each with its attendant sections and rules.
     """
-    name = StringField()
+    name = StringField(max_length=100)
     created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
     updated = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-    body = StringField()
-    itp_session = StringField()
-    body_session_auth = StringField()
+    body = StringField(max_length=10)
+    itp_session = StringField(max_length=10)
+    body_session_auth = StringField(max_length=32)
     sections = EmbeddedDocumentListField(Itpp_section)
 
     meta = {'collection': Config.collection_prefix + 'Itpp_document' }
+
+    def delete_section(self, id):
+        this_section = next(filter(lambda x: x.id == id, self.sections),None)
+        if this_section is not None:
+            self.sections.pop(this_section)
+            self.save()
