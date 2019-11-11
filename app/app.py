@@ -5,10 +5,11 @@ import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
-from app.reports import reports
+from app.reports import ReportList, AuthNotFound, InvalidInput
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
+from dlx import DB, Bib, Auth
 import time
 
 
@@ -24,19 +25,25 @@ app = Flask(__name__)
 
 app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
+URL_BY_DEFAULT = 'https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/'
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = "login"
+login_manager.login_message =""
+
 
 ####################################################
 # BASIC ROUTINES AND ROUTES
 ####################################################  
 
 @app.route("/")
+@login_required
 def main():
     user = current_user
     if current_user:
-        return render_template('main.html',myUser=user)
+        return render_template('main.html',myUser=user,reports=ReportList.reports)
     else:
         return redirect(url_for('login'))
 
@@ -181,6 +188,80 @@ def checkUser():
  
         return redirect(url_for('main'))
 
+####################################################
+# Snapshots MANAGEMENT ROUTES
+####################################################  
+'''
+Snapshots are the starting point of an ITP process. Once the ITP producer has 
+validated the MARC data for the three relevant bodies and their resepective 
+sessions, they will create a snapshot to begin the remaining part of the 
+process.
+
+The three bodies are A/ E/ and S/
+
+The snapshot function (TBC) performs an Extraction of all the records for the 
+three body/session identifiers and Filters the records to include only the 
+fields the ITP report will need. What is saved in the database is the set of 
+extracted and filtered records necessary to proceed.
+
+From a snapshot, the ITP producer may begin assembling the sections that are 
+part of each body/session document. 
+
+So, in modeling terms: a snapshot has 3 documents; a document has many sections;
+a section uses Rules to Display the values of specific fields, Grouped and 
+Sorted.
+'''
+@app.route('/snapshots')
+@login_required
+def list_snapshots():
+    pass
+@app.route('/snapshots/<id>')
+@login_required
+def get_snapshot_by_id(id):
+    b = 'A'
+    s = '72'
+
+    pass
+@app.route('/snapshots/create')
+@login_required
+def create_snapshot():
+    if request.args:
+        '''
+        params = []
+        sessions = request.args.get('sessions').split(',')
+        for s in sessions:
+            params.append(('191','r',s))
+
+        f,s,v = params[0]
+        records = Bib.match_value(f,s,v)
+        results = []
+        for r in records:
+            # do something
+            pass
+        '''
+        
+        return jsonify({'arguments':request.args})
+    else:
+        return jsonify({'status':'arguments required'})
+
+@app.route('/snapshots/<id>/delete')
+@login_required
+def delete_snapshot(id):
+    pass
+
+@app.route("/displaySnapshot")
+@login_required
+def displaySnapshot():
+    return render_template('snapshot.html')
+
+@app.route("/executeSnapshot",methods=["POST"])
+@login_required
+def executeSnapshot():
+    flash('The snapshot execution process is in progress !!! ','message')
+    # the code of the execution should be here
+    # don't forget to return the number of records created
+    return redirect(url_for('main'))
+
 
 ####################################################
 # SECTIONS MANAGEMENT ROUTES
@@ -234,7 +315,7 @@ def update_section(id):
         rules = request.form.get('rules')
 
         section.name = name
-        section.itp_body = body
+        section.itp_body = itp_body
         section.itp_session = itp_session
         section.rules = rules
 
@@ -289,37 +370,37 @@ def delete_rule(id):
 @app.route("/reports")
 @login_required
 def list_reports():
-    return jsonify({"status":"Okay", "reports":reports})
-
+    return jsonify({"status":"Okay", "reports": [r.name for r in ReportList.reports]})
 
 @app.route("/reports/<name>")
-#@login_required
+@login_required
 def get_report_by_id(name):
-    # check the reports whitelist
-    matches = False
-    report = None
-    form = None
-    for r in reports:
-        if r.name == name:
-            matches = True
-            report = r
-            form = report.form_class()
-    if not matches:
+    
+    report = ReportList.get_by_name(name)
+        
+    if report is None:
         abort(400)
+    
+    form = report.form_class(formdata=request.args)
+    
     if request.args:
-        #parse the args
-        form = report.form_class(formdata=request.args)
-        return render_template('report.html', report=report, form=form)
+        warning = None
+        
+        try:
+            results = report.execute(request.args)
+        except InvalidInput:
+            results = []
+            warning = 'Invalid input'
+        except AuthNotFound:
+            results = []
+            warning = 'Session authority not found'
+        except:
+            raise
+            
+        return render_template('report.html', report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT,errorMail=warning)
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
-
-@app.route('/_run_report')
-def _run_report():
-    '''
-    This is intended to be run via AJAX call
-    '''
-    return jsonify({"results":"foo"})
 
 ####################################################
 # START APPLICATION

@@ -7,7 +7,7 @@
 </style>
 
 <div class="container customize ">
-    <h3>List of Rule <span class="badge badge-pill badge-primary">{{myRecord}}</span></h3>
+    <h3>List of Section <span class="badge badge-pill badge-primary">{{myRecord}}</span></h3>
     <hr>
     <div>
         <!-- Simple Message -->
@@ -25,19 +25,19 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th scope="col">Rule Name</th>
-                    <th scope="col">Process Order</th>
-                    <th scope="col">Rule Type</th>
-                    <th scope="col">Parameters</th>
+                    <th scope="col">Section Name</th>
+                    <th scope="col">Section Order</th>
+                    <th scope="col">Data Source</th>
+                    <th scope="col">Rules</th>
                 </tr>
             </thead>
             <tbody>
-                {% for Rule in Rules %}
+                {% for Section in Sections %}
                 <tr>
-                    <td>{{ Rule.rule_name }}</td>
-                    <td>{{ Rule.process_order }}</td>
-                    <td>{{ Rule.rule_type }}</td>
-                    <td>{{ Rule.parameters }}</td>
+                    <td>{{ Section.name }}</td>
+                    <td>{{ Section.section_order }}</td>
+                    <td>{{ Section.data_source }}</td>
+                    <td>{{ Section.rules }}</td>
                     <td><i class="fas fa-edit"><a href="">  Edit </a></i> | <i class="fas fa-trash-alt"><a href=""> Delete </a></i></td>
                 </tr>
                 {% endfor %}

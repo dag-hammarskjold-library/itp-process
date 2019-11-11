@@ -50,8 +50,6 @@
 
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" integrity="sha384-gfdkjb5BdAXd+lj+gudLWI+BXq4IuLW5IT+brZEZsLFm++aCMlF1V92rMkPaX4PP" crossorigin="anonymous">
 
-
-
     <style>
         .bd-placeholder-img {
             font-size: 1.125rem;
@@ -76,6 +74,7 @@
     <!-- Custom js 01 -->
 
     <script src="{{url_for('static',filename='js/custom.js')}}"></script>
+
 
 </head>
 
@@ -104,17 +103,13 @@
 ================================================== -->
 
     <main role="main" class="flex-shrink-0 mt-5">
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-            <ul>
-                {% for message in messages %}
-                <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-            {% endwith %}
-
-        {% block content %} {% endblock %}
+        {% with messages = get_flashed_messages() %} {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %} {% endwith %} {% block content %} {% endblock %}
 
     </main>
 

@@ -6,63 +6,107 @@
         width: 1000px;
     }
 </style>
-<div class="container customize shadow">
-    <div class="container mt-4 mb-4">
-        <h1>{{report['title']}}</h1>
-        <hr>
+<style type="text/css">
+    .customize1 {
+        width: 1000px;
+    }
+</style>
+<style>
+    div#loading {
+        position: fixed;
+        width: 1000px;
+        height: 10000px;
+        display: none;
+        margin-left: auto;
+        margin-right: auto;
+        opacity: 0.5;
+    }
+</style>
+<script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+<div id="loading">
+    <img src="{{ url_for('static', filename='img/ajax-loader.gif') }}">
+</div>
+<div id="content">
+    <div class="container customize shadow">
+        <div class="container mt-4 mb-4">
+            <h1>{{report['title']}}</h1>
+            <hr>
 
-        <h5>{{report['description']}}</h5>
+            <h5>{{report['description']}}</h5>
 
-        <form class="mt-3">
-            <div class="row">
-                {% for field in form if field.widget.input_type != 'hidden'%}
-                <div class="form-group col">
-                    {{ field.label }} {{ field(size=32) }}
+            <form class="mt-3">
+                <div class="row">
+                    {% for field in form if field.widget.input_type != 'hidden'%}
+                    <div class="form-group col col-xs-12">
+                        {{ field.label }} {{ field(class="form-control") }}
+                    </div>
+                    {% endfor %} {{ form.hidden_tag() }}
                 </div>
-                {% endfor %}
-                {{ form.hidden_tag() }}
-            </div>
-            <button id="getResults" type="submit" class="btn btn-primary mb-5">Show Results</button>
-        </form>
+                <button id="getResults" type="submit" class="btn btn-primary mb-5" onclick="loading();" disabled>Show Results </button>
+            </form>
+
+        </div>
+
     </div>
-</div>
-<div class="container customize shadow">
-    <div class="container mt-4 mb-4" id="results">
-        <h3> Result(s) </h3>
+    <div class="container customize1 shadow">
+        <div class="container mt-4 mb-4" id="results">
+            {% if not errorMail %}
+            <h3> <span class="badge badge-pill badge-primary">{{recordNumber}}</span> Result(s) </h3>
+            {% else %}    
+            <h5> <span class="alert alert-danger" role="alert">{{errorMail}} </span> </h5>
+            {% endif %}
+            <hr>
+            <table id="myTable" class="table table-striped sortable">
+                <thead>
+                    <tr>
+                        <th scope="col">Record Type</th>
+                        <th scope="col">Record ID</th>
+                        <th scope="col">Document Symbol</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in resultsSearch %}
+                    <tr class="item">
+                        <td>{{result[0]}}</td>
+                        <td>{{result[1]}}</td>
+                        <td><span><a href='{{url+result[2]}}' target="_blank">{{result[2]}}</a></strong></span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <br>
+    <div id="output"></div>
+    <br>
+    <div class="container">
         <hr>
-        <table id="myTable" class="table">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Record Type</th>
-                    <th scope="col">Bib#</th>
-                    <th scope="col">Document Symbol</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for result in results %}
-                <tr>
-                    <th scope="row">1</th>
-                    <td>Bib</td>
-                    <td>1042980</td>
-                    <td>@A/2015/Add.1</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <a href="{{url_for('main')}}"> Go back to the menu </a>
     </div>
-</div>
-<br>
-<div class="container">
-    <hr>
-    <a href="{{url_for('main')}}"> Go back to the menu </a>
 </div>
 
 <script type="text/javascript">
-    $('#getResults').addEventListener("click", function(e){ 
-        e.preventDefault();
-        // Use the form fields to call /_run_report and get json results
+   function loading() {
+        $("#loading").show();
+  }
+</script>
+<script>
+var someInput = document.querySelector('.form-control');
+someInput.addEventListener('input', function () {
+    someInput.value = someInput.value.toUpperCase();
+});
+</script>
+<script type="text/javascript">
+var someInput = document.querySelector('.form-control');
+    someInput.addEventListener('input', function(){
+        if(this.value.length > 0) { 
+            document.getElementById('getResults').disabled = false; 
+        } else { 
+            document.getElementById('getResults').disabled = true;
+        }
     });
 </script>
+
 
 {% endblock %}
