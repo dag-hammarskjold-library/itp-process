@@ -1,3 +1,4 @@
+import logging
 from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from requests import get
@@ -6,6 +7,7 @@ from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
 from app.reports import ReportList, AuthNotFound, InvalidInput
+from app.snapshot import Snapshot
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import DevelopmentConfig as Config
@@ -257,7 +259,38 @@ def displaySnapshot():
 @app.route("/executeSnapshot",methods=["POST"])
 @login_required
 def executeSnapshot():
-    flash('The snapshot execution process is in progress !!! ','message')
+    form = "Select Authority"
+    number=0
+    snapshot=Snapshot(request.args)
+    #app.logger.info(request.form.get("authority"))    
+    print("body = "+snapshot.body)
+    print("and session = "+snapshot.session)
+    if snapshot is None:
+        print("400")
+        abort(400)
+    if request.args:
+        warning = None
+        print("just before execute")
+        try:
+            number = snapshot.execute(request.args)
+            print("No "+ str(number))
+        except InvalidInput:
+            number=0
+            warning = 'Invalid input'
+        except AuthNotFound:
+            number=0
+            warning = 'Session authority not found'
+        except:
+            raise
+        flash('The snapshot execution process is in progress !!! ','message')    
+        return render_template('snapshot.html', snapshot=snapshot, form=form, recordNumber=number,url=URL_BY_DEFAULT,errorMail=warning)
+    else:
+        results = []        
+        return render_template('snapshot.html', snapshot=snapshot, form=form)    
+
+
+
+
     # the code of the execution should be here
     # don't forget to return the number of records created
     return redirect(url_for('main'))

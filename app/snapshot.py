@@ -1,118 +1,44 @@
 import re
 import json
-from config import Config
+from app.config import Config
+from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
 from dlx import DB
 from dlx.marc import Bib, Auth, Matcher, OrMatch
+from app.reports import AuthNotFound, InvalidInput, _get_body_session
 import pymongo
-import reports
+from pymongo import MongoClient
 
 DB.connect(Config.connect_string)
+db_client=MongoClient(Config.connect_string)
+db=db_client['undlFiles']
+rules_coll = db['itpp_rules']
+snapshot_coll=db['itpp_snapshot_test']
+itp_bib_fields=[]
 
-
-# extend Bib class with itpp serialisation method
-class Bib_itpp (Bib):
-    def to_itpp(self, sbflds):
-        #temp_lst=[]
-        for field in self.get_fields():
-            temp_dict={}
-            for subfield in field.subfields:
-                for k,v in self.serialize_subfield(subfield).items():
-                    try:
-                        if k in sbflds:
-                            temp_dict[k]= v
-                    except:
-                        temp_dict[k]= v
-        #temp_lst.append(temp_dict)
-    #return temp_lst
-        return temp_dict
-
-# 1. records for ITP e.g. A72
-#body=A/; session = 72
 '''
-def get_ITPP_Shapshot_records(body, session, lst_fields):
-    bibs = Bib.match(
-    OrMatch(
-        Matcher('191',('b',body+'/'),('c',session)),
-        Matcher('791',('b',body+'/'),('c',session))
-    ),
-        project=lst_fields
-)
-    return bibs
-
-#print(len(list(get_ITPP_Shapshot_records('A','72'))))
+def _get_body_session(string):
+    try:
+        auth_id = int(string)
+        auth = Auth.match_id(auth_id)
+    except ValueError:
+        try:
+            body,session = string.split('/')
+            auth = next(Auth.match(Matcher('190',('b',body+'/'),('c',session))),None)
+        except ValueError:
+            raise InvalidInput('Invalid session')
+        
+    if auth is None:
+        raise AuthNotFound('Session authority not found')
+    else:
+        body = auth.get_value('190','b')
+        session = auth.get_value('190','c')
+        
+    return (body,session)
 '''
-# 2. pull a list of subfields to extract from the section docuement and create sbflds list
 
-for doc in rules_coll.find({"$and":[{"body":"A"},{"session":"72"},{"name":"filter fields"}]}):
-    itp_bib_fields.extend(doc["parameters"]["actions"]["bibs"])
-    #itp_auth_fields.extend(doc["parameters"]["actions"]["auths"])
-
-set_itp_bib_fields=sorted(set(itp_bib_fields))
-
-sbflds=[]
-itpp_fields=[]
-f=''
-
-# 3. prepare a proper structure of tuples for easier processing e.g.
-# [[(035,a)], [(089,a)], [(191,9), (191,a),  (191,b),  (191,c)]]
-for itp_field in set_itp_bib_fields:
-    #temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
-    if itp_field !="001":
-        if itp_field.split("$")[0] !=f:
-            temp_f=[]
-            temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
-            itpp_fields.insert(len(itpp_fields),temp_f)
-        else:
-            temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
-        f=itp_field.split("$")[0]
-        s_f=itp_field.split("$")[1]
-
-#lsit of fields for projectsions for Matcher object query
-list_of_fields=[t[0] for t in sbflds]        
-list_of_fields =['001','035','089','191','239','245','249','269','495','515','520','580','591','592','598','599','700','711', '791', '930', '949', '991', '992', '995','996']
-
-''' 4. Create a snapshot ; insert individual docs into a mongo DB
-for bib in get_ITPP_Shapshot_records('A','72',list_of_fields ):
-    #bib=Bib.match_id('1161969')
-    bib_dict={}
-    bib_dict["record_type"]="bib"
-    bib_dict["record_id"]=bib.id
-    for itpp_field_subfields in itpp_fields:
-        #flds=[]
-        sbflds=[]
-        for elem in itpp_field_subfields:
-            field=elem[0]
-            sbflds.extend(elem[1])
-        bib_dict[field]=bib.to_itpp(sbflds)
-        print(bib_dict)
-''' 
-    # 5. save each record using mongoengine model or insert one in mongoDB
-
-    class Snapshot(object):
-    def __init__(self):
-        # these attributes must be implmeted by the subclass
-        self.name = None
-        self.created = None
-        self.body_session_auth = None
-        self.record = None
-        self.form_class = None
-        self.output_subfields=output_subfields
-        self.expected_params=None
-
-    def validate_args(self,args):
-        for param in self.expected_params:
-            if param not in args.keys():
-                raise Exception('Param "{}" not found'.format(param))
-        
-    def execute(self,args):
-        self.validate_args(args)
-        
-        # todo
-        # generic execution
-    
-    # for individual bib retrieve all subfields and then in this function filter out all not in the sbflds
-    def list_of_subfields(self, bib, field, sbflds):
+def _list_of_subfields(bib, field, sbflds):
     temp_lst=[]
+    
     for field in bib.get_fields(field):
         temp_dict={}
         for subfield in field.subfields:
@@ -122,44 +48,69 @@ for bib in get_ITPP_Shapshot_records('A','72',list_of_fields ):
         temp_lst.append(temp_dict)
     return temp_lst
 
+class Snapshot(object):
+    def __init__(self,args):
+        # these attributes must be implmeted by the subclass
+        self.name = None
+        self.title = None
+        self.description = "New Snapshot"
+        #self.category = None
+        self.form_class = SelectAuthority
+        self.expected_params = ["authority"]
+        #self.DB=DB.connect(Config.connect_string)
+        #self.db_client=MongoClient(Config.connect_string)
+        #self.db=db_client['undlFiles']
+        #self.rules_coll = db['itpp_rules']
+        #self.snapshot_coll=db['itpp_snapshot_test']
+        #self.stored_criteria = None
+        #self.output_fields = None
+        self.body, self.session=_get_body_session(args['authority'])
+        #self.session=_get_body_session(args['authority'])
 
-        class GA_snapshot(Snapshot):
-        def __init__(self):
-            #super().__init__(self)
-            self.name = "General Assembly ITP Snapshot"
-            self.created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-            self.body_session_auth = StringField()
-            self.record = DictField()
-            self.form_class = GASnapshotForm
-            self.expected_params = ['authority', 'fields']
-            self.output_subfields = [
-                ('035','a'),
-                ('089','a'),
-                ('191','9'),
-                ('191','a'),
-                ('191','b'),
-                ('191','c')
-                ('930','a'),
-            ]
-            # list of fields needed for GA ITPs
-
-        
-    # overrides parent method    
+          
+    def validate_args(self,args):
+        for param in self.expected_params:
+            if param not in args.keys():
+                raise Exception('Expected param "{}" not found'.format(param))
+            
     def execute(self,args):
+        itp_bib_fields=[]
         self.validate_args(args)
-        
-        auth = _get_auth(args['authority'])
-        body,session = _get_body_session(auth)
+        body,session = _get_body_session(args['authority'])
+        print("body = "+body)
+        i=0
+        #1. get the list of fields for the ITP 
+        for doc in self.rules_coll.find({"$and":[{"body":body},{"session":session},{"name":"filter fields"}]}):
+            itp_bib_fields.extend(doc["parameters"]["actions"]["bibs"])
+        set_itp_bib_fields=sorted(set(itp_bib_fields))
+                
+        # 2. prepare a proper structure of tuples for easier processing e.g.
+        # [[(035,a)], [(089,a)], [(191,9), (191,a),  (191,b),  (191,c)]]
+        sbflds=[]
+        itpp_fields=[]
+        f=''
+        for itp_field in set_itp_bib_fields:
+            #temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
+            if itp_field !="001":
+                if itp_field.split("$")[0] !=f:
+                    temp_f=[]
+                    temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
+                    itpp_fields.insert(len(itpp_fields),temp_f)
+                else:
+                    temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
+                f=itp_field.split("$")[0]
+                s_f=itp_field.split("$")[1]
 
-        #may utilize projections of the match boject to optimise execution time and unnecessary carrying over fields
+        #3. find the bibs
         bibs = Bib.match(
             OrMatch(
-                    Matcher('191',('b',body),('c',session)),
-                    Matcher('791',('b',body),('c',session))
+                    Matcher('191',('b',body+'/'),('c',session)),
+                    Matcher('791',('b',body+'/'),('c',session))
                     )
-        )
-        # go over bibs and construct dict members of the itpp_list
+                )
+        #4. go over bibs and construct dict members of the itpp_list
         for bib in bibs:
+            #bib=Bib.match_id('1161969')
             bib_dict={}
             if "ITS" in bib.get_values('930','a'):
                 bib_dict["record_type"]="ITS"
@@ -169,16 +120,47 @@ for bib in get_ITPP_Shapshot_records('A','72',list_of_fields ):
                 bib_dict["record_type"]="BIB"
 
             bib_dict["record_id"]=bib.id
-            itpp_fields=args['subfields']
-            #e.g.  [(035,a)], [(089,a)], [(191,9), (191,a),  (191,b),  (191,c)] are some itpp_field_subfields
             for itpp_field_subfields in itpp_fields:
                 #flds=[]
                 sbflds=[]
                 for elem in itpp_field_subfields:
                     field=elem[0]
                     sbflds.extend(elem[1])
-                bib_dict[field]=self.list_of_subfields(bib,field,sbflds)
-            itpp_list.insert(len(itpp_list),bib_dict)
-        return itpp_list
+                temp_dict={}
+                temp_dict[field]=_list_of_subfields(bib,field,sbflds)
+                if len(temp_dict[field])>1:
+                    bib_dict[field]=temp_dict[field]
+                elif len(temp_dict[field])==1:
+                    bib_dict[field]=temp_dict[field][0]
+                else:
+                    bib_dict[field]=""
+            #itpp_dict_list=[]  
+            #for itpp_subfields in itpp_fields:
+            #    itpp_dict_field={}
+            #    itpp_dict_subfield={}
+            #    for subfield in itpp_subfields:
+            #        itpp_dict_subfield[subfield[1]]=bib.get_value(subfield[0],subfield[1])
+            #    itpp_dict_field[subfield[0]]=itpp_dict_subfield
+            #    itpp_dict_list.insert(len(itpp_dict_list),itpp_dict_field)
+            #for dict in itpp_dict_list:
+            #    bib_dict.update(dict)
+        #insert constructed dicts
+            i=i+1
+            '''snapshot_coll.update(
+                {"record_id":bib_dict["record_id"]},
+                bib_dict,
+                {upsert:true}
+            )'''
+            try:
+                self.snapshot_coll.insert_one(bib_dict)
+            except:
+                warning="somthing wrong with insert into MDb"
+        return i
 
-    
+
+
+
+
+
+
+
