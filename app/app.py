@@ -6,7 +6,7 @@ import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.models import Itpp_log,Itpp_user, Itpp_section, Itpp_rule
 from app.forms import LoginForm
-from app.reports import ReportList, AuthNotFound, InvalidInput
+from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.snapshot import Snapshot
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -261,19 +261,17 @@ def displaySnapshot():
 def executeSnapshot():
     form = "Select Authority"
     number=0
-    snapshot=Snapshot(request.args)
-    #app.logger.info(request.form.get("authority"))    
-    print("body = "+snapshot.body)
-    print("and session = "+snapshot.session)
+    body,session=_get_body_session(request.form.get("authority"))
+    body=body.split('/')[0]#_get_body_session returns A/ and 72 
+    snapshot=Snapshot(body,session) # snapshot class uses A and 72
     if snapshot is None:
-        print("400")
         abort(400)
-    if request.args:
+    if not (body,session) is None:
         warning = None
         print("just before execute")
         try:
-            number = snapshot.execute(request.args)
-            print("No "+ str(number))
+            number = snapshot.execute(body,session)
+            print("No of ITP record is: "+ str(number))
         except InvalidInput:
             number=0
             warning = 'Invalid input'
