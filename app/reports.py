@@ -1,3 +1,4 @@
+import re
 from app.config import Config
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
 from dlx import DB
@@ -17,7 +18,6 @@ class Report(object):
         self.category = None
         self.form_class = None
         self.expected_params = None
-        self.stored_criteria = None
         self.output_fields = None
            
     def validate_args(self,args):
@@ -46,6 +46,7 @@ class BibMissingField(Report):
             ('001',None),
             ('191','a')
         ]
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
     
     def execute(self,args):
         self.validate_args(args)
@@ -77,6 +78,7 @@ class BibMissingSubfield(Report):
             ('001',None),
             ('191','a')
         ]
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
     
     def execute(self,args):
         self.validate_args(args)
@@ -93,7 +95,95 @@ class BibMissingSubfield(Report):
         # list of lists
         return _process_results(bibs,self.output_fields)
 
+class BibAgenda(Report):
+    # WIP
+    def __init__(self):
+        self.name = 'agenda_list'
+        self.title = 'Agenda list'
+        self.description = 'Agenda items from Bib records in the given sesion'
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        #self.output_fields = []
+        self.field_names = ['Document Symbol', 'Agenda Item No.', 'Agenda Subject']
+        
+    def execute(self,args):
+        self.validate_args(args)
+        
+        body,session = _get_body_session(args['authority'])
+        
+        bibs = Bib.match(
+            Matcher('191',('b',body),('c',session)),
+            Matcher('930',('a',Regex('^UND'))),
+            Matcher('991',('d',Regex('^.*'))),
+            project=[f[0] for f in self.output_fields]
+        )
+        
+        # list of lists
+        #return _process_results(bibs,self.output_fields)
+        
+        results = []
+        
+        return results
+        
+class BibIncorrect793Comm(Report):
+    def __init__(self):
+        self.name = 'bib_incorrect_793_committees'
+        self.title = 'Incorrect field - 793 (Committees)'
+        self.description = 'Bib records where 191 starts with "A/C.1" and 793$a does not equal "01"'
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.output_fields = [('191','a')]
+        self.field_names = [('Document Symbol')]
+        
+    def execute(self,args):
+        self.validate_args(args)
+     
+        body,session = _get_body_session(args['authority'])
+        
+        bibs = Bib.match(
+            Matcher('191',('b',body),('c',session)),
+            Matcher('930',('a',Regex('^UND')))
+        )
+        
+        results = []
+        for bib in bibs:
+            if re.match('^A/C\.1/',bib.symbol()):
+                if bib.get_value('793','a') != '01':
+                    results.append(bib) 
 
+        return _process_results(results,self.output_fields)
+       
+class BibIncorrect793Plen(Report):
+    def __init__(self):
+        self.name = 'bib_incorrect_793_plenary'
+        self.title = 'Incorrect field - 793 (Plenary)'
+        self.description = 'Bib records where 191 starts with "A/RES" or "A/session/L." and 793$a does not equal with "PL"'
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.output_fields = [('191','a')]
+        self.output_field_names = [('Document Symbol')]
+        
+    def execute(self,args):
+        self.validate_args(args)
+     
+        body,session = _get_body_session(args['authority'])
+        
+        bibs = Bib.match(
+            Matcher('191',('b',body),('c',session)),
+            Matcher('930',('a',Regex('^UND')))
+        )
+        
+        results = []
+        for bib in bibs:
+            if re.match('^A/RES/',bib.symbol()) or re.match('^A/{}/L\.'.format(session), bib.symbol()):
+                if bib.get_value('793','a') != 'PL':
+                    results.append(bib) 
+
+        return _process_results(results,self.output_fields)
+        
 ### Speech reports
 # These reports are on records that have 791 and 930="ITS"
 
@@ -111,6 +201,7 @@ class SpeechMissingField(Report):
             ('001',None),
             ('791','a')
         ]
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
     
     def execute(self,args):
         self.validate_args(args)
@@ -142,6 +233,7 @@ class SpeechMissingSubfield(Report):
             ('001',None),
             ('791','a')
         ]
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
     
     def execute(self,args):
         self.validate_args(args)
@@ -176,6 +268,7 @@ class VotMissingField(Report):
             ('001',None),
             ('791','a')
         ]
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
     
     def execute(self,args):
         self.validate_args(args)
@@ -207,6 +300,7 @@ class VotMissingSubfield(Report):
             ('001',None),
             ('791','a')
         ]
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
     
     def execute(self,args):
         self.validate_args(args)
@@ -246,6 +340,8 @@ class AnyMissingField(Report):
             ('791','a')
         ]
         
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
+        
     def execute(self,args):
         self.validate_args(args)
     
@@ -277,8 +373,11 @@ class ReportList(object):
         # bib category 
        
         # Agenda List
+        #BibAgenda(), #WIP
         # Incorrect field - 793 (Committees)
+        BibIncorrect793Comm(),
         # Incorrect field - 793 (Plenary)
+        BibIncorrect793Plen(),
         # Incorrect field - 991
         # Incorrect session - 191
         # Incorrect subfield - 191$9
