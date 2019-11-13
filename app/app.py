@@ -33,6 +33,8 @@ URL_BY_DEFAULT = 'https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/sy
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+login_manager.login_message =""
+
 
 ####################################################
 # BASIC ROUTINES AND ROUTES
@@ -249,8 +251,19 @@ def create_snapshot():
 def delete_snapshot(id):
     pass
 
-# do we need a route to update a snapshot? If the incoming data changes enough to 
-# warrant it, perhaps we should just delete the snapshot and start over.
+@app.route("/displaySnapshot")
+@login_required
+def displaySnapshot():
+    return render_template('snapshot.html')
+
+@app.route("/executeSnapshot",methods=["POST"])
+@login_required
+def executeSnapshot():
+    flash('The snapshot execution process is in progress !!! ','message')
+    # the code of the execution should be here
+    # don't forget to return the number of records created
+    return redirect(url_for('main'))
+
 
 ####################################################
 # ITPP ITP Routes

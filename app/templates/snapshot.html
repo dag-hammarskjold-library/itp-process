@@ -1,0 +1,74 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+    .customize {
+        height: 200px;
+        width: 600px;
+    }
+</style>
+<style>
+    div#loading {
+        position: fixed;
+        width: 1000px;
+        height: 10000px;
+        display: none;
+        margin-left: auto;
+        margin-right: auto;
+        opacity: 0.5;
+    }
+</style>
+<script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+<div id="loading">
+    <img src="{{ url_for('static', filename='img/ajax-loader.gif') }}">
+</div>
+<div id="content">
+    <div class="container customize shadow">
+        <div class="container mt-4 mb-4">
+            <h1>Snapshot generation</h1>
+            <hr>
+
+            <form class="mt-3 form-group" method="POST" action="{{url_for('executeSnapshot')}}">
+                <div class="row">
+                    <input type="text" class="form-control" id="authority" placeholder="Enter the authority ID">
+                    <br>
+                    <br>
+                    <button id="execute" type="submit" class="btn btn-primary mb-5" onclick="loading();" disabled> Execute </button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+    <br>
+    <div id="output"></div>
+    <br>
+    <div class="container">
+        <hr>
+        <a href="{{url_for('main')}}"> Go back to the menu </a>
+    </div>
+</div>
+
+<script type="text/javascript">
+   function loading() {
+        $("#loading").show();
+  }
+</script>
+<script>
+var someInput = document.querySelector('.form-control');
+someInput.addEventListener('input', function () {
+    someInput.value = someInput.value.toUpperCase();
+});
+</script>
+<script type="text/javascript">
+var someInput = document.querySelector('.form-control');
+    someInput.addEventListener('input', function(){
+        if(this.value.length > 0) { 
+            document.getElementById('execute').disabled = false; 
+        } else { 
+            document.getElementById('execute').disabled = true;
+        }
+    });
+</script>
+
+
+{% endblock %}
