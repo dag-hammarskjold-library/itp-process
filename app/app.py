@@ -262,13 +262,12 @@ def executeSnapshot():
     form = "Select Authority"
     number=0
     body,session=_get_body_session(request.form.get("authority"))
-    body=body.split('/')[0]#_get_body_session returns A/ and 72 
+    body=body.split('/')[0]#_get_body_session returns A/ and 72 ; only temporary to ensure that rules are correctly read
     snapshot=Snapshot(body,session) # snapshot class uses A and 72
     if snapshot is None:
         abort(400)
     if not (body,session) is None:
         warning = None
-        print("just before execute")
         try:
             number = snapshot.execute(body,session)
             print("No of ITP record is: "+ str(number))
@@ -280,7 +279,7 @@ def executeSnapshot():
             warning = 'Session authority not found'
         except:
             raise
-        flash('The snapshot execution process is in progress !!! ','message')    
+        flash('The snapshot execution process is completed !!! ','message')    
         return render_template('snapshot.html', snapshot=snapshot, form=form, recordNumber=number,url=URL_BY_DEFAULT,errorMail=warning)
     else:
         results = []        

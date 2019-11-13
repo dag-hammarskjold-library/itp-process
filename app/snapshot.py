@@ -13,7 +13,7 @@ DB.connect(Config.connect_string)
 db_client=MongoClient(Config.connect_string)
 db=db_client['undlFiles']
 rules_coll = db['itpp_rules']
-snapshot_coll=db['itpp_snapshot_test']
+snapshot_coll=db['itpp_snapshot_test1']
 itp_bib_fields=[]
 
 
@@ -45,10 +45,9 @@ class Snapshot(object):
         
         for field in bib.get_fields(field):
             temp_dict={}
-            for subfield in field.subfields:
-                for k,v in Bib.serialize_subfield(subfield).items():
-                    if k in sbflds:
-                        temp_dict[k]= v
+            for sub in field.subfields:
+                if sub.code in sbflds:
+                        temp_dict[sub.code]= sub.value
             temp_lst.append(temp_dict)
         return temp_lst    
             
@@ -79,9 +78,10 @@ class Snapshot(object):
         #3. find the bibs
         bibs = Bib.match(
             OrMatch(
-                    Matcher('191',('b',body+'/'),('c',session)),
-                    Matcher('791',('b',body+'/'),('c',session))
-                    )
+                    Matcher('191',('b',self.body+'/'),('c',self.session)),
+                    Matcher('791',('b',self.body+'/'),('c',self.session)),
+                    ),
+                    project=list({l[0][0] for l in itpp_fields})
                 )
         #4. go over bibs and construct dict members of the itpp_list
         for bib in bibs:
@@ -95,16 +95,15 @@ class Snapshot(object):
                 bib_dict["record_type"]="BIB"
 
             bib_dict["record_id"]=bib.id
-            print("bib.id = "+str(bib_dict["record_id"]))
+            bib_dict["bodysession"]=self.body+self.session
+
+            #print("bib.id = "+str(bib_dict["record_id"]))
             for itpp_field_subfields in itpp_fields:
-                print(str(itpp_field_subfields))
                 #flds=[]
                 sbflds=[]
                 for elem in itpp_field_subfields:
                     field=elem[0]
                     sbflds.extend(elem[1])
-                print("fld= "+str(field))
-                print("sbflds are:"+str(sbflds))
                 temp_dict={}
                 temp_dict[field]=self.list_of_subfields(bib,field,sbflds)
                 if len(temp_dict[field])>1:
@@ -114,15 +113,17 @@ class Snapshot(object):
                 else:
                     bib_dict[field]=""
             i=i+1
+            #print(str(i))
+            
             '''snapshot_coll.update(
                 {"record_id":bib_dict["record_id"]},
                 bib_dict,
                 {upsert:true}
             )'''
             try:
-                self.snapshot_coll.insert_one(bib_dict)
+                snapshot_coll.insert_one(bib_dict)
             except:
-                warning="somthing went wrong with insert into MDb"
+                warning="something went wrong with insert into MDb"
         return i
 
 
