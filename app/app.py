@@ -24,7 +24,7 @@ app = Flask(__name__)
 # setting up the secret key and connect to the database
 
 app.secret_key=b'a=pGw%4L1tB{aK6'
-connect(host=Config.connect_string,db=Config.dbname)
+#connect(host=Config.connect_string,db=Config.dbname)
 URL_BY_DEFAULT = 'https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/'
 
 

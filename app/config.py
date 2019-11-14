@@ -47,3 +47,4 @@ class DevelopmentConfig(Config):
     # Provide overrides for production settings here.
     collection_prefix = 'dev_'
     DEBUG = True
+    

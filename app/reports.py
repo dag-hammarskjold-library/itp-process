@@ -5,6 +5,7 @@ from dlx import DB
 from dlx.marc import Bib, Auth, Matcher, OrMatch
 from bson.regex import Regex
 
+print(Config.connect_string)
 DB.connect(Config.connect_string)
 
 ### Report base class. Not for use.
@@ -130,7 +131,7 @@ class BibIncorrect793Comm(Report):
     def __init__(self):
         self.name = 'bib_incorrect_793_committees'
         self.title = 'Incorrect field - 793 (Committees)'
-        self.description = 'Bib records where 191 starts with "A/C.1" and 793$a does not equal "01"'
+        self.description = 'Bib records where 191 starts with "A/C.<comitte number>" and 793$a does not equal the committe number'
         self.category = "BIB"
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -149,9 +150,9 @@ class BibIncorrect793Comm(Report):
         
         results = []
         for bib in bibs:
-            if re.match('^A/C\.1/',bib.symbol()):
-                if bib.get_value('793','a') != '01':
-                    results.append(bib) 
+            m = re.match('^A/C\.(\d)/', bib.symbol())
+            if m and bib.get_value('793','a') != '0' + m[1]:
+                results.append(bib) 
 
         return _process_results(results,self.output_fields)
        
