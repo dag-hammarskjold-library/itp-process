@@ -3,7 +3,7 @@
 from unittest import TestCase 
 from flask import Flask
 
-from app.app import app
+#from app.app import app
 
 # prints list of routes
 #for rule in app.url_map.iter_rules(): print(rule)
