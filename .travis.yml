@@ -2,7 +2,13 @@
 # It could be used as-is, as this app assumes it will be run in a serverless envuronment.
 # You will want to make sure Travis CI has your AWS secrets stored so you don't run into any
 # issues with deployment.
-  
+
+# safelist
+branches:
+  only:
+  - master
+  - deploy
+
 language: python
 python:
 - 3.6
@@ -11,18 +17,18 @@ install:
 
 stages:
   - name: Dev
-  if: branch = master
+    if: branch = master
   
   - name: Prod
-  if: branch = deploy
+    if: branch = deploy
   
 jobs:
   include:
     - stage: Dev
-    script:
-    - zappa update -s zappa_settings.json dev
+      script:
+      - zappa update -s zappa_settings.json dev
     
     - stage: Prod
-    script:
-    - zappa update -s zappa_settings.json prod
+      script:
+      - zappa update -s zappa_settings.json prod
   
