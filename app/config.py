@@ -1,7 +1,7 @@
 from dlx import DB, Bib, Auth
 from mongoengine import connect
 import boto3
-import re
+import os, re
 
 '''
 This is your application configuration file. Use it to set your various configurations,
@@ -36,8 +36,13 @@ class Config(object):
     RPP = 10
 
     client = boto3.client('ssm')
-    connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
-    dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
+    
+    if os.environ['FLASK_TESTING'] == '1':
+        connect_string = 'mongomock://localhost'
+    else:
+        connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
+        dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
+    
     collection_prefix = ''
     
 class ProductionConfig(Config):
@@ -47,3 +52,5 @@ class DevelopmentConfig(Config):
     # Provide overrides for production settings here.
     collection_prefix = 'dev_'
     DEBUG = True
+    
+    
