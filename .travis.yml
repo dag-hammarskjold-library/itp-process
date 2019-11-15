@@ -13,11 +13,20 @@ python:
 install:
 - pip install -r requirements.txt
 
-if: branch = master
-script:
-- zappa update -s zappa_settings.json dev
+stages:
+  - name: Dev
+  if: branch = master
   
-if: branch = deploy
-script:
-- zappa update -s zappa_settings.json prod
+  - name: Prod
+  if: branch = deploy
+  
+jobs:
+  include:
+    - stage: Dev
+    script:
+    - zappa update -s zappa_settings.json dev
+    
+    - stage: Prod
+    script:
+    - zappa update -s zappa_settings.json prod
   
