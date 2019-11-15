@@ -12,5 +12,14 @@ python:
 - 3.6
 install:
 - pip install -r requirements.txt
-script:
-- zappa update -s zappa_settings.json dev
+jobs:
+  include:
+    if: branch = master
+    script:
+    - zappa update -s zappa_settings.json dev
+  
+    if: branch = deploy
+    script:
+    - zappa update -s zappa_settings.json prod
+  
+
