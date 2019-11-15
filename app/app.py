@@ -307,6 +307,9 @@ def get_itpp_itp_by_id(id):
 @app.route("/itpp_itps/<id>/update", methods=['GET','POST'])
 @login_required
 def update_itpp_itp(id):
+    if request.method == 'POST':
+        pass
+
     mode = request.args.get('mode','init')
     itp = Itpp_itp.objects.get(id=id)
     snapshots = Itpp_snapshot.objects
@@ -334,12 +337,12 @@ def delete_itpp_itp(id):
 
 @app.route("/itpp_itps/<itp_id>/sections")
 
-@app.route("/itpp_itps/sections/new", methods=['POST'])
+@app.route("/itpp_itps/<id>/sections/new", methods=['POST'])
 @login_required
-def add_section():
+def add_section(id):
     itp_id = request.form.get('itp_id',None)
     section_name = request.form.get('sectionName',None)
-    section_order = request.form.get('setionOrder',None)
+    section_order = request.form.get('sectionOrder',None)
     data_source = request.form.get('dataSource',None)
 
     itp = Itpp_itp.objects(id=itp_id)[0]
@@ -367,6 +370,17 @@ def add_section():
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>", methods=['GET','POST'])
 
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/delete")
+@login_required
+def delete_section(itp_id,section_id):
+    try:
+        itp = Itpp_itp.objects(id=itp_id)[0]
+        itp.update(pull__sections__id=section_id)
+        return json.dumps({
+            "success":True, 
+            "redirect": url_for('update_itpp_itp', id=itp_id, mode='add_sections')
+        }), 200, {'ContentType':'application/json'}
+    except:
+        raise
 
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules")
 @login_required
@@ -376,6 +390,20 @@ def _expand_rules(itp_id,section_id):
     if itp and section:
         return jsonify(section.rules)
 
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/new")
+@login_required
+def add_rule(itp_id,section_id):
+    pass
+
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/update")
+@login_required
+def update_rule(itp_id, section_id, rule_id):
+    pass
+
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/delete")
+@login_required
+def delete_rule(itp_id, section_id, rule_id):
+    pass
 
 
 ####################################################

@@ -1,8 +1,10 @@
 from mongoengine import *
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
+from bson import ObjectId
 import time
 from app.config import DevelopmentConfig as Config
+
 
 class Itpp_user(UserMixin, Document):
     """
@@ -61,6 +63,7 @@ class Itpp_rule(EmbeddedDocument):
     This is still very inadequate and doesn't really allow us to do much
     It will require a better understanding of the target serialization.
     '''
+    id = ObjectIdField(default=ObjectId)
     rule_name = StringField()
     process_order = StringField()
     rule_type = StringField() # e.g., group, sort, filter
@@ -74,8 +77,9 @@ class Itpp_section(EmbeddedDocument):
     such as which fields to display, group, and sort; and any transformations 
     necessary to construct the final output.
     """
-    name = StringField()
-    section_order = StringField()
+    id = ObjectIdField(default=ObjectId)
+    name = StringField(unique=True,required=True)
+    section_order = IntField()
     data_source = ReferenceField(Itpp_snapshot)
     rules = EmbeddedDocumentListField(Itpp_rule)
 
@@ -96,8 +100,14 @@ class Itpp_itp(Document):
 
     meta = {'collection': Config.collection_prefix + 'Itpp_document' }
 
+    def get_section_by_id(self, id):
+        this_section = next(filter(lambda x: x.id == id, self.sections),None)
+        return(this_section)
+
     def delete_section(self, id):
+        print(id)
         this_section = next(filter(lambda x: x.id == id, self.sections),None)
         if this_section is not None:
             self.sections.pop(this_section)
             self.save()
+            print('deleted')

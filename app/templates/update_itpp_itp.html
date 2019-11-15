@@ -80,6 +80,7 @@
             <span class="fa fa-plus"></span><a href="#" data-toggle="modal" data-target="#createSection"> New </a>
             {% endif %}
             {% for section in itp.sections %}
+                {% set delete_url = url_for('delete_section', itp_id=itp.id, section_id=section.id) %}
                 <div class="card section" id="{{section.name}}">
                     <div class="card-body">
                         <h5 class="card-title">{{section.name}}</h5>
@@ -87,7 +88,7 @@
                         <p class="card-text">Data Source: {{section.data_source}}</p>
                         <div class="card-footer">
                             <span class="fas fa-edit"></span><a href="#"> Edit </a><span> | </span>
-                            <span class="fas fa-trash-alt"></span><a href="#"> Delete </a>
+                            <span class="fas fa-trash-alt"></span><a href="#" onclick='deleteSection("{{delete_url}}")'> Delete </a>
                             {% if loop.last %}
                             <span> | </span>
                             <span class="fa fa-plus"></span><a href="#" data-toggle="modal" data-target="#createSection"> New </a>
@@ -133,10 +134,12 @@
                         <label for="sectionOrder">Order: </label>
                         <input name="sectionOrder" class="form-control" type="text">
                     </div>
+                    {% if snapshots %}
                     <div class="form-group row">
                         <label for="dataSource">Data Source: </label>
                         <input name="dataSource" class="form-control" type="text">
                     </div>
+                    {% endif %}
                 </form>
             </div>
         </div>
@@ -154,7 +157,7 @@ $('#save').click(function(e) {
     e.preventDefault();
     var postData = $('form#itpDocument').serializeArray();
     $.ajax({
-        url: "{{url_for('create_itpp_itp')}}",
+        url: "{{url_for('update_itpp_itp', id=itp.id)}}",
         type: 'post',
         data: postData,
         dataType: 'json',
@@ -169,7 +172,7 @@ $("#saveSection").click(function(e){
     var postData = $('form#addSection').serializeArray();
     console.log(postData);
     $.ajax({
-        url: "{{url_for('add_section')}}",
+        url: "{{url_for('add_section', id=itp.id)}}",
         type: 'post',
         data: postData,
         dataType: 'json',
@@ -177,7 +180,12 @@ $("#saveSection").click(function(e){
             window.location.href = return_data['redirect'];
         }
     })
-})
+});
+
+function deleteSection(url){
+    
+    console.log(url);
+}
 
 </script>
 
