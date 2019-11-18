@@ -269,8 +269,8 @@ def executeSnapshot():
     if not (body,session) is None:
         warning = None
         try:
-            number = snapshot.execute(body,session)
-            print("No of ITP record is: "+ str(number))
+            number = snapshot.execute()
+            print("No of ITP records is: "+ str(number))
         except InvalidInput:
             number=0
             warning = 'Invalid input'
