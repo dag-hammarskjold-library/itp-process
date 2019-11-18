@@ -52,7 +52,7 @@ def get_config():
     if 'FLASK_TEST' in os.environ:
         return TestConfig
 
-    flask_env = os.environ['FLASK_ENV']
+    flask_env = os.environ.setdefault('FLASK_ENV', 'development')
     
     if flask_env == 'production':
         return ProductionConfig
