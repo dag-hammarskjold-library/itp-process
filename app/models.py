@@ -64,7 +64,7 @@ class Itpp_rule(EmbeddedDocument):
     It will require a better understanding of the target serialization.
     '''
     id = ObjectIdField(default=ObjectId)
-    rule_name = StringField()
+    name = StringField()
     process_order = StringField()
     rule_type = StringField() # e.g., group, sort, filter
     parameters = ListField()

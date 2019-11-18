@@ -13,6 +13,7 @@ from werkzeug.utils import secure_filename
 from app.config import Config
 from dlx import DB, Bib, Auth
 from bson.json_util import dumps
+import bson
 import time, json
 
 
@@ -40,6 +41,11 @@ login_manager.login_message =""
 ####################################################
 # BASIC ROUTINES AND ROUTES
 ####################################################  
+
+@app.route('/_clear')
+def clear_session():
+    session.clear()
+    return redirect(url_for('main'))
 
 @app.route("/")
 @login_required
@@ -79,6 +85,8 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+
 
 # bad url
 @app.errorhandler(404) 
@@ -274,8 +282,7 @@ def executeSnapshot():
 @login_required
 def list_itpp_itps():
     itps = Itpp_itp.objects
-    #print(itps[0])
-    return render_template('list_itpp_itps.html', data=itps)
+    return render_template('itpp_itp/list.html', data=itps)
 
 @app.route("/itpp_itps/new", methods=['GET','POST'])
 @login_required
@@ -289,15 +296,12 @@ def create_itpp_itp():
             itp.save()
             flash("ITP Document creation succeeded.")
             itp_id = json.loads(dumps(itp.id))['$oid']
-            return json.dumps({
-                "success":True, 
-                "redirect": url_for('update_itpp_itp', id=itp_id, mode='add_sections')
-            }), 200, {'ContentType':'application/json'}
+            return redirect(url_for('update_itpp_itp', id=itp_id, mode='sections'))
         except:
-            raise
-            return json.dumps({"success":False}), 302, {'ContentType':'application/json'}
-        #return redirect(url_for('list_itpp_itps'))
-    return render_template('create_itpp_itp.html')
+            flash("Could not create the ITP Document.")
+            return render_template('itpp_itp/create.html')
+    else:
+        return render_template('itpp_itp/create.html')
 
 @app.route("/itpp_itps/<id>")
 @login_required
@@ -308,13 +312,29 @@ def get_itpp_itp_by_id(id):
 @login_required
 def update_itpp_itp(id):
     if request.method == 'POST':
-        pass
-
-    mode = request.args.get('mode','init')
+        name = request.form.get('name',None)
+        body = request.form.get('body',None)
+        itp_session = request.form.get('session')
+        try:
+            itp = Itpp_itp.objects.get(id=id)
+            itp.name = name
+            itp.body = body
+            itp.itp_session = itp_session
+            itp.save()
+            flash("ITP Document save succeeded.")
+            itp_id = json.loads(dumps(itp.id))['$oid']
+            return json.dumps({
+                "success":True, 
+                "redirect": url_for('update_itpp_itp', id=itp_id, mode='sections')
+            }), 200, {'ContentType':'application/json'}
+        except:
+            raise
+            return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
+    mode = request.args.get('mode','meta')
     itp = Itpp_itp.objects.get(id=id)
     snapshots = Itpp_snapshot.objects
     if itp is not None:
-        return render_template('update_itpp_itp.html', itp=itp, snapshots=snapshots, mode=mode)
+        return render_template('itpp_itp/update.html', itp=itp, snapshots=snapshots, mode=mode)
     else:
         flash("Not found")
         return redirect(url_for('list_itpp_itps'))
@@ -334,8 +354,6 @@ def delete_itpp_itp(id):
     except:
         flash("Ubable to delete ITP Document.")
         return redirect(url_for('list_itpp_itps'))
-
-@app.route("/itpp_itps/<itp_id>/sections")
 
 @app.route("/itpp_itps/<id>/sections/new", methods=['POST'])
 @login_required
@@ -359,48 +377,138 @@ def add_section(id):
         section_id = section.name
         return json.dumps({
             "success":True, 
-            "redirect": url_for('update_itpp_itp', id=itp_id, mode='add_sections')
+            "redirect": url_for('update_itpp_itp', id=itp_id, mode='sections')
         }), 200, {'ContentType':'application/json'}
     except:
         raise
-        return json.dumps({"success":False}), 302, {'ContentType':'application/json'}
+        return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
     
     
 
-@app.route("/itpp_itps/<itp_id>/sections/<section_id>", methods=['GET','POST'])
+@app.route("/itpp_itps/<itp_id>/sections", methods=['GET','POST'])
+def get_or_update_section(itp_id):
+    if request.method == 'POST':
+        section_id = request.form.get('section_id',None)
+        name = request.form.get('sectionName',None)
+        order = request.form.get('sectionOrder',None)
+        #print(section_id, name, order)
+        try:
+            itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
+            for section in itp.sections:
+                if section.id == bson.ObjectId(section_id):
+                    section.name=name
+                    section.section_order=order
+
+            itp.save()
+            flash("ITP Document save succeeded.")
+            itp_id = json.loads(dumps(itp.id))['$oid']
+            return json.dumps({
+                "success":True, 
+                "redirect": url_for('update_itpp_itp', id=itp_id, mode='sections')
+            }), 200, {'ContentType':'application/json'}
+        except:
+            raise
+            return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
+    mode = request.args.get('mode','init')
+    itp = Itpp_itp.objects.get(id=id)
+    snapshots = Itpp_snapshot.objects
+    if itp is not None:
+        return render_template('update_itpp_itp.html', itp=itp, snapshots=snapshots, mode=mode)
+    else:
+        flash("Not found")
+        return redirect(url_for('list_itpp_itps'))
 
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/delete")
 @login_required
 def delete_section(itp_id,section_id):
     try:
         itp = Itpp_itp.objects(id=itp_id)[0]
-        itp.update(pull__sections__id=section_id)
+        itp.update(pull__sections__id=bson.ObjectId(section_id))
+        return redirect(url_for('update_itpp_itp', id=itp_id, mode='sections'))
+
+        '''
         return json.dumps({
             "success":True, 
-            "redirect": url_for('update_itpp_itp', id=itp_id, mode='add_sections')
+            "redirect": url_for('update_itpp_itp', id=itp_id, mode='sections')
         }), 200, {'ContentType':'application/json'}
+        '''
     except:
         raise
 
-@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules")
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules", methods=['GET','POST'])
 @login_required
-def _expand_rules(itp_id,section_id):
-    itp = Itpp_itp.objects.get(id=itp_id)
-    section = itp.sections.get(name=section_id)
-    if itp and section:
-        return jsonify(section.rules)
+def get_or_update_rule(itp_id,section_id):
+    itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
+    if request.method == 'POST':
+        rule_id = request.form.get('rule_id',None)
+        name = request.form.get('ruleName',None)
+        order = request.form.get('processOrcer',None)
+        rule_type = request.form.get('ruleType',None)
+        parameters = request.form.get('parameters',None)
+        try:
+            itp = Itpp_itp.objects.get(id=itp_id)
+            section = None
+            for section in itp.sections:
+                if section.id == bson.ObjectId(section_id):
+                    for rule in section.rules:
+                        if rule.id == bson.ObjectId(rule_id):
+                            rule.name = name
+                            rule.process_order = order
+                            rule.rule_type = rule_type
+                            rule.parameters = parameters
+            itp.save()
+            flash("Rule saved successfully")
+            return json.dumps({
+                "success":True, 
+                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id)
+            }), 200, {'ContentType':'application/json'}
+        except:
+            raise
+            return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
 
-@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/new")
+    for section in itp.sections:
+        if section.id == bson.ObjectId(section_id):
+            return render_template('itpp_itp/update.html', mode='rules', itp=itp, section=section, rules=section.rules)
+    
+
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/new", methods=['GET','POST'])
 @login_required
 def add_rule(itp_id,section_id):
-    pass
+    itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
+    if request.method == 'POST':
+        name = request.form.get('ruleName',None)
+        order = request.form.get('processOrcer',None)
+        rule_type = request.form.get('ruleType',None)
+        parameters = request.form.get('parameters','').split(",")
 
-@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/update")
-@login_required
-def update_rule(itp_id, section_id, rule_id):
-    pass
 
-@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/delete")
+        itp = Itpp_itp.objects.get(id=itp_id)
+        section = next(filter(lambda x: x.id == bson.ObjectId(section_id),itp.sections),None)
+
+        try:
+            rule = Itpp_rule(
+                name=name,
+                process_order=order,
+                rule_type=rule_type,
+                parameters=parameters
+            )
+            section.rules.append(rule)
+            itp.save()
+            flash("ITP Rule creation succeeded.")
+            rule_id = rule.id
+            return json.dumps({
+                "success":True, 
+                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id)
+            }), 200, {'ContentType':'application/json'}
+        except:
+            raise
+            return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
+    
+    for section in itp.sections:
+        if section.id == bson.ObjectId(section_id):
+            return render_template('itpp_itp/update.html', mode='rules', itp=itp, section=section, rules=section.rules)
+
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/delete", methods=['POST'])
 @login_required
 def delete_rule(itp_id, section_id, rule_id):
     pass
