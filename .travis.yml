@@ -7,10 +7,28 @@
 branches:
   only:
   - master
+  - deploy
+
 language: python
 python:
 - 3.6
 install:
 - pip install -r requirements.txt
-script:
-- zappa update -s zappa_settings.json dev
+
+stages:
+  - name: Dev
+    if: branch = master
+  
+  - name: Prod
+    if: branch = deploy
+  
+jobs:
+  include:
+    - stage: Dev
+      script:
+      - zappa update -s zappa_settings.json dev
+    
+    - stage: Prod
+      script:
+      - zappa update -s zappa_settings.json prod
+  

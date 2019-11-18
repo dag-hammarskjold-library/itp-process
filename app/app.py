@@ -10,7 +10,7 @@ from app.forms import LoginForm, SectionForm
 from app.reports import ReportList, AuthNotFound, InvalidInput
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from app.config import DevelopmentConfig as Config
+from app.config import Config
 from dlx import DB, Bib, Auth
 from bson.json_util import dumps
 import time, json

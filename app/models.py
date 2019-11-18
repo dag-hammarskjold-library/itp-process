@@ -3,7 +3,7 @@ from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 from bson import ObjectId
 import time
-from app.config import DevelopmentConfig as Config
+from app.config import Config
 
 
 class Itpp_user(UserMixin, Document):
