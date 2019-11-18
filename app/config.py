@@ -49,15 +49,16 @@ class TestConfig(ProductionConfig):
     connect_string = 'mongomock://localhost'
     
 def get_config():
-    flask_env = os.environ.setdefault('FLASK_ENV','development')
+    if 'FLASK_TEST' in os.environ:
+        return TestConfig
 
-    print(flask_env)
+    flask_env = os.environ['FLASK_ENV']
     
     if flask_env == 'production':
         return ProductionConfig
     elif flask_env == 'development':
         return DevelopmentConfig
     else:
-        return TestConfig
+        raise Exception('Environment variable "FLASK_ENV" set to invalid value "{}"'.format(flask_env))
 
 Config = get_config()
