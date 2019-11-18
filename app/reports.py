@@ -5,7 +5,6 @@ from dlx import DB
 from dlx.marc import Bib, Auth, Matcher, OrMatch
 from bson.regex import Regex
 
-print(Config.connect_string)
 DB.connect(Config.connect_string)
 
 ### Report base class. Not for use.

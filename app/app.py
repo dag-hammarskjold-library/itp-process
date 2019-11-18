@@ -8,7 +8,7 @@ from app.forms import LoginForm
 from app.reports import ReportList, AuthNotFound, InvalidInput
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from app.config import DevelopmentConfig as Config
+from app.config import Config
 from dlx import DB, Bib, Auth
 import time
 

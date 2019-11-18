@@ -1,7 +1,7 @@
 from dlx import DB, Bib, Auth
 from mongoengine import connect
 import boto3
-import re
+import os, re
 
 '''
 This is your application configuration file. Use it to set your various configurations,
@@ -31,20 +31,33 @@ Travis CI, you will need to make sure your CI environment has the appropriate va
 and stored.
 '''
 
-class Config(object):
-    # how many results per page
-    RPP = 10
-
+class ProductionConfig(object):
     client = boto3.client('ssm')
     connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
     dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
     collection_prefix = ''
+    RPP = 10
     
-class ProductionConfig(Config):
-    DEBUG = False
-    
-class DevelopmentConfig(Config):
+class DevelopmentConfig(ProductionConfig):
     # Provide overrides for production settings here.
     collection_prefix = 'dev_'
     DEBUG = True
+
+class TestConfig(ProductionConfig):
+    DEBUG = True
+    collection_prefix = ''
+    connect_string = 'mongomock://localhost'
     
+def get_config():
+    flask_env = os.environ.setdefault('FLASK_ENV','development')
+
+    print(flask_env)
+    
+    if flask_env == 'production':
+        return ProductionConfig
+    elif flask_env == 'development':
+        return DevelopmentConfig
+    else:
+        return TestConfig
+
+Config = get_config()
