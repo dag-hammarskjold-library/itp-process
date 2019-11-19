@@ -11,6 +11,7 @@ docutils==0.14
 durationpy==0.5
 Flask==1.0.2
 Flask-Login==0.4.1
+flask-mongoengine==0.9.5
 Flask-WTF==0.14.2
 future==0.16.0
 hjson==3.0.1
