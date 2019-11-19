@@ -1,0 +1,70 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1000px;
+    }
+</style>
+
+
+<div class="container customize ">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{{url_for('list_itpp_itps')}}">ITP Document Creation</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="{{url_for('create_itpp_itp')}}">Meta <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" tabindex="-1" aria-disabled="true" href="#">Sections</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="col">
+            <form id="itpDocument" method="POST" action="{{url_for('create_itpp_itp')}}">
+                <div class="form-group row">
+                    <label for="name" class="col-sm-3 col-form-label">Name</label>
+                    <div class="col-sm-9">
+                        <input name="name" type="text" class="form-control" placeholder="name">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="body" class="col-sm-3 col-form-label">Body</label>
+                    <div class="col-sm-9">
+                        <input name="body" type="text" class="form-control" placeholder="body">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="session" class="col-sm-3 col-form-label">Session</label>
+                    <div class="col-sm-9">
+                        <input name="session" type="text" class="form-control" placeholder="session">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary" id="save">
+                    <span class="fa fa-save"></span> Create Document
+                </button>
+            </form>
+        </div>
+    </div>
+      
+   
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href="{{url_for('list_itpp_itps')}}"> List of ITPP ITPs </a>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+$("#save").click(function(e){
+    e.preventDefault();
+    $('#itpDocument').submit();
+});
+</script>
+{% endblock %}
