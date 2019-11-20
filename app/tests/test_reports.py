@@ -25,9 +25,11 @@ class Reports(TestCase):
         DB.bibs.delete_many({})
         DB.auths.delete_many({})
         
-        # mock session auths
+        # mock auths
+        # all xrefs in the mock bibs must point to an auth in the mock db to work properly
         Auth({'_id': 1}).set('190','b','A/').set('190','c','SESSION_1').commit()
         Auth({'_id': 2}).set('190','b','A/').set('190','c','SESSION_2').commit()
+        Auth({'_id': 3}).set('191','d','AGENDA SUBJECT').commit()
         
     ### bib
     
@@ -72,7 +74,7 @@ class Reports(TestCase):
 
         args['authority'] = 2
         results = report.execute(args)
-        self.assertEqual(len(results),0)  
+        self.assertEqual(len(results),0)
     
     # Incorrect field - 793 (Plenary)
     def test_14b(self):
@@ -118,7 +120,6 @@ class Reports(TestCase):
         self.assertEqual(results[0][0],'A/RES/BAD')
         self.assertEqual(results[1][0],'A/SESSION_1/L.BAD')
         
-        
     # incorrect field - bib
     def test_9(self):
         pass
@@ -133,12 +134,69 @@ class Reports(TestCase):
    
     # missing field - bib
     def test_8a_14a_16(self):
-        pass
+        args = {}
+        args['authority'] = 1
+        
+        for tag in ('793','991','992'):
+            report = ReportList.get_by_name('bib_missing_' + tag)
+            
+            Bib({'_id': 1}).set_values(
+                ('191','a','GOOD'),
+                ('191','b',1),
+                ('191','c',1),
+                ('930','a','UND'),
+                (tag,'a',3)
+            ).commit()
+            
+            Bib({'_id': 2}).set_values(
+                ('191','a','BAD'),
+                ('191','b',1),
+                ('191','c',1),
+                ('930','a','UND')
+            ).commit()
+            
+            results = report.execute(args)
+            self.assertEqual(results[0][2],'BAD')
     
     # missing subfield - bib
     def test_7a_12a(self):
-        pass
-      
+        args = {}
+        args['authority'] = 1
+        
+        for t in [('191','9'),('991','d')]:
+            tag,code = t[0],t[1]
+            report = ReportList.get_by_name('bib_missing_' + tag + code)
+            
+            Bib({'_id': 1}).set_values(
+                ('001',None,'2'),
+                ('191','a','GOOD'),
+                ('191','b',1),
+                ('191','c',1),
+                ('930','a','UND'),
+                (tag,code,3)
+            ).commit()
+            
+            Bib({'_id': 2}).set_values(
+                ('001',None,'2'),
+                ('191','a','BAD'),
+                ('191','b',1),
+                ('191','c',1),
+                ('930','a','UND'),
+                (tag,'z','WRONG')
+            ).commit()
+            
+            Bib({'_id': 3}).set_values(
+                ('001',None,'3'),
+                ('191','a','GOOD'),
+                ('191','b',1),
+                ('191','c',1),
+                ('930','a','UND')
+            ).commit()
+
+            results = report.execute(args)
+            expected = 2 if tag == '191' else 1
+            self.assertEqual(len(results),expected)
+            
     # missing subfield value - bib
     def test_1_2_13(self):
         pass
@@ -146,7 +204,7 @@ class Reports(TestCase):
     ### speech
     
     # Duplicate speech records
-    def test25(self):
+    def test_25(self):
         pass
     
     # Field mismatch - 269 & 992 - speech

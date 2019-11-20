@@ -32,69 +32,6 @@ class Report(object):
 ### Bib reports
 # These reports are on records that have field 191 and 930$a='UND'
 
-class BibMissingField(Report):
-    def __init__(self,tag):
-        self.tag = tag
-        self.name = 'bib_missing_' + tag
-        self.title = 'Missing field - ' + tag
-        self.description = 'Bib records from the given body/session that don\'t have a {} field.'.format(tag)
-        self.category = "BIB"
-        self.form_class = SelectAuthority
-        self.expected_params = ['authority']
-        self.output_fields = [
-            ('930','a'),
-            ('001',None),
-            ('191','a')
-        ]
-        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
-    
-    def execute(self,args):
-        self.validate_args(args)
-        
-        body,session = _get_body_session(args['authority'])
-        
-        bibs = Bib.match(
-            Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a',Regex('^UND'))),
-            Matcher(self.tag,modifier='not_exists'),
-            project=[f[0] for f in self.output_fields]
-        )
-        
-        # list of lists
-        return _process_results(bibs,self.output_fields)
-        
-class BibMissingSubfield(Report):
-    def __init__(self,tag,code):
-        self.tag = tag
-        self.code = code
-        self.name = 'bib_missing_' + tag + code
-        self.title = 'Missing subfield - {}${}'.format(tag,code)
-        self.description = 'Bib records from the given body/session that don\'t have a {}${} field.'.format(tag,code)
-        self.category = "BIB"
-        self.form_class = SelectAuthority
-        self.expected_params = ['authority']
-        self.output_fields = [
-            ('930','a'),
-            ('001',None),
-            ('191','a')
-        ]
-        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
-    
-    def execute(self,args):
-        self.validate_args(args)
-        
-        body,session = _get_body_session(args['authority'])
-        
-        bibs = Bib.match(
-            Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a',Regex('^UND'))),
-            Matcher(self.tag,(self.code,Regex('^.*')),modifier='not'),
-            project=[f[0] for f in self.output_fields]
-        )
-        
-        # list of lists
-        return _process_results(bibs,self.output_fields)
-
 class BibAgenda(Report):
     # WIP
     def __init__(self):
@@ -125,7 +62,7 @@ class BibAgenda(Report):
         results = []
         
         return results
-        
+
 class BibIncorrect793Comm(Report):
     def __init__(self):
         self.name = 'bib_incorrect_793_committees'
@@ -183,6 +120,70 @@ class BibIncorrect793Plen(Report):
                     results.append(bib) 
 
         return _process_results(results,self.output_fields)
+
+class BibMissingField(Report):
+    def __init__(self,tag):
+        self.tag = tag
+        self.name = 'bib_missing_' + tag
+        self.title = 'Missing field - ' + tag
+        self.description = 'Bib records from the given body/session that don\'t have a {} field.'.format(tag)
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.output_fields = [
+            ('930','a'),
+            ('001',None),
+            ('191','a')
+        ]
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
+    
+    def execute(self,args):
+        self.validate_args(args)
+        
+        body,session = _get_body_session(args['authority'])
+        
+        bibs = Bib.match(
+            Matcher('191',('b',body),('c',session)),
+            Matcher('930',('a',Regex('^UND'))),
+            Matcher(self.tag,modifier='not_exists'),
+            project=[f[0] for f in self.output_fields]
+        )
+        
+        # list of lists
+        return _process_results(bibs,self.output_fields)
+        
+class BibMissingSubfield(Report):
+    def __init__(self,tag,code):
+        self.tag = tag
+        self.code = code
+        self.name = 'bib_missing_' + tag + code
+        self.title = 'Missing subfield - {}${}'.format(tag,code)
+        self.description = 'Bib records from the given body/session that don\'t have a {} field but no subfield ${}.'.format(tag,code)
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.output_fields = [
+            ('930','a'),
+            ('001',None),
+            ('191','a')
+        ]
+        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
+    
+    def execute(self,args):
+        self.validate_args(args)
+        
+        body,session = _get_body_session(args['authority'])
+        
+        bibs = Bib.match(
+            Matcher('191',('b',body),('c',session)),
+            Matcher('930',('a',Regex('^UND'))),
+            Matcher(self.tag,modifier='exists'),
+            Matcher(self.tag,(self.code,Regex('^.*')),modifier='not'),
+            project=[f[0] for f in self.output_fields]
+        )
+        
+        # list of lists
+        return _process_results(bibs,self.output_fields)
         
 ### Speech reports
 # These reports are on records that have 791 and 930="ITS"
