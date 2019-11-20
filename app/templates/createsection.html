@@ -16,26 +16,30 @@
     <form class="mt-5 orm-signin" method="POST" action="{{url_for('create_section')}}">
         <div class="row">
             <div class="col-sm">
-                <div class="form-group">
-                    <label for="rule_name">Name</label>
-                    <input type="text" class="form-control" id="name" name="name" placeholder="Enter the name of the section">
+                {% for field in form if field.widget.input_type != 'hidden'%}
+                <div class="form-group col col-xs-12">
+                    {{ field.label }} {{ field(class="form-control") }}
                 </div>
-                <div class="form-group">
-                    <label for="process_order">Section Order</label>
-                    <input type="text" class="form-control" id="section_order" name="section_order" placeholder="Enter the section order">
-                </div>
-                <div class="form-group">
-                    <label for="process_order">Data source</label>
-                    <input type="text" class="form-control" id="data_source" name="data_source" placeholder="Enter the data source">
-                </div>
-                <div class="form-group">
-                    <label for="process_order">Rules</label>
-                    <input type="text" class="form-control" id="rules" name="rules" placeholder="Enter the rules">
-                </div>
-
+                {% endfor %}
             </div>
         </div>
-        <button type="submit" class="btn btn-primary mb-5">Create the rule</button>
+        <div class="row">
+            <div class="col-sm">
+                <div class="col col-xs-12">
+                    <ul class="list-group list-group-horizontal">
+                        <li class="list-group-item"><a href="{{url_for('create_snapshot')}}">Create a Snapshot</a></li>
+                        <li class="list-group-item"><a href="{{url_for('create_rule')}}">Create a Rule</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="row my-2">
+            <div class="col-sm">
+                <div class="col col-xs-12">
+                    <button type="submit" class="btn btn-primary mb-5">Create the Section</button>
+                </div>
+            </div>
+        </div>
 
     </form>
     <hr>

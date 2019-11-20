@@ -1,8 +1,10 @@
 from mongoengine import *
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
+from bson import ObjectId
 import time
-from app.config import DevelopmentConfig as Config
+from app.config import Config
+
 
 class Itpp_user(UserMixin, Document):
     """
@@ -61,7 +63,8 @@ class Itpp_rule(EmbeddedDocument):
     This is still very inadequate and doesn't really allow us to do much
     It will require a better understanding of the target serialization.
     '''
-    rule_name = StringField()
+    id = ObjectIdField(default=ObjectId)
+    name = StringField()
     process_order = StringField()
     rule_type = StringField() # e.g., group, sort, filter
     parameters = ListField()
@@ -74,8 +77,9 @@ class Itpp_section(EmbeddedDocument):
     such as which fields to display, group, and sort; and any transformations 
     necessary to construct the final output.
     """
-    name = StringField()
-    section_order = StringField()
+    id = ObjectIdField(default=ObjectId)
+    name = StringField(unique=True,required=True)
+    section_order = IntField()
     data_source = ReferenceField(Itpp_snapshot)
     rules = EmbeddedDocumentListField(Itpp_rule)
 
@@ -86,12 +90,24 @@ class Itpp_itp(Document):
     This is where the ITP Document building happens. A document is a collection
     of snapshots (typically three), each with its attendant sections and rules.
     """
-    name = StringField()
+    name = StringField(max_length=100)
     created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
     updated = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-    body = StringField()
-    itp_session = StringField()
-    body_session_auth = StringField()
+    body = StringField(max_length=10)
+    itp_session = StringField(max_length=10)
+    body_session_auth = StringField(max_length=32)
     sections = EmbeddedDocumentListField(Itpp_section)
 
     meta = {'collection': Config.collection_prefix + 'Itpp_document' }
+
+    def get_section_by_id(self, id):
+        this_section = next(filter(lambda x: x.id == id, self.sections),None)
+        return(this_section)
+
+    def delete_section(self, id):
+        print(id)
+        this_section = next(filter(lambda x: x.id == id, self.sections),None)
+        if this_section is not None:
+            self.sections.pop(this_section)
+            self.save()
+            print('deleted')
