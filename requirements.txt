@@ -11,6 +11,7 @@ docutils==0.14
 durationpy==0.5
 Flask==1.0.2
 Flask-Login==0.4.1
+flask-mongoengine==0.9.5
 Flask-WTF==0.14.2
 future==0.16.0
 hjson==3.0.1
@@ -23,7 +24,7 @@ kappa==0.6.0
 lambda-packages==0.20.0
 MarkupSafe==1.1.0
 mongoengine==0.18.2
-mongomock==3.17.0
+mongomock==3.18.0
 placebo==0.8.2
 pymongo==3.9.0
 pyrsistent==0.15.4

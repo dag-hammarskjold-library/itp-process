@@ -1,0 +1,61 @@
+{% extends 'base.html' %} {% block content %}
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1200px;
+    }
+</style>
+
+<div class="container customize ">
+    <h3>List of ITP Process ITPs <span class="badge badge-pill badge-primary">{{myRecord}}</span></h3>
+    <hr>
+    <div>
+        <!-- Simple Message -->
+        {% with mails = get_flashed_messages(category_filter=["message"]) %} {% if mails %}
+        <div class="alert alert-success" role="alert">
+            <ul>
+                {%- for msg in mails %}
+                <li>{{ msg }}</li>
+                {% endfor -%}
+            </ul>
+        </div>
+        {% endif %} {% endwith %}
+    </div>
+    <div class="div-scroll table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Updated</th>
+                    <th scope="col">Body</th>
+                    <th scope="col">Session</th>
+                    <th scope="col">Body/Session Auth</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for itp in data %}
+                <tr>
+                    <td>{{ itp.name }}</td>
+                    <td>{{ itp.created }}</td>
+                    <td>{{ itp.updated }}</td>
+                    <td>{{ itp.body }}</td>
+                    <td>{{ itp.itp_session }}</td>
+                    <td>{{ itp.body_session_auth }}</td>
+                    <td><i class="fas fa-edit"><a href="{{url_for('update_itpp_itp', id=itp.id)}}">  Edit </a></i> | <i class="fas fa-trash-alt"><a href="{{url_for('delete_itpp_itp', id=itp.id)}}"> Delete </a></i></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href="{{url_for('create_itpp_itp')}}"> Create a new ITPP ITP | </a>
+        <a href="{{url_for('main')}}"> Go back to the menu </a>
+    </div>
+</div>
+<hr>
+
+</div>
+{% endblock %}

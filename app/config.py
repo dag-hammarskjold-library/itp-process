@@ -32,6 +32,7 @@ and stored.
 '''
 
 class ProductionConfig(object):
+    context = 'production'
     client = boto3.client('ssm')
     connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
     dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
@@ -40,10 +41,12 @@ class ProductionConfig(object):
     
 class DevelopmentConfig(ProductionConfig):
     # Provide overrides for production settings here.
+    context='development'
     collection_prefix = 'dev_'
     DEBUG = True
 
 class TestConfig(ProductionConfig):
+    context = 'test'
     DEBUG = True
     collection_prefix = ''
     connect_string = 'mongomock://localhost'
@@ -51,9 +54,9 @@ class TestConfig(ProductionConfig):
 def get_config():
     if 'FLASK_TEST' in os.environ:
         return TestConfig
-  
-    flask_env = os.environ['FLASK_ENV']
 
+    flask_env = os.environ.setdefault('FLASK_ENV', 'development')
+    
     if flask_env == 'production':
         return ProductionConfig
     elif flask_env == 'development':
