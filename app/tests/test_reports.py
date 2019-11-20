@@ -225,11 +225,62 @@ class Reports(TestCase):
         
     # missing field - speech
     def test_8b_17a_18a_20a(self):
-        pass
+        args = {}
+        args['authority'] = 1
+        
+        for tag in ('039','856','991','992'):
+            report = ReportList.get_by_name('speech_missing_' + tag)
+            
+            Bib({'_id': 1}).set_values(
+                ('791','a','GOOD'),
+                ('791','b',1),
+                ('791','c',1),
+                ('930','a','ITS'),
+                (tag,'a','x')
+            ).commit()
+            
+            Bib({'_id': 2}).set_values(
+                ('791','a','BAD'),
+                ('791','b',1),
+                ('791','c',1),
+                ('930','a','ITS')
+            ).commit()
+            
+            results = report.execute(args)
+            self.assertEqual(results[0][2],'BAD')
     
     # missing subfield - speech
     def test_12b(self):
-        pass
+        args = {}
+        args['authority'] = 1
+        tag,code = '991','d'
+        report = ReportList.get_by_name('speech_missing_' + tag + code)
+        
+        Bib({'_id': 1}).set_values(
+            ('791','a','GOOD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('930','a','ITS'),
+            (tag,code,3)
+        ).commit()
+        
+        Bib({'_id': 2}).set_values(
+            ('791','a','BAD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('930','a','ITS'),
+            (tag,'z','WRONG')
+        ).commit()
+        
+        Bib({'_id': 3}).set_values(
+            ('791','a','GOOD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('930','a','ITS')
+        ).commit()
+
+        results = report.execute(args)
+        self.assertEqual(len(results),1)
         
     ### vote
     
@@ -247,26 +298,67 @@ class Reports(TestCase):
     
     # missing field - vote
     def test_12c_17b_18b_20b(self):
-        pass
+        args = {}
+        args['authority'] = 1
         
-    # Missing subfield - 991$d
+        for tag in ('039','856','991','992'):
+            report = ReportList.get_by_name('vote_missing_' + tag)
+            
+            Bib({'_id': 1}).set_values(
+                ('791','a','GOOD'),
+                ('791','b',1),
+                ('791','c',1),
+                ('930','a','VOT'),
+                (tag,'a','x')
+            ).commit()
+            
+            Bib({'_id': 2}).set_values(
+                ('791','a','BAD'),
+                ('791','b',1),
+                ('791','c',1),
+                ('930','a','VOT')
+            ).commit()
+            
+            results = report.execute(args)
+            self.assertEqual(results[0][2],'BAD')
+        
+    # Missing subfield - vote
     def test_12c(self):
-        pass
+        args = {}
+        args['authority'] = 1
+        tag,code = '991','d'
+        report = ReportList.get_by_name('vote_missing_' + tag + code)
+        
+        Bib({'_id': 1}).set_values(
+            ('791','a','GOOD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('930','a','VOT'),
+            (tag,code,3)
+        ).commit()
+        
+        Bib({'_id': 2}).set_values(
+            ('791','a','BAD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('930','a','VOT'),
+            (tag,'z','WRONG')
+        ).commit()
+        
+        Bib({'_id': 3}).set_values(
+            ('791','a','GOOD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('930','a','VOT')
+        ).commit()
+
+        results = report.execute(args)
+        self.assertEqual(len(results),1)
 
     ### other
     
     # missing 930 - all
     def test_3_19a_19b(self):
         pass
-        
-# util
 
-class SetBib(Bib):
-    def __init__(self,doc):
-        super().__init__(doc)
-    
-    def set_vals(self,*tuples):
-        for t in tuples:
-            tag,sub,val = t[0],t[1],t[2]
-            self.set(tag,sub,val)
     
