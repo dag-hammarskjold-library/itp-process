@@ -24,7 +24,7 @@ kappa==0.6.0
 lambda-packages==0.20.0
 MarkupSafe==1.1.0
 mongoengine==0.18.2
-mongomock==3.17.0
+mongomock==3.18.0
 placebo==0.8.2
 pymongo==3.9.0
 pyrsistent==0.15.4
