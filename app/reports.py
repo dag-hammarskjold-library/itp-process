@@ -169,7 +169,7 @@ class BibIncorrect793Plen(Report):
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
         self.output_fields = [('191','a')]
-        self.output_field_names = [('Document Symbol')]
+        self.field_names = [('Document Symbol')]
         
     def execute(self,args):
         self.validate_args(args)
