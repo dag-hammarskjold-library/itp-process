@@ -1,13 +1,15 @@
+import logging
 from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from requests import get
 import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
+from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
+from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
 from app.models import Itpp_log, Itpp_user, Itpp_section, Itpp_rule, Itpp_snapshot, Itpp_itp
 from app.forms import LoginForm, SectionForm
-from app.reports import ReportList, AuthNotFound, InvalidInput
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import Config
@@ -268,7 +270,35 @@ def displaySnapshot():
 @app.route("/executeSnapshot",methods=["POST"])
 @login_required
 def executeSnapshot():
-    flash('The snapshot execution process is in progress !!! ','message')
+    form = "Select Authority"
+    number=0
+    body,session=_get_body_session(request.form.get("authority"))
+    body=body.split('/')[0]#_get_body_session returns A/ and 72 ; only temporary to ensure that rules are correctly read
+    snapshot=Snapshot(body,session) # snapshot class uses A and 72
+    if snapshot is None:
+        abort(400)
+    if not (body,session) is None:
+        warning = None
+        try:
+            number = snapshot.execute()
+            print("No of ITP records is: "+ str(number))
+        except InvalidInput:
+            number=0
+            warning = 'Invalid input'
+        except AuthNotFound:
+            number=0
+            warning = 'Session authority not found'
+        except:
+            raise
+        flash('The snapshot execution process is completed !!! ','message')    
+        return render_template('snapshot.html', snapshot=snapshot, form=form, recordNumber=number,url=URL_BY_DEFAULT,errorMail=warning)
+    else:
+        results = []        
+        return render_template('snapshot.html', snapshot=snapshot, form=form)    
+
+
+
+
     # the code of the execution should be here
     # don't forget to return the number of records created
     return redirect(url_for('main'))
