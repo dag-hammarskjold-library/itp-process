@@ -320,9 +320,10 @@ def create_itpp_itp():
     if request.method == 'POST':
         name = request.form.get('name',None)
         body = request.form.get('body',None)
-        itp_session = request.form.get('session')
+        itp_session = request.form.get('session',None)
+        body_session_auth = request.form.get('bodySessionAuth',None)
         try:
-            itp = Itpp_itp(name=name, body=body, itp_session=itp_session)
+            itp = Itpp_itp(name=name, body=body, itp_session=itp_session, body_session_auth=body_session_auth)
             itp.save()
             flash("ITP Document creation succeeded.")
             itp_id = json.loads(dumps(itp.id))['$oid']
@@ -336,7 +337,11 @@ def create_itpp_itp():
 @app.route("/itpp_itps/<id>")
 @login_required
 def get_itpp_itp_by_id(id):
-    pass
+    try:
+        itp = Itpp_itp.objects.get(id=id)
+        return jsonify(itp)
+    except:
+        raise
 
 @app.route("/itpp_itps/<id>/update", methods=['GET','POST'])
 @login_required
@@ -344,12 +349,14 @@ def update_itpp_itp(id):
     if request.method == 'POST':
         name = request.form.get('name',None)
         body = request.form.get('body',None)
-        itp_session = request.form.get('session')
+        itp_session = request.form.get('session',None)
+        body_session_auth = request.form.get('bodySessionAuth',None)
         try:
             itp = Itpp_itp.objects.get(id=id)
             itp.name = name
             itp.body = body
             itp.itp_session = itp_session
+            itp.body_session_auth = body_session_auth
             itp.save()
             flash("ITP Document save succeeded.")
             itp_id = json.loads(dumps(itp.id))['$oid']
