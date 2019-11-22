@@ -339,7 +339,7 @@ def create_itpp_itp():
 def get_itpp_itp_by_id(id):
     try:
         itp = Itpp_itp.objects.get(id=id)
-        return jsonify(itp)
+        return render_template('itpp_itp/view.html', itp=itp)
     except:
         raise
 
@@ -479,7 +479,7 @@ def get_or_update_rule(itp_id,section_id):
     if request.method == 'POST':
         rule_id = request.form.get('rule_id',None)
         name = request.form.get('ruleName',None)
-        order = request.form.get('processOrcer',None)
+        order = request.form.get('processOrder',None)
         rule_type = request.form.get('ruleType',None)
         parameters = request.form.get('parameters',None)
         try:
@@ -545,10 +545,28 @@ def add_rule(itp_id,section_id):
         if section.id == bson.ObjectId(section_id):
             return render_template('itpp_itp/update.html', mode='rules', itp=itp, section=section, rules=section.rules)
 
-@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/delete", methods=['POST'])
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/delete")
 @login_required
 def delete_rule(itp_id, section_id, rule_id):
-    pass
+    try:
+        itp = Itpp_itp.objects.get(id=itp_id)
+        #itp.update(sections__id=bson.ObjectId(section_id),pull__sections__rules__id=bson.ObjectId(rule_id))
+        #itp = Itpp_itp.objects(id=bson.ObjectId(itp_id), sections__id=bson.ObjectId(section_id), sections__rules__id=bson.ObjectId(rule_id))[0]
+        for section in itp.sections:
+            if section.id == bson.ObjectId(section_id):
+                idx = 0
+                for rule in section.rules:
+                    if rule.id == bson.ObjectId(rule_id):
+                        print(section.id, rule.id)
+                        section.rules.pop(idx)
+                        itp.save()
+                    else:
+                        idx += 1
+                return render_template('itpp_itp/update.html', mode='rules', itp=itp, section=section, rules=section.rules)
+                #return redirect(url_for('update_itpp_itp', id=itp_id, section=section, mode='rules'))
+        
+    except:
+        raise
 
 
 ####################################################

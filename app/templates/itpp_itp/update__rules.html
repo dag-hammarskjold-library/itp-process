@@ -13,7 +13,7 @@
                     <p class="card-text">Type: {{rule.rule_type}}</p>
                     <p class="card-text">Parameters: {{rule.parameters}}</p>
                     <div class="card-footer">
-                        <span class="fas fa-edit"></span><a href="#" id="updateRuleLink" data-toggle="modal" data-target="#updateRule" onclick="editRule(id='{{rule.id}}',name='{{rule.name}}',order='{{rule.process_order}}', parameters='{{rule.parameters}}')"> Edit </a><span> | </span>
+                        <span class="fas fa-edit"></span><a href="#" id="updateRuleLink" data-toggle="modal" data-target="#updateRule" onclick='editRule(id="{{rule.id}}", name="{{rule.name}}", order="{{rule.process_order}}", parameters="{{rule.parameters}}")'> Edit </a><span> | </span>
                         <span class="fas fa-trash-alt"></span><a href="{{delete_url}}"> Delete </a>
                         {% if loop.last %}
                         <span> | </span>
@@ -75,7 +75,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title">Create a section</h5>
+            <h5 class="modal-title">Update a rule</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
             </button>
@@ -83,26 +83,26 @@
 
         <div class="modal-body">
             <div class="col">
-                <p>This is a form to update a section</p>
+                <p>This is a form to update a rule</p>
                 <form id="updateRuleForm">
                     <input id="itp_id" name="itp_id" type="hidden" value="{{itp.id}}">
                     <input id="section_id" name="section_id" type="hidden" value="{{section.id}}">
                     <input id="rule_id" name="rule_id" type="hidden">
                     <div class="form-group row">
                         <label for="ruleName">Name: </label>
-                        <input name="ruleName" class="form-control" type="text">
+                        <input id="ruleName" name="ruleName" class="form-control" type="text">
                     </div>
                     <div class="form-group row">
                         <label for="processOrder">Order: </label>
-                        <input name="processOrder" class="form-control" type="text">
+                        <input id="processOrder" name="processOrder" class="form-control" type="text">
                     </div>
                     <div class="form-group row">
                         <label for="ruleType">Type: </label>
-                        <input name="ruleType" class="form-control" type="text">
+                        <input id="ruleType" name="ruleType" class="form-control" type="text">
                     </div>
                     <div class="form-group row">
                         <label for="parameters">Parameters: </label>
-                        <input name="parameters" class="form-control" type="text">
+                        <input id="parameters" name="parameters" class="form-control" type="text">
                     </div>
                 </form>
             </div>
@@ -148,7 +148,8 @@
         })
     });
     
-    function editSection(id,name,order,type,parameters) {
+    function editRule(id,name,order,type,parameters) {
+        console.log(id,name,order,type,parameters);
         $('#updateRule input#rule_id').val(id);
         $('#updateRule input#ruleName').val(name);
         $('#updateRule input#processOrder').val(order);
