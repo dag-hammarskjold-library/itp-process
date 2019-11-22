@@ -1,0 +1,75 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+    .customize {
+        height: 800px;
+        width: 1000px;
+    }
+</style>
+
+<div class="container customize ">
+    <div class="row">
+        <div class="col">
+            <h1>{{itp.name}}</h1>
+            {% if itp.body and itp.itp_session %}
+            <p>Body/Session: {{itp.body}}/{{itp.itp_session}}</p>
+            {% endif %}
+            {% if itp.body_session_auth %}
+            <p>Body/Session Auth#: {{itp.body_session_auth}}</p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h3>Sections</h3>
+        </div>
+    </div>
+    {% for section in itp.sections|sort(attribute='section_order') %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">{{section.name}}</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    {% if section.section_order %}
+                    <p>Section Order: {{section.section_order}}</p>
+                    {% endif %}
+                    {%if section.data_source %}
+                    <p>Data Source: {{section.data_source}}</p>
+                    {% else %}
+                    <p>Data Source: None</p>
+                    {% endif %}
+                </div>
+                <div class="col">
+                    <div class="row">
+                        <div class="col">
+                            <h4>Rules</h4>
+                        </div>
+                    </div>
+                    {% for rule in section.rules %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">{{rule.name}}</h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">Process Order: {{rule.process_order}}</p>
+                            <p class="card-text">Rule Type: {{rule.rule_type}}</p>
+                            <p class="card-text">Parameters: {{rule.parameters|join(',')}}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href="{{url_for('list_itpp_itps')}}"> List of ITP Documents | </a>
+        <a href="{{url_for('main')}}"> Go back to the menu </a>
+    </div>
+</div>
+
+
+{% endblock %}

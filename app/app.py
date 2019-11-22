@@ -320,9 +320,10 @@ def create_itpp_itp():
     if request.method == 'POST':
         name = request.form.get('name',None)
         body = request.form.get('body',None)
-        itp_session = request.form.get('session')
+        itp_session = request.form.get('session',None)
+        body_session_auth = request.form.get('bodySessionAuth',None)
         try:
-            itp = Itpp_itp(name=name, body=body, itp_session=itp_session)
+            itp = Itpp_itp(name=name, body=body, itp_session=itp_session, body_session_auth=body_session_auth)
             itp.save()
             flash("ITP Document creation succeeded.")
             itp_id = json.loads(dumps(itp.id))['$oid']
@@ -336,7 +337,11 @@ def create_itpp_itp():
 @app.route("/itpp_itps/<id>")
 @login_required
 def get_itpp_itp_by_id(id):
-    pass
+    try:
+        itp = Itpp_itp.objects.get(id=id)
+        return render_template('itpp_itp/view.html', itp=itp)
+    except:
+        raise
 
 @app.route("/itpp_itps/<id>/update", methods=['GET','POST'])
 @login_required
@@ -344,12 +349,14 @@ def update_itpp_itp(id):
     if request.method == 'POST':
         name = request.form.get('name',None)
         body = request.form.get('body',None)
-        itp_session = request.form.get('session')
+        itp_session = request.form.get('session',None)
+        body_session_auth = request.form.get('bodySessionAuth',None)
         try:
             itp = Itpp_itp.objects.get(id=id)
             itp.name = name
             itp.body = body
             itp.itp_session = itp_session
+            itp.body_session_auth = body_session_auth
             itp.save()
             flash("ITP Document save succeeded.")
             itp_id = json.loads(dumps(itp.id))['$oid']
@@ -472,7 +479,7 @@ def get_or_update_rule(itp_id,section_id):
     if request.method == 'POST':
         rule_id = request.form.get('rule_id',None)
         name = request.form.get('ruleName',None)
-        order = request.form.get('processOrcer',None)
+        order = request.form.get('processOrder',None)
         rule_type = request.form.get('ruleType',None)
         parameters = request.form.get('parameters',None)
         try:
@@ -485,13 +492,14 @@ def get_or_update_rule(itp_id,section_id):
                             rule.name = name
                             rule.process_order = order
                             rule.rule_type = rule_type
-                            rule.parameters = parameters
-            itp.save()
-            flash("Rule saved successfully")
-            return json.dumps({
-                "success":True, 
-                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id)
-            }), 200, {'ContentType':'application/json'}
+                            rule.parameters = parameters.split(',')
+                            itp.save()
+                            flash("Rule saved successfully")
+                            print()
+                            return json.dumps({
+                                "success":True, 
+                                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id, mode='rules')
+                            }), 200, {'ContentType':'application/json'}
         except:
             raise
             return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
@@ -507,7 +515,7 @@ def add_rule(itp_id,section_id):
     itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
     if request.method == 'POST':
         name = request.form.get('ruleName',None)
-        order = request.form.get('processOrcer',None)
+        order = request.form.get('processOrder',None)
         rule_type = request.form.get('ruleType',None)
         parameters = request.form.get('parameters','').split(",")
 
@@ -528,7 +536,7 @@ def add_rule(itp_id,section_id):
             rule_id = rule.id
             return json.dumps({
                 "success":True, 
-                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id)
+                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id, mode='rules')
             }), 200, {'ContentType':'application/json'}
         except:
             raise
@@ -538,10 +546,28 @@ def add_rule(itp_id,section_id):
         if section.id == bson.ObjectId(section_id):
             return render_template('itpp_itp/update.html', mode='rules', itp=itp, section=section, rules=section.rules)
 
-@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/delete", methods=['POST'])
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/rules/<rule_id>/delete")
 @login_required
 def delete_rule(itp_id, section_id, rule_id):
-    pass
+    try:
+        itp = Itpp_itp.objects.get(id=itp_id)
+        #itp.update(sections__id=bson.ObjectId(section_id),pull__sections__rules__id=bson.ObjectId(rule_id))
+        #itp = Itpp_itp.objects(id=bson.ObjectId(itp_id), sections__id=bson.ObjectId(section_id), sections__rules__id=bson.ObjectId(rule_id))[0]
+        for section in itp.sections:
+            if section.id == bson.ObjectId(section_id):
+                idx = 0
+                for rule in section.rules:
+                    if rule.id == bson.ObjectId(rule_id):
+                        print(section.id, rule.id)
+                        section.rules.pop(idx)
+                        itp.save()
+                    else:
+                        idx += 1
+                return render_template('itpp_itp/update.html', mode='rules', itp=itp, section=section, rules=section.rules)
+                #return redirect(url_for('update_itpp_itp', id=itp_id, section=section, mode='rules'))
+        
+    except:
+        raise
 
 
 ####################################################
