@@ -55,7 +55,7 @@
                         <div class="card-body">
                             <p class="card-text">Process Order: {{rule.process_order}}</p>
                             <p class="card-text">Rule Type: {{rule.rule_type}}</p>
-                            <p class="card-text">Parameters: {{rule.parameters}}</p>
+                            <p class="card-text">Parameters: {{rule.parameters|join(',')}}</p>
                         </div>
                     </div>
                     {% endfor %}
@@ -64,6 +64,11 @@
         </div>
     </div>
     {% endfor %}
+    <hr>
+    <div class="text-bold text-right font-weight-bold">
+        <a href="{{url_for('list_itpp_itps')}}"> List of ITP Documents | </a>
+        <a href="{{url_for('main')}}"> Go back to the menu </a>
+    </div>
 </div>
 
 
