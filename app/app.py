@@ -492,13 +492,14 @@ def get_or_update_rule(itp_id,section_id):
                             rule.name = name
                             rule.process_order = order
                             rule.rule_type = rule_type
-                            rule.parameters = parameters
-            itp.save()
-            flash("Rule saved successfully")
-            return json.dumps({
-                "success":True, 
-                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id)
-            }), 200, {'ContentType':'application/json'}
+                            rule.parameters = parameters.split(',')
+                            itp.save()
+                            flash("Rule saved successfully")
+                            print()
+                            return json.dumps({
+                                "success":True, 
+                                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id, mode='rules')
+                            }), 200, {'ContentType':'application/json'}
         except:
             raise
             return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
@@ -514,7 +515,7 @@ def add_rule(itp_id,section_id):
     itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
     if request.method == 'POST':
         name = request.form.get('ruleName',None)
-        order = request.form.get('processOrcer',None)
+        order = request.form.get('processOrder',None)
         rule_type = request.form.get('ruleType',None)
         parameters = request.form.get('parameters','').split(",")
 
@@ -535,7 +536,7 @@ def add_rule(itp_id,section_id):
             rule_id = rule.id
             return json.dumps({
                 "success":True, 
-                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id)
+                "redirect": url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id, mode='rules')
             }), 200, {'ContentType':'application/json'}
         except:
             raise

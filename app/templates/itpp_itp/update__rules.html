@@ -11,9 +11,9 @@
                     <h5 class="card-title">{{rule.name}}</h5>
                     <p class="card-text">Order: {{rule.process_order}}</p>
                     <p class="card-text">Type: {{rule.rule_type}}</p>
-                    <p class="card-text">Parameters: {{rule.parameters}}</p>
+                    <p class="card-text">Parameters: {{rule.parameters|join(",")}}</p>
                     <div class="card-footer">
-                        <span class="fas fa-edit"></span><a href="#" id="updateRuleLink" data-toggle="modal" data-target="#updateRule" onclick='editRule(id="{{rule.id}}", name="{{rule.name}}", order="{{rule.process_order}}", parameters="{{rule.parameters}}")'> Edit </a><span> | </span>
+                        <span class="fas fa-edit"></span><a href="#" id="updateRuleLink" data-toggle="modal" data-target="#updateRule" onclick='editRule(id="{{rule.id}}", name="{{rule.name}}", order="{{rule.process_order}}", type="{{rule.rule_type}}",parameters="{{rule.parameters|join(",")}}")'> Edit </a><span> | </span>
                         <span class="fas fa-trash-alt"></span><a href="{{delete_url}}"> Delete </a>
                         {% if loop.last %}
                         <span> | </span>
