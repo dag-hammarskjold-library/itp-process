@@ -44,6 +44,13 @@
             </ul>
         </div>
     </nav>
+    <div class="row">
+        <div class="col">
+            <hr>
+            <h4>Now Editing: {{itp.name}} ({{itp.body}}/{{itp.itp_session}})</h4>
+            <hr>
+        </div>
+    </div>
     {% if mode == 'sections' %}
         {% include 'itpp_itp/update__sections.html' %}
     {% elif mode == 'rules' %}
@@ -51,7 +58,7 @@
     {% else %}
     <div class="row">
         <div class="col">
-            <form id="itpDocument">
+            <form id="itpDocument" method="POST">
                 <div class="form-group row">
                     <label for="name" class="col-sm-3 col-form-label">Name</label>
                     <div class="col-sm-9">
@@ -83,6 +90,16 @@
                         {% endif %}
                     </div>
                 </div>
+                <div class="form-group row">
+                    <label for="bodySessionAuth" class="col-sm-3 col-form-label">Body/Session Auth#</label>
+                    <div class="col-sm-9">
+                        {% if itp.body_session_auth %}
+                        <input name="bodySessionAuth" type="text" class="form-control" placeholder="body/session auth#" value="{{itp.body_session_auth}}">
+                        {% else %}
+                        <input name="bodySessionAuth" type="text" class="form-control" placeholder="body/session auth#">
+                        {% endif %}
+                    </div>
+                </div>
                 <button type="button" class="btn btn-primary" id="save">
                     <span class="fa fa-save"></span> Save and Continue
                 </button>
@@ -92,7 +109,25 @@
     {% endif %}
     <hr>
     <div class="text-bold text-right font-weight-bold">
-        <a href="{{url_for('list_itpp_itps')}}"> List of ITPP ITPs </a>
+        <a href="{{url_for('list_itpp_itps')}}"> List of ITP Documents | </a>
+        <a href="{{url_for('main')}}"> Go back to the menu </a>
     </div>
 </div>
+
+<script type="text/javascript">
+$("#save").click(function(e){
+    e.preventDefault();
+    var postData = $('form#itpDocument').serializeArray();
+    console.log(postData);
+    $.ajax({
+        url: "{{url_for('update_itpp_itp', id=itp.id)}}",
+        type: 'post',
+        data: postData,
+        dataType: 'json',
+        success: function(return_data) {
+            window.location.href = return_data['redirect'];
+        }
+    })
+});
+</script>
 {% endblock %}

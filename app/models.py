@@ -65,7 +65,7 @@ class Itpp_rule(EmbeddedDocument):
     '''
     id = ObjectIdField(default=ObjectId)
     name = StringField()
-    process_order = StringField()
+    process_order = IntField()
     rule_type = StringField() # e.g., group, sort, filter
     parameters = ListField()
 
