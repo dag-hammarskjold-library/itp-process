@@ -44,7 +44,7 @@ class MissingField(Report):
             ('001',None),
             (self.symbol_field,'a')
         ]
-        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
+        self.field_names = ['Record Type','Record ID', 'Document Symbol']
     
     def execute(self,args):
         self.validate_args(args)
@@ -77,7 +77,7 @@ class MissingSubfield(Report):
             ('001',None),
             ('191','a')
         ]
-        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
+        self.field_names = ['Record Type','Record ID', 'Document Symbol']
     
     def execute(self,args):
         self.validate_args(args)
@@ -135,12 +135,12 @@ class BibIncorrect793Comm(Report):
     def __init__(self):
         self.name = 'bib_incorrect_793_committees'
         self.title = 'Incorrect field - 793 (Committees)'
-        self.description = 'Bib records where 191 starts with "A/C.<comitte number>" and 793$a does not equal the committe number'
+        self.description = 'Bib records where 191 starts with "A/C.<committee number>" and 793$a does not equal the committe number'
         self.category = "BIB"
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
         self.output_fields = [('191','a')]
-        self.field_names = [('Document Symbol')]
+        self.field_names = ['Document Symbol']
         
     def execute(self,args):
         self.validate_args(args)
@@ -169,7 +169,7 @@ class BibIncorrect793Plen(Report):
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
         self.output_fields = [('191','a')]
-        self.field_names = [('Document Symbol')]
+        self.field_names = ['Document Symbol']
         
     def execute(self,args):
         self.validate_args(args)
@@ -270,7 +270,7 @@ class AnyMissingField(Report):
             ('791','a')
         ]
         
-        self.field_names = [('Record Type','Record ID', 'Document Symbol')]
+        self.field_names = ['Record Type','Record ID', 'Document Symbol']
         
     def execute(self,args):
         self.validate_args(args)
@@ -409,7 +409,7 @@ def _process_results(generator,output_fields):
     results = []
     
     for bib in generator:
-        results.append(['||'.join(bib.get_values(*out)) for out in output_fields])
+        results.append(['; '.join(bib.get_values(*out)) for out in output_fields])
     
     # list of lists
     return results

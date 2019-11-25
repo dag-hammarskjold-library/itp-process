@@ -59,8 +59,8 @@
             <table id="myTable" class="table table-striped sortable">
                 <thead>
                     <tr>
-						{% for title in columnTitle %}
-                        <th scope="col">{{title}}</th>
+						{% for field in report['field_names'] %}
+                        <th scope="col">{{field}}</th>
 						{% endfor %}
                     </tr>
                 </thead>

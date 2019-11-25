@@ -601,12 +601,12 @@ def get_report_by_id(name):
             
         return render_template(
             'report.html', 
-            columnTitle=report.field_names, 
-            report=report, form=form, 
-            resultsSearch=results, 
-            recordNumber=len(results), 
-            url=URL_BY_DEFAULT, 
-            errorMail=warning
+            report = report, 
+            form = form, 
+            resultsSearch = results, 
+            recordNumber = len(results), 
+            url = URL_BY_DEFAULT, 
+            errorMail = warning
         )        
     else:
         results = []        
