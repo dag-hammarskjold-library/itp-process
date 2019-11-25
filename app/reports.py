@@ -256,15 +256,17 @@ class VoteIncorrectSession(VoteReport):
         
         bibs = Bib.match(
             Matcher('791',('b',body),('c',session)),
-            Matcher('930',('a',Regex('^UND')))
+            Matcher('930',('a','VOT'))
         )
         
         results = []
         for bib in bibs:
             for symbol in bib.get_values('791','a'):
-                match = re.match('^A/(\d+)',symbol)
+               
+                match = re.match('^A/RES/(\d+)',symbol)
                 if match:
                     check = bib.get_value('791','r')
+                    print((symbol,check))
                     if check != 'A' + match.group(1):
                         results.append(bib)
                         break
@@ -276,7 +278,7 @@ class VoteIncorrectSession(VoteReport):
                         results.append(bib)
                         break
                     
-                match = re.match('^E/(\d{4})',symbol)
+                match = re.match('^E/RES/(\d{4})',symbol)
                 if match:
                     check = bib.get_value('791','r')
                     if check != 'E' + match.group(1):

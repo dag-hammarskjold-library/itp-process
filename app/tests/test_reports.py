@@ -312,7 +312,7 @@ class Reports(TestCase):
             ('791','b',1),
             ('791','c',1),
             ('791','r','A72'),
-            ('930','a','UND'),
+            ('930','a','VOT'),
         ).commit()
         
         Bib({'_id': 2}).set_values(
@@ -320,7 +320,7 @@ class Reports(TestCase):
             ('791','b',1),
             ('791','c',1),
             ('791','r','A1'),
-            ('930','a','UND')
+            ('930','a','VOT')
         ).commit()
         
         report = ReportList.get_by_name('vote_incorrect_session')
@@ -333,7 +333,7 @@ class Reports(TestCase):
             ('791','b',1),
             ('791','c',1),
             ('791','r','S1900'),
-            ('930','a','UND'),
+            ('930','a','VOT'),
         ).commit()
         
         Bib({'_id': 2}).set_values(
@@ -341,7 +341,7 @@ class Reports(TestCase):
             ('791','b',1),
             ('791','c',1),
             ('791','r','S1999'),
-            ('930','a','UND')
+            ('930','a','VOT')
         ).commit()
         
         report = ReportList.get_by_name('vote_incorrect_session')
@@ -354,7 +354,7 @@ class Reports(TestCase):
             ('791','b',1),
             ('791','c',1),
             ('791','r','E2012'),
-            ('930','a','UND'),
+            ('930','a','VOT'),
         ).commit()
         
         Bib({'_id': 2}).set_values(
@@ -362,7 +362,7 @@ class Reports(TestCase):
             ('791','b',1),
             ('791','c',1),
             ('791','r','E1969'),
-            ('930','a','UND')
+            ('930','a','VOT')
         ).commit()
         
         report = ReportList.get_by_name('vote_incorrect_session')
