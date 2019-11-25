@@ -266,7 +266,6 @@ class VoteIncorrectSession(VoteReport):
                 match = re.match('^A/RES/(\d+)',symbol)
                 if match:
                     check = bib.get_value('791','r')
-                    print((symbol,check))
                     if check != 'A' + match.group(1):
                         results.append(bib)
                         break
