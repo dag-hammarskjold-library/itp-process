@@ -599,7 +599,15 @@ def get_report_by_id(name):
         except:
             raise
             
-        return render_template('report.html',columnTitle=report.field_names,report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT,errorMail=warning)
+        return render_template(
+            'report.html', 
+            columnTitle=report.field_names, 
+            report=report, form=form, 
+            resultsSearch=results, 
+            recordNumber=len(results), 
+            url=URL_BY_DEFAULT, 
+            errorMail=warning
+        )        
     else:
         results = []        
         return render_template('report.html', report=report, form=form)
