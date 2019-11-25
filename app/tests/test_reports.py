@@ -294,7 +294,82 @@ class Reports(TestCase):
         
     # incorrect session - vote
     def test_6(self):
-        pass
+        '''
+        authority ID for the body/session;
+        930$a starts with "VOT";
+        
+        If 791 $a starts with:
+        
+        A/72 => 791 $r should also start with A72
+        
+        S/RES/(year)
+        
+        E/2018 => 791 $r should also start with E2018
+        '''
+        
+        Bib({'_id': 1}).set_values(
+            ('791','a','A/72/GOOD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('791','r','A72'),
+            ('930','a','UND'),
+        ).commit()
+        
+        Bib({'_id': 2}).set_values(
+            ('791','a','A/72/BAD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('791','r','A1'),
+            ('930','a','UND')
+        ).commit()
+        
+        report = ReportList.get_by_name('vote_incorrect_session')
+        results = report.execute({'authority': 1})
+        self.assertEqual(len(results),1)
+        self.assertEqual(results[0][1],'A/72/BAD')
+        
+        Bib({'_id': 1}).set_values(
+            ('791','a','S/RES/1999/BAD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('791','r','S1900'),
+            ('930','a','UND'),
+        ).commit()
+        
+        Bib({'_id': 2}).set_values(
+            ('791','a','S/RES/1999/GOOD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('791','r','S1999'),
+            ('930','a','UND')
+        ).commit()
+        
+        report = ReportList.get_by_name('vote_incorrect_session')
+        results = report.execute({'authority': 1})
+        self.assertEqual(len(results),1)
+        self.assertEqual(results[0][1],'S/RES/1999/BAD')
+        
+        Bib({'_id': 1}).set_values(
+            ('791','a','E/2012/GOOD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('791','r','E2012'),
+            ('930','a','UND'),
+        ).commit()
+        
+        Bib({'_id': 2}).set_values(
+            ('791','a','E/1970/BAD'),
+            ('791','b',1),
+            ('791','c',1),
+            ('791','r','E1969'),
+            ('930','a','UND')
+        ).commit()
+        
+        report = ReportList.get_by_name('vote_incorrect_session')
+        results = report.execute({'authority': 1})
+        self.assertEqual(len(results),1)
+        self.assertEqual(results[0][1],'E/1970/BAD')
+        
     
     # missing field - vote
     def test_12c_17b_18b_20b(self):

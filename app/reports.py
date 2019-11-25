@@ -164,7 +164,7 @@ class BibIncorrect793Plen(Report):
     def __init__(self):
         self.name = 'bib_incorrect_793_plenary'
         self.title = 'Incorrect field - 793 (Plenary)'
-        self.description = 'Bib records where 191 starts with "A/RES" or "A/session/L." and 793$a does not equal with "PL"'
+        self.description = 'Bib records where 191 starts with "A/RES" or "A/<session>/L." and 793$a does not equal with "PL"'
         self.category = "BIB"
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -229,6 +229,62 @@ class SpeechMissingSubfield(MissingSubfield):
 
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
+
+class VoteReport(Report):
+    def __init__(self):
+        self.type = 'vote'
+        self.category = 'VOTING'
+        self.type_code = 'VOT'
+        self.symbol_field = '791'
+
+class VoteIncorrectSession(VoteReport):
+    def __init__(self):
+        super().__init__()
+        
+        self.name = 'vote_incorrect_session'
+        self.title = 'Incorrect session - 791'
+        self.description = 'Vote records that have the incorrect session in 791$r'
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.output_fields = [('001',None),('791','a')]
+        self.field_names = ['Record ID','791']
+        
+    def execute(self,args):
+        self.validate_args(args)
+     
+        body,session = _get_body_session(args['authority'])
+        
+        bibs = Bib.match(
+            Matcher('791',('b',body),('c',session)),
+            Matcher('930',('a',Regex('^UND')))
+        )
+        
+        results = []
+        for bib in bibs:
+            for symbol in bib.get_values('791','a'):
+                match = re.match('^A/(\d+)',symbol)
+                if match:
+                    check = bib.get_value('791','r')
+                    if check != 'A' + match.group(1):
+                        results.append(bib)
+                        break
+                    
+                match = re.match('^S/RES/(\d{4})',symbol)
+                if match: 
+                    check = bib.get_value('791','r')
+                    if check != 'S' + match.group(1):
+                        results.append(bib)
+                        break
+                    
+                match = re.match('^E/(\d{4})',symbol)
+                if match:
+                    check = bib.get_value('791','r')
+                    if check != 'E' + match.group(1):
+                        results.append(bib)
+                        break
+
+        return _process_results(results,self.output_fields)
+
 class VoteMissingField(MissingField):
     def __init__(self,tag):
         self.type = 'vote'
@@ -246,8 +302,7 @@ class VoteMissingSubfield(MissingSubfield):
         self.symbol_field = '791'
         
         super().__init__(tag,code)
-        
-        
+  
 ### "Other" reports
 
 class AnyMissingField(Report):
@@ -352,6 +407,7 @@ class ReportList(object):
         # Incorrect field - 991
         # Incorrect field - 992
         # Incorrect session - 791
+        VoteIncorrectSession(),
         # Missing field - 039
         VoteMissingField('039'),
         # Missing field - 856
