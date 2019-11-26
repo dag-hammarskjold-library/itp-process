@@ -209,17 +209,13 @@ Snapshots are the starting point of an ITP process. Once the ITP producer has
 validated the MARC data for the three relevant bodies and their resepective 
 sessions, they will create a snapshot to begin the remaining part of the 
 process.
-
 The three bodies are A/ E/ and S/
-
 The snapshot function (TBC) performs an Extraction of all the records for the 
 three body/session identifiers and Filters the records to include only the 
 fields the ITP report will need. What is saved in the database is the set of 
 extracted and filtered records necessary to proceed.
-
 From a snapshot, the ITP producer may begin assembling the sections that are 
 part of each body/session document. 
-
 So, in modeling terms: a snapshot has 3 documents; a document has many sections;
 a section uses Rules to Display the values of specific fields, Grouped and 
 Sorted.
@@ -244,7 +240,6 @@ def create_snapshot():
         sessions = request.args.get('sessions').split(',')
         for s in sessions:
             params.append(('191','r',s))
-
         f,s,v = params[0]
         records = Bib.match_value(f,s,v)
         results = []
@@ -604,7 +599,15 @@ def get_report_by_id(name):
         except:
             raise
             
-        return render_template('report.html', report=report, form=form, resultsSearch=results ,recordNumber=len(results),url=URL_BY_DEFAULT,errorMail=warning)
+        return render_template(
+            'report.html', 
+            report = report, 
+            form = form, 
+            resultsSearch = results, 
+            recordNumber = len(results), 
+            url = URL_BY_DEFAULT, 
+            errorMail = warning
+        )        
     else:
         results = []        
         return render_template('report.html', report=report, form=form)

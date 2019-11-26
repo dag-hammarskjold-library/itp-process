@@ -59,17 +59,17 @@
             <table id="myTable" class="table table-striped sortable">
                 <thead>
                     <tr>
-                        <th scope="col">Record Type</th>
-                        <th scope="col">Record ID</th>
-                        <th scope="col">Document Symbol</th>
+						{% for field in report['field_names'] %}
+                        <th scope="col">{{field}}</th>
+						{% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for result in resultsSearch %}
                     <tr class="item">
-                        <td>{{result[0]}}</td>
-                        <td>{{result[1]}}</td>
-                        <td><span><a href='{{url+result[2]}}' target="_blank">{{result[2]}}</a></strong></span></td>
+                        {% for field in result %}
+							<td>{{field}}</td>
+						{% endfor %}
                     </tr>
                     {% endfor %}
                 </tbody>
