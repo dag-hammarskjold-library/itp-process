@@ -149,13 +149,14 @@ class BibIncorrect793Comm(Report):
         
         bibs = Bib.match(
             Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a',Regex('^UND')))
+            Matcher('930',('a',Regex('^UND'))),
+            project = ['191','793']
         )
         
         results = []
         for bib in bibs:
             m = re.match('^A/C\.(\d)/', bib.symbol())
-            if m and bib.get_value('793','a') != '0' + m[1]:
+            if m and bib.get_value('793','a') != '0' + m.group(1):
                 results.append(bib) 
 
         return _process_results(results,self.output_fields)
@@ -178,12 +179,13 @@ class BibIncorrect793Plen(Report):
         
         bibs = Bib.match(
             Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a',Regex('^UND')))
+            Matcher('930',('a',Regex('^UND'))),
+            project = ['191','793']
         )
         
         results = []
         for bib in bibs:
-            if re.match('^A/RES/',bib.symbol()) or re.match('^A/{}/L\.'.format(session), bib.symbol()):
+            if re.match('^A/RES/',bib.symbol()) or re.match('^A/.+/L\.', bib.symbol()):
                 if bib.get_value('793','a') != 'PL':
                     results.append(bib) 
 
@@ -256,7 +258,8 @@ class VoteIncorrectSession(VoteReport):
         
         bibs = Bib.match(
             Matcher('791',('b',body),('c',session)),
-            Matcher('930',('a','VOT'))
+            Matcher('930',('a','VOT')),
+            project=['001','791']
         )
         
         results = []
