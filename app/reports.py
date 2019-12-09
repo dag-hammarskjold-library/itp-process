@@ -75,7 +75,7 @@ class MissingSubfield(Report):
         self.output_fields = [
             ('930','a'),
             ('001',None),
-            ('191','a')
+            (self.symbol_field,'a')
         ]
         self.field_names = ['Record Type','Record ID', 'Document Symbol']
     

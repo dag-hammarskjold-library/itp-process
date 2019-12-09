@@ -265,6 +265,7 @@ class Reports(TestCase):
         ).commit()
         
         Bib({'_id': 2}).set_values(
+            ('001',None,'2'),
             ('791','a','BAD'),
             ('791','b',1),
             ('791','c',1),
@@ -281,6 +282,7 @@ class Reports(TestCase):
 
         results = report.execute(args)
         self.assertEqual(len(results),1)
+        self.assertEqual(results[0],['ITS','2','BAD'])
         
     ### vote
     
