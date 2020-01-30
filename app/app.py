@@ -426,7 +426,7 @@ def clone_section(target_itp_id):
             source_section = Itpp_itp.objects.get(id=bson.ObjectId(source_itp_id), sections__id=bson.ObjectId(section_id)).sections[0]
             target_itp = Itpp_itp.objects.get(id=target_itp_id)
             target_section = Itpp_section(
-                name=source_section.name,
+                name='Copy of ' + source_section.name,
                 section_order = source_section.section_order,
                 data_source = source_section.data_source
             )
