@@ -1,42 +1,38 @@
 {% if not snapshots %}
 <div class="row">
     <div class="col">
-        
+
         <p>There are no snapshots available. You should create one before continuing.</p>
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createSnapshot">
             <span class="fa fa-plus"></span> Create Snapshot
         </button>
-        
+
     </div>
 </div>
-<hr>
-{% endif %}
+<hr> {% endif %}
 <div class="row">
     <div class="col">
         <h3>Sections</h3>
         {% if not itp.sections %}
-        <span class="fa fa-plus"></span><a href="#" data-toggle="modal" data-target="#addSection"> New </a>
-        {% endif %}
-        {% for section in itp.sections %}
-            {% set delete_url = url_for('delete_section', itp_id=itp.id, section_id=section.id) %}
-            {% set rules_url = url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id) %}
+        <span class="fa fa-plus"></span><a href="#" data-toggle="modal" data-target="#addSection"> New </a> {% endif %} {% for section in itp.sections %} {% set delete_url = url_for('delete_section', itp_id=itp.id, section_id=section.id) %} {% set rules_url
+        = url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id) %}
 
-            <div class="card section" id="{{section.id}}">
-                <div class="card-body">
-                    <h5 class="card-title">{{section.name}}</h5>
-                    <p class="card-text">Order: {{section.section_order}}</p>
-                    <p class="card-text">Data Source: {{section.data_source}}</p>
-                    <p class="card-text"><a href="{{url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id, mode='rules')}}">Manage Rules</a></p>
-                    <div class="card-footer">
-                        <span class="fas fa-edit"></span><a href="#" id="updateSectionLink" data-toggle="modal" data-target="#updateSection" onclick="editSection(id='{{section.id}}',name='{{section.name}}',order='{{section.section_order}}')"> Edit </a><span> | </span>
-                        <span class="fas fa-trash-alt"></span><a href="{{delete_url}}"> Delete </a>
-                        {% if loop.last %}
-                        <span> | </span>
-                        <span class="fa fa-plus"></span><a href="#" data-toggle="modal" data-target="#addSection"> New </a>
-                        {% endif %}
-                    </div>
+        <div class="card section" id="{{section.id}}">
+            <div class="card-body">
+                <h5 class="card-title">{{section.name}}</h5>
+                <p class="card-text">Order: {{section.section_order}}</p>
+                <p class="card-text">Data Source: {{section.data_source}}</p>
+                <p class="card-text"><a href="{{url_for('get_or_update_rule', itp_id=itp.id, section_id=section.id, mode='rules')}}">Manage Rules</a></p>
+                <div class="card-footer">
+                    <span class="fas fa-edit"></span><a href="#" id="updateSectionLink" data-toggle="modal" data-target="#updateSection" onclick="editSection(id='{{section.id}}',name='{{section.name}}',order='{{section.section_order}}')"> Edit </a><span> | </span>
+                    <span class="fas fa-trash-alt"></span><a href="{{delete_url}}"> Delete </a> {% if loop.last %}
+                    <span> | </span>
+                    <span class="fa fa-plus"></span><a href="#" data-toggle="modal" data-target="#addSection"> New </a>
+                    <span> | </span>
+                    <span class="far fa-copy"></span><a id="loadSections" href="#" data-toggle="modal" data-target="#cloneSection"> Clone Existing </a> {% endif %}
                 </div>
             </div>
+        </div>
         {% endfor %}
     </div>
 </div>
@@ -46,39 +42,39 @@
 <div class="modal" id="addSection" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Create a section</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <div class="modal-header">
+                <h5 class="modal-title">Create a section</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
             </button>
-        </div>
-
-        <div class="modal-body">
-            <div class="col">
-                <p>This is a form to create a new section</p>
-                <form id="addSectionForm">
-                    <input name="itp_id" type="hidden" value="{{itp.id}}">
-                    <div class="form-group row">
-                        <label for="sectionName">Name: </label>
-                        <input name="sectionName" class="form-control" type="text">
-                    </div>
-                    <div class="form-group row">
-                        <label for="sectionOrder">Order: </label>
-                        <input name="sectionOrder" class="form-control" type="text">
-                    </div>
-                    {% if snapshots %}
-                    <div class="form-group row">
-                        <label for="dataSource">Data Source: </label>
-                        <input name="dataSource" class="form-control" type="text">
-                    </div>
-                    {% endif %}
-                </form>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" id="saveNewSection" class="btn btn-primary">Save changes</button>
-        </div>
+
+            <div class="modal-body">
+                <div class="col">
+                    <p>This is a form to create a new section</p>
+                    <form id="addSectionForm">
+                        <input name="itp_id" type="hidden" value="{{itp.id}}">
+                        <div class="form-group row">
+                            <label for="sectionName">Name: </label>
+                            <input name="sectionName" class="form-control" type="text">
+                        </div>
+                        <div class="form-group row">
+                            <label for="sectionOrder">Order: </label>
+                            <input name="sectionOrder" class="form-control" type="text">
+                        </div>
+                        {% if snapshots %}
+                        <div class="form-group row">
+                            <label for="dataSource">Data Source: </label>
+                            <input name="dataSource" class="form-control" type="text">
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" id="saveNewSection" class="btn btn-primary">Save changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -86,83 +82,139 @@
 <div class="modal" id="updateSection" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Create a section</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <div class="modal-header">
+                <h5 class="modal-title">Create a section</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
             </button>
-        </div>
+            </div>
 
-        <div class="modal-body">
-            <div class="col">
-                <p>This is a form to update a section</p>
-                <form id="updateSectionForm">
-                    <input id="itp_id" name="itp_id" type="hidden" value="{{itp.id}}">
-                    <input id="section_id" name="section_id" type="hidden">
-                    <div class="form-group row">
-                        <label for="sectionName">Name: </label>
-                        <input id="sectionName" name="sectionName" class="form-control" type="text">
-                    </div>
-                    <div class="form-group row">
-                        <label for="sectionOrder">Order: </label>
-                        <input id="sectionOrder" name="sectionOrder" class="form-control" type="text">
-                    </div>
-                    {% if snapshots %}
-                    <div class="form-group row">
-                        <label for="dataSource">Data Source: </label>
-                        <input id="dataSource" name="dataSource" class="form-control" type="text">
-                    </div>
-                    {% endif %}
-                </form>
+            <div class="modal-body">
+                <div class="col">
+                    <p>This is a form to update a section</p>
+                    <form id="updateSectionForm">
+                        <input id="itp_id" name="itp_id" type="hidden" value="{{itp.id}}">
+                        <input id="section_id" name="section_id" type="hidden">
+                        <div class="form-group row">
+                            <label for="sectionName">Name: </label>
+                            <input id="sectionName" name="sectionName" class="form-control" type="text">
+                        </div>
+                        <div class="form-group row">
+                            <label for="sectionOrder">Order: </label>
+                            <input id="sectionOrder" name="sectionOrder" class="form-control" type="text">
+                        </div>
+                        {% if snapshots %}
+                        <div class="form-group row">
+                            <label for="dataSource">Data Source: </label>
+                            <input id="dataSource" name="dataSource" class="form-control" type="text">
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" id="saveUpdatedSection" class="btn btn-primary">Save changes</button>
             </div>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <button type="button" id="saveUpdatedSection" class="btn btn-primary">Save changes</button>
-        </div>
+    </div>
+</div>
+
+<div class="modal" id="cloneSection" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Clone a section</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="col">
+                    <p>Select a section from the list below</p>
+                    <div id="sectionList"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
+    $("#saveNewSection").click(function(e) {
+        e.preventDefault();
+        var postData = $('form#addSectionForm').serializeArray();
+        console.log(postData);
+        $.ajax({
+            url: "{{url_for('add_section', id=itp.id)}}",
+            type: 'post',
+            data: postData,
+            dataType: 'json',
+            success: function(return_data) {
+                window.location.href = return_data['redirect'];
+            }
+        })
+    });
 
-$("#saveNewSection").click(function(e){
-    e.preventDefault();
-    var postData = $('form#addSectionForm').serializeArray();
-    console.log(postData);
-    $.ajax({
-        url: "{{url_for('add_section', id=itp.id)}}",
-        type: 'post',
-        data: postData,
-        dataType: 'json',
-        success: function(return_data) {
-            window.location.href = return_data['redirect'];
-        }
-    })
-});
+    $("#saveUpdatedSection").click(function(e) {
+        e.preventDefault();
+        var postData = $('form#updateSectionForm').serializeArray();
+        console.log(postData);
+        $.ajax({
+            url: "{{url_for('get_or_update_section', itp_id=itp.id)}}",
+            type: 'post',
+            data: postData,
+            dataType: 'json',
+            success: function(return_data) {
+                window.location.href = return_data['redirect'];
+            }
+        })
+    });
 
-$("#saveUpdatedSection").click(function(e){
-    e.preventDefault();
-    var postData = $('form#updateSectionForm').serializeArray();
-    console.log(postData);
-    $.ajax({
-        url: "{{url_for('get_or_update_section', itp_id=itp.id)}}",
-        type: 'post',
-        data: postData,
-        dataType: 'json',
-        success: function(return_data) {
-            window.location.href = return_data['redirect'];
-        }
-    })
-});
+    $('#cloneSection').ready(function() {
+        $.ajax({
+            url: "{{url_for('list_all_sections')}}",
+            type: "get",
+            dataType: 'json',
+            success: function(return_data) {
+                var i;
+                for (i=0; i<return_data.length; i++) {
+                    var newA = document.createElement("a");
+                    newA.id = return_data[i]['itp']['id'] + '/' + return_data[i]['section']['id'];
+                    $(newA).addClass("cloneLink");
+                    newA.href = "#";
+                    newA.text = return_data[i]['itp']['name'] + ' / ' + return_data[i]['section']['name'];
+                    var f = "cloneLink('"+ return_data[i]['itp']['id'] + "','" + return_data[i]['section']['id'] +"')";
+                    console.log(f);
+                    $(newA).attr('onClick', f);
+                    $("div#sectionList")
+                    .append(newA)
+                    .append('<br>');
+                }
+            }
+        })
+    });
 
-function editSection(id,name,order) {
-    $('#updateSection input#section_id').val(id);
-    $('#updateSection input#sectionName').val(name);
-    $('#updateSection input#sectionOrder').val(order);
-    {% if snapshots %}
-    $('#updateSection input#dataSource').val(order);
-    {% endif %}
-    console.log(id,name,order)
-};
+    function cloneLink(sourceItpId, sectionId) {
+        var postData = {'sourceItpId': sourceItpId, 'sectionId': sectionId };
+        console.log(postData);
+        $.ajax({
+            url: "{{url_for('clone_section', target_itp_id=itp.id)}}",
+            type: 'post',
+            data: postData,
+            dataType: 'json',
+            success: function(return_data) {
+                window.location.href = return_data['redirect'];
+            }
+        });
+    }
+
+    function editSection(id, name, order) {
+        $('#updateSection input#section_id').val(id);
+        $('#updateSection input#sectionName').val(name);
+        $('#updateSection input#sectionOrder').val(order); 
+        {%if snapshots %}
+        $('#updateSection input#dataSource').val(order); 
+        {% endif %}
+        console.log(id, name, order)
+    };
 </script>

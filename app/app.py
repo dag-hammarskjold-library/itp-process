@@ -414,8 +414,44 @@ def add_section(id):
     except:
         raise
         return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
+
+@app.route("/itpp_itps/<target_itp_id>/sections/cloneFrom", methods=['POST'])
+@login_required
+def clone_section(target_itp_id):
+    if request.method == 'POST':
+        source_itp_id = request.form.get('sourceItpId',None)
+        section_id = request.form.get('sectionId', None)
+        source_itp = Itpp_itp.objects.get(id=source_itp_id)
+        try:
+            source_section = Itpp_itp.objects.get(id=bson.ObjectId(source_itp_id), sections__id=bson.ObjectId(section_id)).sections[0]
+            target_itp = Itpp_itp.objects.get(id=target_itp_id)
+            target_section = Itpp_section(
+                name=source_section.name,
+                section_order = source_section.section_order,
+                data_source = source_section.data_source
+            )
+            target_itp.sections.append(target_section)
+            target_itp.save()
+            flash("Clone succeeded.")
+            return json.dumps({
+                "success":True, 
+                "redirect": url_for('update_itpp_itp', id=target_itp_id, mode='sections')
+            }), 200, {'ContentType':'application/json'}
+        except:
+            raise
+            return json.dumps({
+                'success': False,
+            }), 400, {'ContentType': 'application/json'}
+    # method is GET
+    itp_list = Itpp_itp.objects
     
-    
+@app.route("/itpp_itps/sections")
+def list_all_sections():
+    return_data = []
+    for itp in Itpp_itp.objects:
+        for section in itp.sections:
+            return_data.append({'itp': {'id': str(itp.id), 'name': itp.name}, 'section': {'id': str(section.id), 'name': section.name}})
+    return json.dumps(return_data), 200, {'ContentType': 'application/json'}
 
 @app.route("/itpp_itps/<itp_id>/sections", methods=['GET','POST'])
 def get_or_update_section(itp_id):
