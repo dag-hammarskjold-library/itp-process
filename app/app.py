@@ -428,7 +428,8 @@ def clone_section(target_itp_id):
             target_section = Itpp_section(
                 name='Copy of ' + source_section.name,
                 section_order = source_section.section_order,
-                data_source = source_section.data_source
+                data_source = source_section.data_source,
+                rules = source_section.rules
             )
             target_itp.sections.append(target_section)
             target_itp.save()
