@@ -35,13 +35,83 @@
                     <button id="execute" type="submit" class="btn btn-primary mb-5" onclick="loading();" disabled> Execute </button>
                 </div>
             </form>
-
+            
         </div>
+        
+    </div>
+    <br>
+    <div id="output">
+        <!--<div class="container mt-4 mb-4" >
+            <h4>Current snapshots:</h4>
+            {% for snapshot in snapshots %}
+            <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                <li> <span class="text-dark">*   {{snapshot}}</span></a></li>
+            </ul>
+            {% endfor %}
+        </div> -->
+        <div class="card mb-12 shadow-sm">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Existing Snapshots</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-3">
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-header">
+                                <h4 class="my-0 font-weight-normal">General Assembly</h4>
+                            </div>
+                            <div class="card-body">
+                                {% for snapshot in snapshots %}
+                                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                                    <!-- Implement the loop for generating the links for the reports -->
+                                    {% if snapshot[0][0]=="A" %}
+                                    <li> <span class="text-dark"> * {{snapshot[0]}} @ {{snapshot[1] }}</span></li>
+                                    {% endif %}
+                                </ul>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-header">
+                                <h4 class="my-0 font-weight-normal">Security Council</h4>
+                            </div>
+                            <div class="card-body">
+                                {% for snapshot in snapshots %}
+                                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                                    <!-- Implement the loop for generating the links for the reports -->
+                                    {% if snapshot[0][0]=="S" %}
+                                    <li> <span class="text-dark"> * {{snapshot[0]}} @ {{snapshot[1] }}</span></li>
+                                    {% endif %}
+                                </ul>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-header">
+                                <h4 class="my-0 font-weight-normal">ECOSOC</h4>
+                            </div>
+                            <div class="card-body">
+                                {% for snapshot in snapshots %}
+                                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                                    <!-- Implement the loop for generating the links for the reports -->
+                                    {% if snapshot[0][0]=="E" %}
+                                    <li> <span class="text-dark"> * {{snapshot[0]}} @ {{snapshot[1] }}</span></li>
+                                    {% endif %}
+                                </ul>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
 
     </div>
     <br>
-    <div id="output"></div>
-    <br>
+
+
     <div class="container">
         <hr>
         <a href="{{url_for('main')}}"> Go back to the menu </a>

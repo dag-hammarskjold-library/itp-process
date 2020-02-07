@@ -1,4 +1,5 @@
-from dlx import DB, Bib, Auth
+from dlx import DB
+from dlx.marc import Bib, Auth
 from mongoengine import connect
 import boto3
 import os, re
