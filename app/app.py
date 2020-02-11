@@ -14,9 +14,11 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import Config
 from dlx import DB
+from dlx.marc import Bib, Auth, BibSet, QueryDocument,Condition,Or
 from bson.json_util import dumps
 import bson
 import time, json
+from zappa.asynchronous import task
 
 
 ###############################################################################################
@@ -260,7 +262,14 @@ def delete_snapshot(id):
 @app.route("/displaySnapshot")
 @login_required
 def displaySnapshot():
-    return render_template('snapshot.html')
+    snapshot=Snapshot('ZZZZ','0001')
+    return render_template('snapshot.html', snapshots=snapshot.list())
+
+@task
+def transform_and_write_snapshot(snapshot):
+    snapshot.transform_write()
+
+
 
 @app.route("/executeSnapshot",methods=["POST"])
 @login_required
@@ -270,13 +279,32 @@ def executeSnapshot():
     body,session=_get_body_session(request.form.get("authority"))
     body=body.split('/')[0]#_get_body_session returns A/ and 72 ; only temporary to ensure that rules are correctly read
     snapshot=Snapshot(body,session) # snapshot class uses A and 72
+    #snapshots=Snapshot.list()
     if snapshot is None:
         abort(400)
     if not (body,session) is None:
         warning = None
         try:
-            number = snapshot.execute()
-            print("No of ITP records is: "+ str(number))
+            '''
+            proj_dict, itpp_bib_fields=snapshot.fields_to_extract()
+            print(proj_dict)
+            lbibs,len_of_data=snapshot.fetch_data(proj_dict)
+            print(f"len of lbibs is {len(lbibs)}")
+            no_of_chunks=10
+
+            print(f"ITP fields are {itpp_bib_fields}, number of records in the snapshot is {len_of_data}")
+            for i in range(1,no_of_chunks+1):
+                start_time_chunk=time.time()
+                len1=snapshot.process_bib_records(i,no_of_chunks+1,lbibs,itpp_bib_fields)
+                print(f"--- {time.time() - start_time_chunk} seconds for chunk {i} run ---")
+                print(f"chunk No is: {i}; records processed are {len1}")
+                #print("No. of ITP its records is: {}".format(number_itss))
+            print(f"No. of ITP records is: {len(snapshot.replace_list_recs)}")
+            start_time_bulk_write=time.time()
+            snapshot.bulk_write_bibs()bg-07feb
+            '''
+            transform_and_write_snapshot(snapshot)
+            
         except InvalidInput:
             number=0
             warning = 'Invalid input'
@@ -285,11 +313,11 @@ def executeSnapshot():
             warning = 'Session authority not found'
         except:
             raise
-        flash('The snapshot execution process is completed !!! ','message')    
-        return render_template('snapshot.html', snapshot=snapshot, form=form, recordNumber=number,url=URL_BY_DEFAULT,errorMail=warning)
+        flash(f'The snapshot execution process is in progress! Number of records is {snapshot.snapshot_len} ','message')    
+        return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(), form=form, recordNumber=number,url=URL_BY_DEFAULT,errorMail=warning)
     else:
         results = []        
-        return render_template('snapshot.html', snapshot=snapshot, form=form)    
+        return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(),form=form)    
 
 
 
