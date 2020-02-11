@@ -300,7 +300,7 @@ def executeSnapshot():
     transform_and_write_snapshot(body, session)
     # the code of the execution should be here
     # don't forget to return the number of records created
-    flash(f'The snapshot execution process is in progress! Number of records is {snapshot.snapshot_len} ','message')    
+    #flash(f'The snapshot execution process is in progress! Number of records is {snapshot.snapshot_len} ','message')    
     return redirect(url_for('displaySnapshot'))
 
 
