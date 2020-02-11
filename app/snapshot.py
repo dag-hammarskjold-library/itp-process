@@ -90,7 +90,7 @@ class Snapshot(object):
         bibset=BibSet.from_query(query, projection=proj_dict, skip=0, limit=0)
         
         l_temp=bibset.count
-        self.snapshot_len=l_temp
+        self.snapshot_len=l_temp 
         lbibs=list(bibset.records)
         return lbibs, l_temp
    
