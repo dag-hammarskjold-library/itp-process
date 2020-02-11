@@ -13,7 +13,7 @@ from app.forms import LoginForm, SectionForm
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from app.config import Config
-from dlx import DB, Bib, Auth
+from dlx import DB
 from bson.json_util import dumps
 import bson
 import time, json
