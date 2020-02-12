@@ -5,7 +5,7 @@
         "project_name": "itp-process",
         "runtime": "python3.7",
         "s3_bucket": "zappa-7la88m1as",
-        "timeout_seconds": 120,
+        "timeout_seconds": 600,
         "environment_variables": {
             "FLASK_ENV": "development"
         }
