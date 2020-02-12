@@ -275,7 +275,6 @@ def transform_and_write_snapshot(body, session):
         warning = None
         try:
             snapshot.transform_write()
-            
         except InvalidInput:
             number=0
             warning = 'Invalid input'
@@ -283,11 +282,12 @@ def transform_and_write_snapshot(body, session):
             number=0
             warning = 'Session authority not found'
         except:
-            raise
-        return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(), form=form, recordNumber=snapshot.snapshot_len,url=URL_BY_DEFAULT,errorMail=warning)
+            warning = 'Unknown Problem'
+        #return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(), form=form, recordNumber=snapshot.snapshot_len,url=URL_BY_DEFAULT,errorMail=warning)
     else:
-        results = []        
-        return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(),form=form)    
+        snapshot= None
+        #return redirect(url_for('main'))    
+        #return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(),form=form)    
 
 
 @app.route("/executeSnapshot",methods=["POST"])
