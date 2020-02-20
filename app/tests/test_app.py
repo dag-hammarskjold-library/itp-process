@@ -1,4 +1,6 @@
 # assertion methods are documented here https://docs.python.org/3/library/unittest.html#classes-and-functions
+import os
+os.environ['FLASK_TEST'] = 'True'
 
 from unittest import TestCase 
 from flask import Flask
