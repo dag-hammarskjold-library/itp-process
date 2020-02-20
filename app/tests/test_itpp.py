@@ -1,13 +1,9 @@
-import re, json
-from unittest import TestCase
-from collections.abc import Generator
-from jsonschema import exceptions as X
-from dlx import DB, marc, MARC, Bib, Auth
-from dlx.query import jmarc as Q
+import os
+os.environ['FLASK_TEST'] = 'True'
 
-from bson import SON
-DB.connect("mongodb://undlFilesAdmin:password@18.235.152.183:8080/?authSource=undlFiles")
-#connect to the DLX DB 
+from unittest import TestCase
+from dlx.marc import Bib
+
 class Data(object):
     jbib = {
         '_id' : 999,
@@ -1912,9 +1908,9 @@ class Data(object):
 #for bib in bibs:
 #print(Bib.match_id(1161969).get_values("991"))
 	        
-for field in Bib.match_id(1161969).get_fields('991'):
-    for subfield in field.subfields:
-        print(Bib.serialize_subfield(subfield))
+#for field in Bib.match_id(1161969).get_fields('991'):
+#    for subfield in field.subfields:
+#        print(Bib.serialize_subfield(subfield))
 		
 class Todo(TestCase):
    def setUp(self):
@@ -1937,28 +1933,29 @@ class Todo(TestCase):
         pass
 
 class To_itpp(TestCase):
-
-    def test_proper_dict(self):
-        bib = Bib.match_id(1161969)
-        self.assertEqual(type((bib.to_itpp()).get("245")),"dict")
-
-    def test_proper_list_repetitive_field_values(self):
-        bib = Bib.match_id(1161969)
-        self.assertEqual(type((bib.to_itpp()).get("991")),"list")
+    pass
     
-    def test_correct_list_repetitive_field_values(self):
-        bib = Bib.match_id(1161969)
-        self.assertEqual(len((bib.to_itpp()).get("991")),64)
-    
-    def test_proper_dict2(self):
-        bib = Bib.match_id(1161969)
-        self.assertEqual(len((bib.to_itpp()).get("245")),2)
-
-    def test_245(self):
-        bib = Bib.match_id(1161969)
-        self.assertEqual(((bib.to_itpp()).get("245").get("a")),"General Assembly official records, 72nd session :")
-        self.assertEqual(((bib.to_itpp()).get("245").get("b")),"62nd plenary meeting, Monday, 4  December 2017, New York")
-        #self.assertEqual(getattr(getattr(bib.to_itpp(),"245"),"c"),"title")
+    #def test_proper_dict(self):
+    #    bib = Bib.match_id(1161969)
+    #    self.assertEqual(type((bib.to_itpp()).get("245")),"dict")
+    #
+    #def test_proper_list_repetitive_field_values(self):
+    #    bib = Bib.match_id(1161969)
+    #    self.assertEqual(type((bib.to_itpp()).get("991")),"list")
+    #
+    #def test_correct_list_repetitive_field_values(self):
+    #    bib = Bib.match_id(1161969)
+    #    self.assertEqual(len((bib.to_itpp()).get("991")),64)
+    #
+    #def test_proper_dict2(self):
+    #    bib = Bib.match_id(1161969)
+    #    self.assertEqual(len((bib.to_itpp()).get("245")),2)
+    #
+    #def test_245(self):
+    #    bib = Bib.match_id(1161969)
+    #    self.assertEqual(((bib.to_itpp()).get("245").get("a")),"General Assembly official records, 72nd session :")
+    #    self.assertEqual(((bib.to_itpp()).get("245").get("b")),"62nd plenary meeting, Monday, 4  December 2017, New York")
+    #    #self.assertEqual(getattr(getattr(bib.to_itpp(),"245"),"c"),"title")
 
     
     
