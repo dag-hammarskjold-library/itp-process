@@ -8,7 +8,7 @@ from copy import deepcopy
 from app.reports import ReportList
 from dlx import DB
 from dlx.marc import Bib, Auth
-from mongomock.database import Database as MockDB
+from mongomock.database import Database as MockDB 
 
 class Reports(TestCase):
     # Data is committed to in-memory mock database by setting Config.connect_string to "mongomock://localhost".

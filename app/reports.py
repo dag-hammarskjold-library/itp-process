@@ -1,7 +1,5 @@
 import re
-#from app.config import Config
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
-from dlx import DB
 from dlx.marc import Bib, Auth, Matcher, OrMatch
 from bson.regex import Regex
 
