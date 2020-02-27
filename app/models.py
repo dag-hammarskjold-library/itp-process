@@ -78,7 +78,7 @@ class Itpp_section(EmbeddedDocument):
     necessary to construct the final output.
     """
     id = ObjectIdField(default=ObjectId)
-    name = StringField(unique=True,required=True)
+    name = StringField(required=True)
     section_order = IntField()
     data_source = ReferenceField(Itpp_snapshot)
     rules = EmbeddedDocumentListField(Itpp_rule)

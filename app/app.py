@@ -484,7 +484,7 @@ def get_or_update_section(itp_id):
             raise
             return json.dumps({"success":False}), 400, {'ContentType':'application/json'}
     mode = request.args.get('mode','init')
-    itp = Itpp_itp.objects.get(id=id)
+    itp = Itpp_itp.objects.get(id=itp_id)
     snapshots = Itpp_snapshot.objects
     if itp is not None:
         return render_template('update_itpp_itp.html', itp=itp, snapshots=snapshots, mode=mode)
