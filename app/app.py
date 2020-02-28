@@ -492,6 +492,16 @@ def get_or_update_section(itp_id):
         flash("Not found")
         return redirect(url_for('list_itpp_itps'))
 
+@app.route("/itpp_itps/<itp_id>/sections/<section_id>/execute")
+@login_required
+def execute_section(itp_id, section_id):
+    itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
+    return jsonify({
+        'itp_id': str(itp.id),
+        'section_id': str(section_id),
+        'rules': itp.sections.rules
+    })
+
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/delete")
 @login_required
 def delete_section(itp_id,section_id):

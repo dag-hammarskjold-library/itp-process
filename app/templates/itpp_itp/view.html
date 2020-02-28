@@ -13,8 +13,7 @@
             <h1>{{itp.name}}</h1>
             {% if itp.body and itp.itp_session %}
             <p>Body/Session: {{itp.body}}/{{itp.itp_session}}</p>
-            {% endif %}
-            {% if itp.body_session_auth %}
+            {% endif %} {% if itp.body_session_auth %}
             <p>Body/Session Auth#: {{itp.body_session_auth}}</p>
             {% endif %}
         </div>
@@ -28,14 +27,14 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">{{section.name}}</h3>
+            <a class="btn btn-primary" href="{{url_for('execute_section', itp_id=itp.id, section_id=section.id)}}">Execute</a>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col">
                     {% if section.section_order %}
                     <p>Section Order: {{section.section_order}}</p>
-                    {% endif %}
-                    {%if section.data_source %}
+                    {% endif %} {%if section.data_source %}
                     <p>Data Source: {{section.data_source}}</p>
                     {% else %}
                     <p>Data Source: None</p>
