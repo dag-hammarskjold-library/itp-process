@@ -498,8 +498,7 @@ def execute_section(itp_id, section_id):
     itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
     return jsonify({
         'itp_id': str(itp.id),
-        'section_id': str(section_id),
-        'rules': itp.sections.rules
+        'section_id': str(section_id)
     })
 
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/delete")
