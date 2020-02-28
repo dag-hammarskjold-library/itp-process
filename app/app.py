@@ -5,6 +5,7 @@ from requests import get
 import boto3, re, os, pymongo
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
+from app.aggregations import Aggregation
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
@@ -496,6 +497,12 @@ def get_or_update_section(itp_id):
 @login_required
 def execute_section(itp_id, section_id):
     itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
+    '''
+    This is how you would load an aggregation class and execute it.
+    this_agg = Aggregation(bodysession='foo')
+    
+    this_agg.exec()
+    '''
     return_data = {
         'itp_id': itp_id,
         'itp_name': itp.name,

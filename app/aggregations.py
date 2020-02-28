@@ -18,8 +18,14 @@ class Aggregation(object):
 
 class Stage(object):
     def __init__(self):
-        self.foo = None
+        self.stage_type = None
 
     def exec(self):
         # do the work
         pass
+
+class MatchStage(Stage):
+    # any init data
+
+    def foo(self):
+        return 'bar'
