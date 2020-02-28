@@ -496,10 +496,28 @@ def get_or_update_section(itp_id):
 @login_required
 def execute_section(itp_id, section_id):
     itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
-    return jsonify({
-        'itp_id': str(itp.id),
-        'section_id': str(section_id)
-    })
+    return_data = {
+        'itp_id': itp_id,
+        'itp_name': itp.name,
+        'itp_body': itp.body,
+        'itp_session': itp.itp_session,
+        'itp_body_session_auth': itp.body_session_auth,
+        'section_id': section_id,
+        'section_name': itp.sections[0].name,
+        'section_order': itp.sections[0].section_order,
+        'section_data_source': itp.sections[0].data_source
+    }
+    this_rules = []
+    for r in itp.sections[0].rules:
+        this_rules.append({
+            'rule_id': str(r.id),
+            'rule_name': r.name,
+            'rule_type': r.rule_type,
+            'process_order': r.process_order,
+            'parameters': r.parameters
+        })
+    return_data['rules'] = this_rules
+    return jsonify(return_data)
 
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/delete")
 @login_required
