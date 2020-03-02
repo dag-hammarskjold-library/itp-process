@@ -5,9 +5,9 @@ os.environ['FLASK_TEST'] = 'True'
 
 from unittest import TestCase
 from copy import deepcopy
-from app.config import Config
 from app.reports import ReportList
-from dlx import DB, Bib, Auth
+from dlx import DB
+from dlx.marc import Bib, Auth
 from mongomock.database import Database as MockDB 
 
 class Reports(TestCase):
@@ -16,10 +16,10 @@ class Reports(TestCase):
     
     def setUp(self):
         # runs before every test method
-         
+        DB.connect('mongomock://localhost')
         # an abundance of caution
-        self.assertEqual(Config.connect_string,'mongomock://localhost')
-        self.assertIsInstance(DB.handle,MockDB)
+        #self.assertEqual(get_config().connect_string,'mongomock://localhost')
+        #self.assertIsInstance(DB.client, MockDB)
         
         # clear the db
         DB.bibs.delete_many({})

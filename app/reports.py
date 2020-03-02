@@ -1,11 +1,9 @@
 import re
-from app.config import Config
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
-from dlx import DB
 from dlx.marc import Bib, Auth, Matcher, OrMatch
 from bson.regex import Regex
 
-DB.connect(Config.connect_string)
+#DB.connect(Config.connect_string)
 
 ### Report base class. Not for use.
 
