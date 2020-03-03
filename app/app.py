@@ -297,6 +297,7 @@ def executeSnapshot():
     number=0
     body,session=_get_body_session(request.form.get("authority"))
     body=body.split('/')[0]#_get_body_session returns A/ and 72 ; only temporary to ensure that rules are correctly read
+    print(f"body and session are {body} and {session}")
     transform_and_write_snapshot(body, session)
     # the code of the execution should be here
     # don't forget to return the number of records created
