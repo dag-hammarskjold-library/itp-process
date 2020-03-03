@@ -1,6 +1,6 @@
 import re
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
-from dlx.marc import Bib, Auth, Matcher, OrMatch
+from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, QueryDocument, Condition
 from bson.regex import Regex
 
 #DB.connect(Config.connect_string)
@@ -50,9 +50,9 @@ class MissingField(Report):
         body,session = _get_body_session(args['authority'])
         
         bibs = Bib.match(
-            Matcher(self.symbol_field,('b',body),('c',session)),
-            Matcher('930',('a',Regex('^' + self.type_code))),
-            Matcher(self.tag,modifier='not_exists'),
+            Condition(self.symbol_field,('b',body),('c',session)),
+            Condition('930',('a',Regex('^' + self.type_code))),
+            Condition(self.tag,modifier='not_exists'),
             project=[f[0] for f in self.output_fields]
         )
         
@@ -83,10 +83,10 @@ class MissingSubfield(Report):
         body,session = _get_body_session(args['authority'])
         
         bibs = Bib.match(
-            Matcher(self.symbol_field,('b',body),('c',session)),
-            Matcher('930',('a',Regex('^' + self.type_code))),
-            Matcher(self.tag,modifier='exists'),
-            Matcher(self.tag,(self.code,Regex('^.*')),modifier='not'),
+            Condition(self.symbol_field,('b',body),('c',session)),
+            Condition('930',('a',Regex('^' + self.type_code))),
+            Condition(self.tag,modifier='exists'),
+            Condition(self.tag,(self.code,Regex('^.*')),modifier='not'),
             project=[f[0] for f in self.output_fields]
         )
         
@@ -99,36 +99,40 @@ class MissingSubfield(Report):
 # These reports are on records that have field 191 and 930$a='UND'
 
 class BibAgenda(Report):
-    # WIP
     def __init__(self):
         self.name = 'agenda_list'
         self.title = 'Agenda list'
-        self.description = 'Agenda items from Bib records in the given sesion'
+        self.description = 'Agenda items from Bib records in the given session'
         self.category = "BIB"
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        #self.output_fields = []
-        self.field_names = ['Document Symbol', 'Agenda Item No.', 'Agenda Subject']
+        self.output_fields = [('191', 'a'), ('991', 'b'), ('991', 'd')]
+        self.field_names = ['Document Symbol', 'Auth#', 'Agenda Item No.', 'Agenda Subject']
         
     def execute(self,args):
         self.validate_args(args)
         
-        body,session = _get_body_session(args['authority'])
+        body, session = _get_body_session(args['authority'])
         
-        bibs = Bib.match(
-            Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a',Regex('^UND'))),
-            Matcher('991',('d',Regex('^.*'))),
-            project=[f[0] for f in self.output_fields]
+        bibset = BibSet.from_query(
+            QueryDocument(
+                Condition('191',('b',body),('c',session)),
+                Condition('930',('a',Regex('^UND'))),
+                Condition('991',('d',Regex('^.*'))),
+            ),
+            projection={'191': 1, '991': 1}
         )
         
-        # list of lists
-        #return _process_results(bibs,self.output_fields)
-        
         results = []
-        
-        return results
+         
+        for bib in bibset:
+            sym = '; '.join(bib.get_values('191', 'a'))
 
+            for field in bib.get_fields('991'):
+                results.append([sym, field.get_xrefs()[0], field.get_value('b'), field.get_value('d')])
+
+        return results
+        
 class BibIncorrect793Comm(Report):
     def __init__(self):
         self.name = 'bib_incorrect_793_committees'
@@ -146,14 +150,14 @@ class BibIncorrect793Comm(Report):
         body,session = _get_body_session(args['authority'])
         
         bibs = Bib.match(
-            Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a',Regex('^UND'))),
+            Condition('191',('b',body),('c',session)),
+            Condition('930',('a',Regex('^UND'))),
             project = ['191','793']
         )
         
         results = []
         for bib in bibs:
-            m = re.match('^A/C\.(\d)/', bib.symbol())
+            m = re.match(r'^A/C\.(\d)/', bib.symbol())
             if m and bib.get_value('793','a') != '0' + m.group(1):
                 results.append(bib) 
 
@@ -176,14 +180,14 @@ class BibIncorrect793Plen(Report):
         body,session = _get_body_session(args['authority'])
         
         bibs = Bib.match(
-            Matcher('191',('b',body),('c',session)),
-            Matcher('930',('a',Regex('^UND'))),
+            Condition('191',('b',body),('c',session)),
+            Condition('930',('a',Regex('^UND'))),
             project = ['191','793']
         )
         
         results = []
         for bib in bibs:
-            if re.match('^A/RES/',bib.symbol()) or re.match('^A/.+/L\.', bib.symbol()):
+            if re.match(r'^A/RES/',bib.symbol()) or re.match(r'^A/.+/L\.', bib.symbol()):
                 if bib.get_value('793','a') != 'PL':
                     results.append(bib) 
 
@@ -206,7 +210,81 @@ class BibMissingSubfield(MissingSubfield):
         self.symbol_field = '191'
         
         super().__init__(tag,code)
+
+class BibIncorrect991(Report):
+    def __init__(self):
+        # WIP
+        # S/PV symbols are not implemented becasue no there was no criteria provided for detecting session
+        # This implenetation does not acount for double-symboled records at this time. todo.
         
+        self.name = 'bib_incorrect_991'
+        self.title = 'Incorrect field - 991'
+        self.description = 'Bib records with a 991 that does not contain the correct agenda document symbol'
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.output_fields = [('191', 'a'), ('991', 'a'), ('991', 'b'), ('991', 'c'), ('991', 'd'), ('991', 'e')]
+        self.field_names = ['191$a', '991$a', '991$b', '991$c', '991$d', '991$e']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        bibset = BibSet.from_query(
+            QueryDocument(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('930', {'a': Regex('^UND')}),
+            ),
+            projection={'191': 1, '991': 1}
+        )
+        
+        results = []
+        
+        def sc_convert(year):
+            return str(int(year) - 1945)
+            
+        for bib in bibset:
+            sym = bib.get_value('191', 'a')
+            sparts = sym.split('/')
+            body = sparts[0]
+                                
+            if body == 'A':
+                if sparts[1][0:1] == 'C' or sparts[1] in ['RES', 'INF', 'BUR']: 
+                    year = sparts[2]
+                else:
+                    year = sparts[1]
+            elif body == 'S':
+                if sparts[1][:2] == 'PV':
+                    continue
+                elif sparts[1] in ['Agenda', 'PRST']:
+                    year = sparts[2]
+                elif sparts[1]== 'RES':
+                    match = re.search(r'\((.+)\)', sym)
+                    year = match.group(1)
+                elif re.match(r'\d\d\d\d$', sparts[1]):
+                    year = sparts[1]
+                else:
+                    continue
+                    
+                session = sc_convert(year)
+            elif body == 'E':
+                if sparts[1]== 'RES': 
+                    session = sparts[2]
+                else:
+                    session = sparts[1]
+            else:
+                continue
+            
+            for val in bib.get_values('991', 'a'):
+                aparts = val.split('/')
+                
+                if '/'.join(aparts[0:2]) != '/'.join([body, session]):                
+                    row = bib.get_values('991', 'a', 'b', 'c', 'd', 'e')
+                    row.insert(0, bib.get_value('191', 'a'))
+                    results.append(row)
+
+        return results
+
 ### Speech reports
 # These reports are on records that have 791 and 930="ITS"
 class SpeechMissingField(MissingField):
@@ -255,8 +333,8 @@ class VoteIncorrectSession(VoteReport):
         body,session = _get_body_session(args['authority'])
         
         bibs = Bib.match(
-            Matcher('791',('b',body),('c',session)),
-            Matcher('930',('a','VOT')),
+            Condition('791',('b',body),('c',session)),
+            Condition('930',('a','VOT')),
             project=['001','791']
         )
         
@@ -264,21 +342,21 @@ class VoteIncorrectSession(VoteReport):
         for bib in bibs:
             for symbol in bib.get_values('791','a'):
                
-                match = re.match('^A/RES/(\d+)',symbol)
+                match = re.match(r'^A/RES/(\d+)',symbol)
                 if match:
                     check = bib.get_value('791','r')
-                    if check != 'A' + match.group(1):
+                    if check != 'A' + match.group(1):                        
                         results.append(bib)
                         break
                     
-                match = re.match('^S/RES/(\d{4})',symbol)
+                match = re.match(r'^S/RES/(\d{4})',symbol)
                 if match: 
                     check = bib.get_value('791','r')
                     if check != 'S' + match.group(1):
                         results.append(bib)
                         break
                     
-                match = re.match('^E/RES/(\d{4})',symbol)
+                match = re.match(r'^E/RES/(\d{4})',symbol)
                 if match:
                     check = bib.get_value('791','r')
                     if check != 'E' + match.group(1):
@@ -336,10 +414,10 @@ class AnyMissingField(Report):
     
         bibs = Bib.match(
             OrMatch(
-                Matcher('191',('b',body),('c',session)),
-                Matcher('791',('b',body),('c',session))
+                Condition('191',('b',body),('c',session)),
+                Condition('791',('b',body),('c',session))
             ),
-            Matcher(self.tag,modifier='not_exists'),
+            Condition(self.tag,modifier='not_exists'),
             project=[f[0] for f in self.output_fields]
         )
     
@@ -358,18 +436,19 @@ class ReportList(object):
         # predefined reports
         
         # bib category 
-       
+        
         # Agenda List
-        #BibAgenda(), #WIP
+        BibAgenda(), #WIP
         # Incorrect field - 793 (Committees)
         BibIncorrect793Comm(),
         # Incorrect field - 793 (Plenary)
         BibIncorrect793Plen(),
         # Incorrect field - 991
+        BibIncorrect991(),
         # Incorrect session - 191
         # Incorrect subfield - 191$9
         # Missing field - 793
-        BibMissingField('793'),
+        BibMissingField('793'), # *** disable as per VW
         # Missing field - 991
         BibMissingField('991'),
         # Missing field - 992
@@ -435,11 +514,11 @@ class ReportList(object):
 ### exceptions
 
 class AuthNotFound(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         super().__init__(msg)
 
 class InvalidInput(Exception):
-    def __init__(self,msg):
+    def __init__(self, msg):
         super().__init__(msg)
 
 ### utility functions
@@ -451,7 +530,7 @@ def _get_body_session(string):
     except ValueError:
         try:
             body,session = string.split('/')
-            auth = next(Auth.match(Matcher('190',('b',body+'/'),('c',session))),None)
+            auth = next(Auth.match(Condition('190',('b',body+'/'),('c',session))),None)
         except ValueError:
             raise InvalidInput('Invalid session')
         
