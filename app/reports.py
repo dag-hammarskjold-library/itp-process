@@ -262,7 +262,7 @@ class BibIncorrect991(Report):
                             session = sparts[1]
                     elif body == 'S':
                         if sparts[1] in ['Agenda', 'PRST']:
-                            year = sparts[2][:5]
+                            year = sparts[2][:4]
                         elif sparts[1]== 'RES':
                             match = re.search(r'\((.+)\)', sym)
                             year = match.group(1)
