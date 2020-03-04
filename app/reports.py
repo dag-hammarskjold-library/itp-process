@@ -1,4 +1,5 @@
 import re
+from warnings import warn
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
 from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, QueryDocument, Condition
 from bson.regex import Regex
@@ -242,47 +243,55 @@ class BibIncorrect991(Report):
         
         def sc_convert(year):
             return str(int(year) - 1945)
-            
+        
         for bib in bibset:
-            sym = bib.get_value('191', 'a')
-            sparts = sym.split('/')
-            body = sparts[0]
-                                
-            if body == 'A':
-                if sparts[1][0:1] == 'C' or sparts[1] in ['RES', 'INF', 'BUR']: 
-                    year = sparts[2]
-                else:
-                    year = sparts[1]
-            elif body == 'S':
-                if sparts[1][:2] == 'PV':
-                    continue
-                elif sparts[1] in ['Agenda', 'PRST']:
-                    year = sparts[2]
-                elif sparts[1]== 'RES':
-                    match = re.search(r'\((.+)\)', sym)
-                    year = match.group(1)
-                elif re.match(r'\d\d\d\d$', sparts[1]):
-                    year = sparts[1]
-                else:
-                    continue
+            for field in bib.get_fields('991'):
+                aparts = field.get_value('a').split('/')
+                syms = bib.get_values('191', 'a')
+                found = 0
+    
+                for sym in syms:
+                    sparts = sym.split('/')
+                    body = sparts[0]
+                    session = None
+                                    
+                    if body == 'A':
+                        if sparts[1][0:1] == 'C' or sparts[1] in ['RES', 'INF', 'BUR', 'DEC']: 
+                            session = sparts[2]
+                        else:
+                            session = sparts[1]
+                    elif body == 'S':
+                        if sparts[1] in ['Agenda', 'PRST']:
+                            year = sparts[2][:5]
+                        elif sparts[1]== 'RES':
+                            match = re.search(r'\((.+)\)', sym)
+                            year = match.group(1)
+                        elif re.match(r'\d\d\d\d$', sparts[1]):
+                            year = sparts[1]
+                        else:
+                            continue
+                        
+                        try:
+                            session = sc_convert(year)
+                        except(ValueError):
+                            warn('could not read ' + sym)
+                            continue       
+                    elif body == 'E':
+                        if sparts[1]== 'RES': 
+                            session = sparts[2]
+                        else:
+                            session = sparts[1]
+                    else:
+                        continue
                     
-                session = sc_convert(year)
-            elif body == 'E':
-                if sparts[1]== 'RES': 
-                    session = sparts[2]
-                else:
-                    session = sparts[1]
-            else:
-                continue
-            
-            for val in bib.get_values('991', 'a'):
-                aparts = val.split('/')
-                
-                if '/'.join(aparts[0:2]) != '/'.join([body, session]):                
-                    row = bib.get_values('991', 'a', 'b', 'c', 'd', 'e')
-                    row.insert(0, bib.get_value('191', 'a'))
+                    if aparts[0:2] == [body, session]:                
+                        found += 1
+        
+                if found == 0 and bib.get_value('191', 'a')[:4] != 'S/PV':
+                    row = field.get_values('a', 'b', 'c', 'd', 'e')
+                    row.insert(0, '; '.join(bib.get_values('191', 'a')))
                     results.append(row)
-
+                    
         return results
 
 ### Speech reports
