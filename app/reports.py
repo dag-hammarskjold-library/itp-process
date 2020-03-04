@@ -3,6 +3,7 @@ from warnings import warn
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
 from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, QueryDocument, Condition
 from bson.regex import Regex
+from natsort import natsorted
 
 #DB.connect(Config.connect_string)
 
@@ -132,7 +133,9 @@ class BibAgenda(Report):
             for field in bib.get_fields('991'):
                 results.append([sym, field.get_xrefs()[0], field.get_value('b'), field.get_value('d')])
 
-        return results
+        sorted_results = natsorted(results, key=lambda x: x[2])
+        
+        return sorted_results
         
 class BibIncorrect793Comm(Report):
     def __init__(self):
@@ -262,7 +265,7 @@ class BibIncorrect991(Report):
                             session = sparts[1]
                     elif body == 'S':
                         if sparts[1] in ['Agenda', 'PRST']:
-                            year = sparts[2][:5]
+                            year = sparts[2][:4]
                         elif sparts[1]== 'RES':
                             match = re.search(r'\((.+)\)', sym)
                             year = match.group(1)
