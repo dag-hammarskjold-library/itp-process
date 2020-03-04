@@ -7,6 +7,7 @@ from unittest import TestCase
 from copy import deepcopy
 from app.reports import ReportList
 from dlx import DB
+#from dlx.config import Config
 from dlx.marc import Bib, Auth
 from mongomock.database import Database as MockDB 
 
@@ -25,17 +26,42 @@ class Reports(TestCase):
         DB.bibs.delete_many({})
         DB.auths.delete_many({})
         
+        #print(Config.auth_authority_controlled)
+        
         # mock auths
         # all xrefs in the mock bibs must point to an auth in the mock db to work properly
         Auth({'_id': 1}).set('190','b','A/').set('190','c','SESSION_1').commit()
         Auth({'_id': 2}).set('190','b','A/').set('190','c','SESSION_2').commit()
-        Auth({'_id': 3}).set('191','d','AGENDA SUBJECT').commit()
+        Auth({'_id': 3}).set('191', 'a', 'A/SESSION_1/x').set('191','b','AGENDA ITEM').set('191','d','AGENDA SUBJECT').commit()
+        Auth({'_id': 4}).set('191', 'a', 'E/SESSION_1/x').set('191','b','AGENDA ITEM').set('191','d','AGENDA SUBJECT').commit()
+        Auth({'_id': 5}).set('191', 'a', 'S/73/x').set('191','b','AGENDA ITEM').set('191','d','AGENDA SUBJECT').commit()
         
     ### bib
     
     # Agenda List    
     def test_24(self):
-        pass
+        report = ReportList.get_by_name('agenda_list')
+        
+        for x in (range(5)):
+            Bib({'_id': x}).set_values(
+                ('191', 'a', 'A/TEST/'),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('930', 'a', 'UND'),
+                ('991', 'b', 3),
+                ('991', 'd', 3),
+                ('991', 'b', 3, {'address': ['+']}),
+                ('991', 'd', 3, {'address': [1]}),
+            ).commit()
+        
+        args = {}
+        
+        args['authority'] = 1    
+        results = report.execute(args)
+        self.assertEqual(len(results), 10)
+        
+        for r in results:
+            self.assertEqual(r, ['A/TEST/', 3, 'AGENDA ITEM', 'AGENDA SUBJECT'])
     
     # Incorrect field - 793 (Committees)
     def test_15(self):
@@ -122,7 +148,75 @@ class Reports(TestCase):
         
     # incorrect field - bib
     def test_9(self):
-        pass
+        report = ReportList.get_by_name('bib_incorrect_991')
+        
+        args = {}
+        args['authority'] = 1
+        
+        Bib({'_id': 1}).set_values(
+            ('191', 'a', 'A/SESSION_1/GOOD'),
+            ('191', 'b', 1),
+            ('191', 'c', 1),
+            ('930', 'a', 'UND'),
+            ('991', 'a', 3)
+        ).commit()
+        
+        Bib({'_id': 2}).set_values(
+            ('191', 'a', 'A/SESSION_1/BAD'),
+            ('191', 'b', 1),
+            ('191', 'c', 1),
+            ('930', 'a', 'UND'),
+            ('991', 'a', 4)
+        ).commit()
+        
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][0], 'A/SESSION_1/BAD')
+        
+        for x in ['C.1', 'RES', 'INF', 'BUR']:
+            Bib({'_id': 1}).set_values(
+                ('191', 'a', 'A/{}/SESSION_1/GOOD'.format(x)),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('930', 'a', 'UND'),
+                ('991', 'a', 3)
+            ).commit()
+        
+            Bib({'_id': 2}).set_values(
+                ('191', 'a', 'A/{}/SESSION_1/BAD'.format(x)),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('930', 'a', 'UND'),
+                ('991', 'a', 4)
+            ).commit()
+        
+            results = report.execute(args)
+            self.assertEqual(len(results), 1)
+            self.assertRegex(results[0][0], r'^A/.+/SESSION_1/BAD')
+            
+        Bib.match_id(1).set('191', 'a', 'S/2018/GOOD').set('991', 'a', 5).commit()
+        Bib.match_id(2).set('191', 'a', 'S/2018/BAD').set('991', 'a', 4).commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][0], 'S/2018/BAD')
+        
+        Bib.match_id(1).set('191', 'a', 'S/RES/GOOD(2018)').set('991', 'a', 5).commit()
+        Bib.match_id(2).set('191', 'a', 'S/RES/BAD(2018)').set('991', 'a', 4).commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][0], 'S/RES/BAD(2018)')
+        
+        Bib.match_id(1).set('191', 'a', 'S/PRST/2018/GOOD').set('991', 'a', 5).commit()
+        Bib.match_id(2).set('191', 'a', 'S/PRST/2018/BAD').set('991', 'a', 4).commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][0], 'S/PRST/2018/BAD')
+        
+        Bib.match_id(1).set('191', 'a', 'E/RES/SESSION_1').set('991', 'a', 4).commit()
+        Bib.match_id(2).set('191', 'a', 'E/RES/SESSION_1/BAD').set('991', 'a', 5).commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][0], 'E/RES/SESSION_1/BAD')
         
     # incorrect session - bib
     def test_4(self):
@@ -236,7 +330,7 @@ class Reports(TestCase):
                 ('791','b',1),
                 ('791','c',1),
                 ('930','a','ITS'),
-                (tag,'a','x')
+                (tag,'a','x', {'auth_control': False})
             ).commit()
             
             Bib({'_id': 2}).set_values(
@@ -386,7 +480,7 @@ class Reports(TestCase):
                 ('791','b',1),
                 ('791','c',1),
                 ('930','a','VOT'),
-                (tag,'a','x')
+                (tag,'a','x', {'auth_control': False})
             ).commit()
             
             Bib({'_id': 2}).set_values(
