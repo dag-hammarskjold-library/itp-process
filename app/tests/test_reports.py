@@ -294,8 +294,33 @@ class Reports(TestCase):
     
     # incorrect subfield - bib
     def test_7b(self):
-        pass
-   
+        report = ReportList.get_by_name('bib_incorrect_subfield_191_9')
+        
+        for body, code in [('A', 'G'), ('E', 'C'), ('S', 'X')]:
+            
+            Bib({'_id': 1}).set_values(
+                ('191', 'a', body + '/GOOD'),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('191', '9', code),
+                ('930', 'a', 'UND')
+            ).commit()
+            
+            Bib({'_id': 2}).set_values(
+                ('191', 'a', body + '/BAD'),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('191', '9', 'z'),
+                ('930', 'a', 'UND')
+            ).commit()
+            
+            args = {}
+            args['authority'] = 1
+            
+            results = report.execute(args)
+            
+            self.assertEqual(len(results), 1)
+        
     # missing field - bib
     def test_8a_14a_16(self):
         args = {}

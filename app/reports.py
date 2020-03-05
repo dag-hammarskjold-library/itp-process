@@ -298,6 +298,51 @@ class BibIncorrectSession191(Report):
                     warn('Body and session not detected in ' + field.get_value('a'))
                     
         return results
+        
+class BibIncorrectSubfield191_9(Report):
+    def __init__(self):    
+        self.name = 'bib_incorrect_subfield_191_9'
+        self.title = 'Incorrect subfield - 191$9'
+        self.description = ''
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        #self.output_fields = [('191', 'a'), ('991', 'b'), ('991', 'd')]
+        self.field_names = ['Record ID', '191$a', '191$9']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        bibset = BibSet.from_query(
+            QueryDocument(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('930', {'a': Regex('^UND')})
+            ),
+            projection={'191': 1}
+        )
+        
+        results = []
+
+        for bib in bibset:
+            for field in bib.get_fields('191'):
+                sym = field.get_value('a')
+                flag = False
+                
+                if sym[:1] == 'A':
+                    if field.get_value('9')[:1] != 'G':
+                        flag = True
+                elif sym[:1] == 'E':
+                    if field.get_value('9')[:1] != 'C':
+                        flag = True
+                elif sym[:1] == 'S':
+                    if field.get_value('9')[:1] != 'X':
+                        flag = True
+                
+                if flag is True:
+                    results.append([bib.id, field.get_value('a'), field.get_value('9')])
+                    
+        return results
 
 ### Speech reports
 # These reports are on records that have 791 and 930="ITS"
@@ -462,6 +507,7 @@ class ReportList(object):
         # Incorrect session - 191
         BibIncorrectSession191(),
         # Incorrect subfield - 191$9
+        BibIncorrectSubfield191_9(),
         # Missing field - 793
         BibMissingField('793'), # *** disable as per VW
         # Missing field - 991
