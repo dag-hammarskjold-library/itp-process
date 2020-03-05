@@ -244,9 +244,6 @@ class BibIncorrect991(Report):
         
         results = []
         
-        def sc_convert(year):
-            return str(int(year) - 1945)
-        
         for bib in bibset:
             for field in bib.get_fields('991'):
                 aparts = field.get_value('a').split('/')
@@ -254,45 +251,14 @@ class BibIncorrect991(Report):
                 found = 0
     
                 for sym in syms:
-                    sparts = sym.split('/')
-                    body = sparts[0]
-                    session = None
-                                    
-                    if body == 'A':
-                        if sparts[1][0:1] == 'C' or sparts[1] in ['RES', 'INF', 'BUR', 'DEC']: 
-                            session = sparts[2]
-                        else:
-                            session = sparts[1]
-                    elif body == 'S':
-                        if sparts[1] in ['Agenda', 'PRST']:
-                            year = sparts[2][:4]
-                        elif sparts[1]== 'RES':
-                            match = re.search(r'\((.+)\)', sym)
-                            year = match.group(1)
-                        elif re.match(r'\d\d\d\d$', sparts[1]):
-                            year = sparts[1]
-                        else:
-                            continue
-                        
-                        try:
-                            session = sc_convert(year)
-                        except(ValueError):
-                            warn('could not read ' + sym)
-                            continue       
-                    elif body == 'E':
-                        if sparts[1]== 'RES': 
-                            session = sparts[2]
-                        else:
-                            session = sparts[1]
-                    else:
-                        continue
+                    body, session = _body_session_from_symbol(sym)
                     
                     if aparts[0:2] == [body, session]:                
                         found += 1
         
                 if found == 0 and bib.get_value('191', 'a')[:4] != 'S/PV':
                     row = field.get_values('a', 'b', 'c', 'd', 'e')
-                    row.insert(0, '; '.join(bib.get_values('191', 'a')))
+                    row.insert(0, '; '.join(syms))
                     results.append(row)
                     
         return results
@@ -563,3 +529,41 @@ def _process_results(generator,output_fields):
     # list of lists
     return results
     
+def _body_session_from_symbol(symbol):
+    sparts = symbol.split('/')
+    body = sparts[0]
+    session = None
+                    
+    if body == 'A':
+        if sparts[1][0:1] == 'C' or sparts[1] in ['RES', 'INF', 'BUR', 'DEC']: 
+            session = sparts[2]
+        else:
+            session = sparts[1]
+    elif body == 'S':
+        if sparts[1] in ['Agenda', 'PRST']:
+            year = sparts[2][:4]
+        elif sparts[1]== 'RES':
+            match = re.search(r'\((.+)\)', symbol)
+            year = match.group(1)
+        elif re.match(r'\d\d\d\d$', sparts[1]):
+            year = sparts[1]
+        else:
+            return
+        
+        try:
+            session = _sc_convert(year)
+        except(ValueError):
+            warn('could not read ' + symbol)
+            return       
+    elif body == 'E':
+        if sparts[1]== 'RES': 
+            session = sparts[2]
+        else:
+            session = sparts[1]
+    else:
+        return
+        
+    return [body, session]
+    
+def _sc_convert(year):
+    return str(int(year) - 1945)
