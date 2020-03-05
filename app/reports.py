@@ -5,8 +5,6 @@ from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, QueryDocument, Conditi
 from bson.regex import Regex
 from natsort import natsorted
 
-#DB.connect(Config.connect_string)
-
 ### Report base class. Not for use.
 
 class Report(object):
@@ -217,9 +215,7 @@ class BibMissingSubfield(MissingSubfield):
 
 class BibIncorrect991(Report):
     def __init__(self):
-        # WIP
-        # S/PV symbols are not implemented becasue no there was no criteria provided for detecting session
-        # This implenetation does not acount for double-symboled records at this time. todo.
+        # S/PV symbols are skipped because no there was no criteria provided for detecting session
         
         self.name = 'bib_incorrect_991'
         self.title = 'Incorrect field - 991'
@@ -227,8 +223,8 @@ class BibIncorrect991(Report):
         self.category = "BIB"
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        self.output_fields = [('191', 'a'), ('991', 'a'), ('991', 'b'), ('991', 'c'), ('991', 'd'), ('991', 'e')]
-        self.field_names = ['191$a', '991$a', '991$b', '991$c', '991$d', '991$e']
+        #self.output_fields = [('191', 'a'), ('191', 'b'), ('191', 'c'), ('191', 'd'), ('991', 'd'), ('991', 'e')]
+        self.field_names = ['Record ID', '191$a', '991$a', '991$b', '991$c', '991$d', '991$e']
         
     def execute(self, args):
         self.validate_args(args)
@@ -257,9 +253,49 @@ class BibIncorrect991(Report):
                         found += 1
         
                 if found == 0 and bib.get_value('191', 'a')[:4] != 'S/PV':
-                    row = field.get_values('a', 'b', 'c', 'd', 'e')
+                    row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
                     row.insert(0, '; '.join(syms))
+                    row.insert(0, bib.id)
                     results.append(row)
+                    
+        return results
+        
+class BibIncorrectSession191(Report):
+    def __init__(self):    
+        self.name = 'bib_incorrect_session_191'
+        self.title = 'Incorrect session - 191'
+        self.description = ''
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        #self.output_fields = [('191', 'a'), ('991', 'b'), ('991', 'd')]
+        self.field_names = ['Record ID', '191$a', '191$b', '191$c', '191$q', '191$r']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        bibset = BibSet.from_query(
+            QueryDocument(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('930', {'a': Regex('^UND')})
+            ),
+            projection={'191': 1}
+        )
+        
+        results = []
+        
+        for bib in bibset:
+            for field in bib.get_fields('191'):
+                if _body_session_from_symbol(field.get_value('a')):
+                    body, session = _body_session_from_symbol(field.get_value('a'))
+                    
+                    if field.get_value('r') != body + session:
+                        row = [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')]
+                        row.insert(0, bib.id)
+                        results.append(row)
+                else:
+                    warn('Body and session not detected in ' + field.get_value('a'))
                     
         return results
 
@@ -424,6 +460,7 @@ class ReportList(object):
         # Incorrect field - 991
         BibIncorrect991(),
         # Incorrect session - 191
+        BibIncorrectSession191(),
         # Incorrect subfield - 191$9
         # Missing field - 793
         BibMissingField('793'), # *** disable as per VW
@@ -520,7 +557,7 @@ def _get_body_session(string):
         
     return (body,session)
     
-def _process_results(generator,output_fields):
+def _process_results(generator, output_fields):
     results = []
     
     for bib in generator:
@@ -540,7 +577,7 @@ def _body_session_from_symbol(symbol):
         else:
             session = sparts[1]
     elif body == 'S':
-        if sparts[1] in ['Agenda', 'PRST']:
+        if sparts[1] in ['PRST']:
             year = sparts[2][:4]
         elif sparts[1]== 'RES':
             match = re.search(r'\((.+)\)', symbol)
