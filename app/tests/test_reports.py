@@ -171,7 +171,7 @@ class Reports(TestCase):
         
         results = report.execute(args)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0][0], 'A/SESSION_1/BAD')
+        self.assertEqual(results[0][1], 'A/SESSION_1/BAD')
         
         for x in ['C.1', 'RES', 'INF', 'BUR']:
             Bib({'_id': 1}).set_values(
@@ -192,35 +192,105 @@ class Reports(TestCase):
         
             results = report.execute(args)
             self.assertEqual(len(results), 1)
-            self.assertRegex(results[0][0], r'^A/.+/SESSION_1/BAD')
+            self.assertRegex(results[0][1], r'^A/.+/SESSION_1/BAD')
             
         Bib.match_id(1).set('191', 'a', 'S/2018/GOOD').set('991', 'a', 5).commit()
         Bib.match_id(2).set('191', 'a', 'S/2018/BAD').set('991', 'a', 4).commit()
         results = report.execute(args)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0][0], 'S/2018/BAD')
+        self.assertEqual(results[0][1], 'S/2018/BAD')
         
         Bib.match_id(1).set('191', 'a', 'S/RES/GOOD(2018)').set('991', 'a', 5).commit()
         Bib.match_id(2).set('191', 'a', 'S/RES/BAD(2018)').set('991', 'a', 4).commit()
         results = report.execute(args)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0][0], 'S/RES/BAD(2018)')
+        self.assertEqual(results[0][1], 'S/RES/BAD(2018)')
         
         Bib.match_id(1).set('191', 'a', 'S/PRST/2018/GOOD').set('991', 'a', 5).commit()
         Bib.match_id(2).set('191', 'a', 'S/PRST/2018/BAD').set('991', 'a', 4).commit()
         results = report.execute(args)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0][0], 'S/PRST/2018/BAD')
+        self.assertEqual(results[0][1], 'S/PRST/2018/BAD')
         
         Bib.match_id(1).set('191', 'a', 'E/RES/SESSION_1').set('991', 'a', 4).commit()
         Bib.match_id(2).set('191', 'a', 'E/RES/SESSION_1/BAD').set('991', 'a', 5).commit()
         results = report.execute(args)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0][0], 'E/RES/SESSION_1/BAD')
+        self.assertEqual(results[0][1], 'E/RES/SESSION_1/BAD')
         
     # incorrect session - bib
     def test_4(self):
-        pass
+        report = ReportList.get_by_name('bib_incorrect_session_191')
+        
+        args = {}
+        args['authority'] = 1
+        
+        Bib({'_id': 1}).set_values(
+            ('191', 'a', 'A/SESSION_1/GOOD'),
+            ('191', 'b', 1),
+            ('191', 'c', 1),
+            ('191', 'r', 'ASESSION_1'),
+            ('930', 'a', 'UND'),
+        ).commit()
+        
+        Bib({'_id': 2}).set_values(
+            ('191', 'a', 'A/SESSION_1/BAD'),
+            ('191', 'b', 1),
+            ('191', 'c', 1),
+            ('191', 'r', 'x'),
+            ('930', 'a', 'UND'),
+        ).commit()
+        
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'A/SESSION_1/BAD')
+        
+        for x in ['C.1', 'RES', 'INF', 'BUR']:
+            Bib({'_id': 1}).set_values(
+                ('191', 'a', 'A/{}/SESSION_1/GOOD'.format(x)),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('191', 'r', 'ASESSION_1'),
+                ('930', 'a', 'UND'),
+                ('991', 'a', 3)
+            ).commit()
+        
+            Bib({'_id': 2}).set_values(
+                ('191', 'a', 'A/{}/SESSION_1/BAD'.format(x)),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('191', 'r', 'x'),
+                ('930', 'a', 'UND'),
+                ('991', 'a', 4)
+            ).commit()
+        
+            results = report.execute(args)
+            self.assertEqual(len(results), 1)
+            self.assertRegex(results[0][1], r'^A/.+/SESSION_1/BAD')
+            
+        Bib.match_id(1).set('191', 'a', 'S/2018/GOOD').set('191', 'r', 'S73').commit()
+        Bib.match_id(2).set('191', 'a', 'S/2018/BAD').set('191', 'r', 'x').commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'S/2018/BAD')
+        
+        Bib.match_id(1).set('191', 'a', 'S/RES/GOOD(2018)').commit()
+        Bib.match_id(2).set('191', 'a', 'S/RES/BAD(2018)').commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'S/RES/BAD(2018)')
+        
+        Bib.match_id(1).set('191', 'a', 'S/PRST/2018/GOOD').commit()
+        Bib.match_id(2).set('191', 'a', 'S/PRST/2018/BAD').commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'S/PRST/2018/BAD')
+        
+        Bib.match_id(1).set('191', 'a', 'E/RES/SESSION_1').set('191', 'r', 'ESESSION_1').commit()
+        Bib.match_id(2).set('191', 'a', 'E/RES/SESSION_1/BAD').set('191', 'r', 'x').commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'E/RES/SESSION_1/BAD')
     
     # incorrect subfield - bib
     def test_7b(self):
