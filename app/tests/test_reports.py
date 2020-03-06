@@ -39,7 +39,7 @@ class Reports(TestCase):
     ### bib
     
     # Agenda List    
-    def test_24(self):
+    def old_test_24(self):
         report = ReportList.get_by_name('agenda_list')
         
         for x in (range(5)):
@@ -62,7 +62,17 @@ class Reports(TestCase):
         
         for r in results:
             self.assertEqual(r, ['A/TEST/', 3, 'AGENDA ITEM', 'AGENDA SUBJECT'])
-    
+            
+    def test_24(self):
+        report = ReportList.get_by_name('agenda_list')
+        
+        args = {}
+        args['authority'] = 1
+        
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][:4], ['A/SESSION_1/x', 3, 'AGENDA ITEM', 'AGENDA SUBJECT'])
+       
     # Incorrect field - 793 (Committees)
     def test_15(self):
         report = ReportList.get_by_name('bib_incorrect_793_committees')

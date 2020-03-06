@@ -1,7 +1,7 @@
 import re
 from warnings import warn
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
-from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, QueryDocument, Condition
+from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition
 from bson.regex import Regex
 from natsort import natsorted
 
@@ -93,16 +93,13 @@ class MissingSubfield(Report):
         # list of lists
         return _process_results(bibs,self.output_fields)
 
-### 
+### Auth reports
 
-### Bib reports
-# These reports are on records that have field 191 and 930$a='UND'
-
-class BibAgenda(Report):
+class AgendaList(Report):
     def __init__(self):
         self.name = 'agenda_list'
         self.title = 'Agenda list'
-        self.description = 'Agenda items from Bib records in the given session'
+        self.description = 'Agenda items from the given session'
         self.category = "BIB"
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -111,30 +108,26 @@ class BibAgenda(Report):
         
     def execute(self,args):
         self.validate_args(args)
-        
         body, session = _get_body_session(args['authority'])
         
-        bibset = BibSet.from_query(
-            QueryDocument(
-                Condition('191',('b',body),('c',session)),
-                Condition('930',('a',Regex('^UND'))),
-                Condition('991',('d',Regex('^.*'))),
-            ),
-            projection={'191': 1, '991': 1}
+        query = QueryDocument(
+            Condition('191', {'a': Regex('^{}{}'.format(body, session))})
         )
         
+        print(query.to_json())
+        
         results = []
-         
-        for bib in bibset:
-            sym = '; '.join(bib.get_values('191', 'a'))
-
-            for field in bib.get_fields('991'):
-                results.append([sym, field.get_xrefs()[0], field.get_value('b'), field.get_value('d')])
+        
+        for auth in AuthSet.from_query(query):
+            results.append([auth.get_value('191', 'a'), auth.id, auth.get_value('191', 'b'), auth.get_value('191', 'd')])
 
         sorted_results = natsorted(results, key=lambda x: x[2])
         
         return sorted_results
-        
+
+### Bib reports
+# These reports are on records that have field 191 and 930$a='UND'
+     
 class BibIncorrect793Comm(Report):
     def __init__(self):
         self.name = 'bib_incorrect_793_committees'
@@ -497,7 +490,7 @@ class ReportList(object):
         # bib category 
         
         # Agenda List
-        BibAgenda(), #WIP
+        AgendaList(), #WIP
         # Incorrect field - 793 (Committees)
         BibIncorrect793Comm(),
         # Incorrect field - 793 (Plenary)
