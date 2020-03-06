@@ -398,8 +398,36 @@ class Reports(TestCase):
             
     # missing subfield value - bib
     def test_1_2_13(self):
-        pass
-
+        args = {}
+        args['authority'] = 1
+        
+        for params in (['991', 'z', 'I'], ['999', 'c', 't'], ['991', 'f', 'X27']):
+            report = ReportList.get_by_name('bib_missing_subfield_value_{}_{}_{}'.format(*params))
+            
+            print([x.name for x in ReportList.reports])
+            
+            Bib({'_id': 1}).set_values(
+                ('191', 'a', 'GOOD'),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('930', 'a', 'UND'),
+                (params)
+            ).commit()
+            
+            params[2] = 'x'
+            
+            Bib({'_id': 1}).set_values(
+                ('191', 'a', 'BAD'),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('930', 'a', 'UND'),
+                (params)
+            ).commit()
+            
+            results = report.execute(args)
+            self.assertEqual(len(results), 1)
+            self.assertEqual(results[0][1], 'BAD')
+                       
     ### speech
     
     # Duplicate speech records
