@@ -93,8 +93,6 @@ class MissingSubfield(Report):
         # list of lists
         return _process_results(bibs,self.output_fields)
 
-### 
-
 ### Bib reports
 # These reports are on records that have field 191 and 930$a='UND'
 
@@ -343,6 +341,51 @@ class BibIncorrectSubfield191_9(Report):
                     results.append([bib.id, field.get_value('a'), field.get_value('9')])
                     
         return results
+        
+class BibMissingSubfieldValue(Report):
+    def __init__(self, tag, code, value):
+        self.tag = tag
+        self.code = code
+        self.value = value
+        self.description = ''
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.type = 'bib'
+        self.category = 'BIB'
+        
+        self.name = 'bib_missing_subfield_value_{}_{}_{}'.format(tag, code, value)
+        self.title = 'Missing subfield value - {}${} {}'.format(tag, code, value)
+        
+        self.field_names = ['Record ID', '191$a', '{}${}'.format(tag, code)]
+        
+        if self.tag == '991':
+            for x in ('a', 'b', 'c', 'd', 'e'):
+                self.field_names.append('991${}'.format(x))
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition('191', {'b': body, 'c': session}),
+            Condition('930', {'a': 'UND'}),
+            Condition(self.tag, {self.code: self.value}, modifier='not')
+        )
+        
+        bibset = BibSet.from_query(query)
+        
+        results = []
+        
+        for bib in bibset:
+            row = [bib.id, '; '.join(bib.get_values('191', 'a'))]
+            
+            if self.tag == '991':
+                for x in ('a', 'b', 'c', 'd', 'e'):
+                    row.append(bib.get_value(x))
+            
+            results.append(row)
+
+        return results
 
 ### Speech reports
 # These reports are on records that have 791 and 930="ITS"
@@ -520,8 +563,11 @@ class ReportList(object):
         BibMissingSubfield('991','d'),
         
         # Missing subfield value - 991$f X27
+        BibMissingSubfieldValue('991', 'f', 'X27'),
         # Missing subfield value - 991$z I
+        BibMissingSubfieldValue('991', 'z', 'I'),
         # Missing subfield value - 999$c t
+        BibMissingSubfieldValue('999', 'c', 't'),
         
         # speech category 
         
