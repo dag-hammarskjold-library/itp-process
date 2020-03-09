@@ -4,6 +4,7 @@ from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectA
 from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition
 from bson.regex import Regex
 from natsort import natsorted
+from collections import Counter
 
 ### Report base class. Not for use.
 
@@ -113,8 +114,6 @@ class AgendaList(Report):
         query = QueryDocument(
             Condition('191', {'a': Regex('^{}{}'.format(body, session))})
         )
-        
-        print(query.to_json())
         
         results = []
         
@@ -363,15 +362,13 @@ class BibMissingSubfieldValue(Report):
         
         query = QueryDocument(
             Condition('191', {'b': body, 'c': session}),
-            Condition('930', {'a': 'UND'}),
+            Condition('930', {'a': Regex('^UND')}),
             Condition(self.tag, {self.code: self.value}, modifier='not')
         )
         
-        bibset = BibSet.from_query(query)
-        
         results = []
         
-        for bib in bibset:
+        for bib in BibSet.from_query(query, projection={'191': 1, self.tag: 1}):
             row = [bib.id, '; '.join(bib.get_values('191', 'a'))]
             
             if self.tag == '991':
@@ -402,6 +399,48 @@ class SpeechMissingSubfield(MissingSubfield):
         
         super().__init__(tag,code)
 
+class SpeechDuplicateRecord(Report):
+    def __init__(self):
+        self.type = 'speech'
+        self.category = 'SPEECH'
+        self.type_code = 'ITS'
+        self.form_class = SelectAuthority
+        
+        self.expected_params = ['authority']
+        self.name = 'speech_duplicate_record'
+        self.title = "Duplicate speech records"
+        
+        self.output_fields = ['Symbol, Speaker', 'Record IDs'] 
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition('791', {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^ITS')})
+        )
+        
+        seen = {}
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={'791': 1, '700': 1}):
+            symbol, speaker = bib.get_value('791', 'a'), bib.get_value('700', 'a')
+            key = ': '.join([symbol, speaker])
+            
+            if key in seen: 
+                seen[key].append(bib.id)
+            else:
+                seen[key] = []
+                seen[key].append(bib.id)
+            
+        for key in seen.keys():
+            if len(seen[key]) > 1:
+                ids = ', '.join([str (x) for x in seen[key]])
+                results.append([key, ids])
+        
+        return results
+        
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -567,6 +606,7 @@ class ReportList(object):
         # speech category 
         
         # Duplicate speech records
+        SpeechDuplicateRecord(),
         # Field mismatch - 269 & 992
         
         # Incomplete authorities
