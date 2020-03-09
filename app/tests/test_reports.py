@@ -35,6 +35,7 @@ class Reports(TestCase):
         Auth({'_id': 3}).set('191', 'a', 'A/SESSION_1/x').set('191','b','AGENDA ITEM').set('191','d','AGENDA SUBJECT').commit()
         Auth({'_id': 4}).set('191', 'a', 'E/SESSION_1/x').set('191','b','AGENDA ITEM').set('191','d','AGENDA SUBJECT').commit()
         Auth({'_id': 5}).set('191', 'a', 'S/73/x').set('191','b','AGENDA ITEM').set('191','d','AGENDA SUBJECT').commit()
+        Auth({'_id': 6}).set('100', 'a', 'Person, A.').commit()
         
     ### bib
     
@@ -404,8 +405,6 @@ class Reports(TestCase):
         for params in (['991', 'z', 'I'], ['999', 'c', 't'], ['991', 'f', 'X27']):
             report = ReportList.get_by_name('bib_missing_subfield_value_{}_{}_{}'.format(*params))
             
-            print([x.name for x in ReportList.reports])
-            
             Bib({'_id': 1}).set_values(
                 ('191', 'a', 'GOOD'),
                 ('191', 'b', 1),
@@ -432,8 +431,21 @@ class Reports(TestCase):
     
     # Duplicate speech records
     def test_25(self):
-        pass
-    
+        report = ReportList.get_by_name('speech_duplicate_record')
+        
+        for x in [str(x) for x in range(1,3)]:
+            Bib({'_id': x}).set_values(
+                ('791', 'a', 'A/dupe'),
+                ('791', 'b', 1),
+                ('791', 'c', 1),
+                ('930', 'a', 'ITS'),
+                ('700', 'a', 6)
+            ).commit()
+            
+        results = report.execute({'authority': 1})
+        self.assertEqual(len(results), 1)
+        #self.assertEqual()
+        
     # Field mismatch - 269 & 992 - speech
     def test_23a(self):
         pass
