@@ -433,7 +433,7 @@ class SpeechDuplicateRecord(Report):
                 *[str(x) for x in bib.get_xrefs('991')]
             ]
             
-            key = ', '.join(vals)
+            key = ';'.join(vals)
             
             if key in seen: 
                 seen[key].append(bib.id)
@@ -443,7 +443,7 @@ class SpeechDuplicateRecord(Report):
         for key in seen.keys():
             if len(seen[key]) > 1:
                 ids = seen[key]
-                Bib.match_id(ids[0])
+                bib = Bib.match_id(ids[0])
                 symbol, speaker, agenda = bib.get_value('791', 'a'), bib.get_value('700', 'a'), bib.get_value('991', 'd')
                 results.append([symbol, speaker, agenda, ids])
         
