@@ -8,9 +8,13 @@ from dlx.marc import Bib, Auth, BibSet, QueryDocument,Condition,Or
 import pymongo
 from pymongo import MongoClient, ReplaceOne
 import time
+from app.models import Itpp_itp, Itpp_section, Itpp_rule#, list_all_sections
+from mongoengine import connect,disconnect
+
 
 
 DB.connect(Config.connect_string)
+connect(host=Config.connect_string,db=Config.dbname)
 db_client=MongoClient(Config.connect_string)
 db=db_client['undlFiles']
 rules_coll = db['dev_Itpp_document']
@@ -37,19 +41,22 @@ class Snapshot(object):
         i=0
         #1. get the list of fields for the ITP
         itp_bib_fields=[]
-        itp_docs_count=rules_coll.count_documents({"$and":[{"body":self.body},{"itp_session":self.session},{"name":self.body+self.session}]})
-        if itp_docs_count==1:
-            for itp_doc in rules_coll.find({"$and":[{"body":self.body},{"itp_session":self.session},{"name":self.body+self.session}]}):
-                for section in itp_doc["sections"]:
-                    #print(f"section name is:{section['name']}")
-                    for rule in section["rules"]:
-                        if rule["name"]=="fields_needed":
-                            for field_list in rule["parameters"]:
-                                #print(f"    field_list is:{field_list}\n")
-                                for fld in field_list.split(";"):
-                                    itp_bib_fields.append(fld.strip()) 
-                #print(f"from MDB: ->{sorted(set(itp_bib_fields))}")
-                #print(f"Number of fields is {len(set(itp_bib_fields))}")
+        for itp in Itpp_itp.objects:
+            print(itp.name)
+        try:
+            itpp_doc = Itpp_itp.objects.get(name=self.body+self.session,sections__rules__name="fields_needed")
+        except:
+            print(f" there is no matching ITP document")
+            itpp_doc=None
+        if itpp_doc is not None:
+            for itpp_section in itpp_doc.sections:
+                #print(f"    {itpp_section.name}")
+                for itpp_rule in itpp_section.rules:
+                    #print(f"        {itpp_rule.name}")
+                    if itpp_rule.name == "fields_needed":
+                        #print(f"        {itpp_rule.parameters}")
+                        for fld in itpp_rule.parameters[0].split(";"):
+                            itp_bib_fields.append(fld.strip()) 
         else:
             itp_bib_fields=['001', '035$a', '591$a','700$a', '700$g', '710$a', '711$a', '791$a','791$b','791$c','793$a' '930$a', '949$a','991$b', '991$d','001', '035$a', '089$b', '191$9', '191$a', '191$b', '191$c','191$d', '191$z', '239$a', '245$a', '245$b', '245$c', '248$a', '249$a', '269$a', '495$a', '515$a', '520$a', '580$a', '591$a', '592$a', '598$a', '599$a', '791$b', '791$c', '930$a', '949$a', '991$a', '991$b', '991$c', '991$d', '991$e', '991$m', '991$s', '991$z', '992$a', '995$a', '996$a']
         set_itp_bib_fields=sorted(set(itp_bib_fields))
