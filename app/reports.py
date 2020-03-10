@@ -101,7 +101,7 @@ class AgendaList(Report):
         self.name = 'agenda_list'
         self.title = 'Agenda list'
         self.description = 'Agenda items from the given session'
-        self.category = "BIB"
+        self.category = "OTHER"
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
         self.output_fields = [('191', 'a'), ('991', 'b'), ('991', 'd')]
@@ -410,7 +410,7 @@ class SpeechDuplicateRecord(Report):
         self.name = 'speech_duplicate_record'
         self.title = "Duplicate speech records"
         
-        self.output_fields = ['Symbol, Speaker', 'Record IDs'] 
+        self.field_names = ['791$a', '700$a', '991$d', 'Record IDs'] 
         
     def execute(self, args):
         self.validate_args(args)
@@ -423,21 +423,29 @@ class SpeechDuplicateRecord(Report):
         
         seen = {}
         results = []
+        count = Counter()
         
-        for bib in BibSet.from_query(query, projection={'791': 1, '700': 1}):
-            symbol, speaker = bib.get_value('791', 'a'), bib.get_value('700', 'a')
-            key = ': '.join([symbol, speaker])
+        for bib in BibSet.from_query(query, projection={'269': 1, '700': 1, '791': 1, '991': 1}):
+            vals = [
+                bib.get_value('269', 'a'),
+                *[str(x) for x in bib.get_xrefs('700')],
+                bib.get_value('791', 'a'),
+                *[str(x) for x in bib.get_xrefs('991')]
+            ]
+            
+            key = ', '.join(vals)
             
             if key in seen: 
                 seen[key].append(bib.id)
             else:
-                seen[key] = []
-                seen[key].append(bib.id)
+                seen[key] = [bib.id]
             
         for key in seen.keys():
             if len(seen[key]) > 1:
-                ids = ', '.join([str (x) for x in seen[key]])
-                results.append([key, ids])
+                ids = seen[key]
+                Bib.match_id(ids[0])
+                symbol, speaker, agenda = bib.get_value('791', 'a'), bib.get_value('700', 'a'), bib.get_value('991', 'd')
+                results.append([symbol, speaker, agenda, ids])
         
         return results
         
