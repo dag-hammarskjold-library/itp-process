@@ -451,7 +451,19 @@ class Reports(TestCase):
         
     # Field mismatch - 269 & 992 - speech
     def test_23a(self):
-        pass
+        report = ReportList.get_by_name('speech_field_mismatch_269_992')
+        
+        Bib({'_id': 1}).set_values(
+            ('791', 'a', 'A/x'),
+            ('791', 'b', 1),
+            ('791', 'c', 1),
+            ('930', 'a', 'ITS'),
+            ('269', 'a', 'x'),
+            ('992', 'a', 'z')
+        ).commit()
+        
+        results = report.execute({'authority': 1})
+        self.assertEqual(len(results), 1)
     
     # Incomplete authorities - speech
     def test_26(self):
