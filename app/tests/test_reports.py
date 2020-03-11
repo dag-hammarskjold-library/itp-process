@@ -332,7 +332,10 @@ class Reports(TestCase):
             
             self.assertEqual(len(results), 1)
         
+    
+    
     # missing field - bib
+
     def test_8a_14a_16(self):
         args = {}
         args['authority'] = 1
@@ -465,8 +468,82 @@ class Reports(TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0][1], 'Person, A.')
 
-    # Incorrect field 
-    def test_10_21(self):
+    # Incorrect field - 991
+    def test_10(self):
+        report = ReportList.get_by_name('speech_incorrect_991')
+        
+        args = {}
+        args['authority'] = 1
+        
+        Bib({'_id': 1}).set_values(
+            ('791', 'a', 'A/SESSION_1/GOOD'),
+            ('791', 'b', 1),
+            ('791', 'c', 1),
+            ('930', 'a', 'ITS'),
+            ('991', 'a', 3)
+        ).commit()
+        
+        Bib({'_id': 2}).set_values(
+            ('791', 'a', 'A/SESSION_1/BAD'),
+            ('791', 'b', 1),
+            ('791', 'c', 1),
+            ('930', 'a', 'ITS'),
+            ('991', 'a', 4)
+        ).commit()
+        
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'A/SESSION_1/BAD')
+        
+        for x in ['C.1', 'RES', 'INF', 'BUR']:
+            Bib({'_id': 1}).set_values(
+                ('791', 'a', 'A/{}/SESSION_1/GOOD'.format(x)),
+                ('791', 'b', 1),
+                ('791', 'c', 1),
+                ('930', 'a', 'ITS'),
+                ('991', 'a', 3)
+            ).commit()
+        
+            Bib({'_id': 2}).set_values(
+                ('791', 'a', 'A/{}/SESSION_1/BAD'.format(x)),
+                ('791', 'b', 1),
+                ('791', 'c', 1),
+                ('930', 'a', 'ITS'),
+                ('991', 'a', 4)
+            ).commit()
+        
+            results = report.execute(args)
+            self.assertEqual(len(results), 1)
+            self.assertRegex(results[0][1], r'^A/.+/SESSION_1/BAD')
+            
+        Bib.match_id(1).set('791', 'a', 'S/2018/GOOD').set('991', 'a', 5).commit()
+        Bib.match_id(2).set('791', 'a', 'S/2018/BAD').set('991', 'a', 4).commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'S/2018/BAD')
+        
+        Bib.match_id(1).set('791', 'a', 'S/RES/GOOD(2018)').set('991', 'a', 5).commit()
+        Bib.match_id(2).set('791', 'a', 'S/RES/BAD(2018)').set('991', 'a', 4).commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'S/RES/BAD(2018)')
+        
+        Bib.match_id(1).set('791', 'a', 'S/PRST/2018/GOOD').set('991', 'a', 5).commit()
+        Bib.match_id(2).set('791', 'a', 'S/PRST/2018/BAD').set('991', 'a', 4).commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'S/PRST/2018/BAD')
+        
+        Bib.match_id(1).set('791', 'a', 'E/RES/SESSION_1').set('991', 'a', 4).commit()
+        Bib.match_id(2).set('791', 'a', 'E/RES/SESSION_1/BAD').set('991', 'a', 5).commit()
+        results = report.execute(args)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'E/RES/SESSION_1/BAD')
+
+    # Incorrect field - 991
+    def test_21(self):
+        report = ReportList.get_by_name('speech_incorrect_field_992')
+        
         pass
         
     # incorrect session - speech
