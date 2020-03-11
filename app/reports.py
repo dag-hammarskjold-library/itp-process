@@ -448,7 +448,44 @@ class SpeechDuplicateRecord(Report):
                 results.append([symbol, speaker, agenda, ids])
         
         return results
+
+class SpeechIncompleteAuthority(Report):
+    def __init__(self):
+        self.type = 'speech'
+        self.category = 'SPEECH'
+        self.type_code = 'ITS'
+        self.form_class = SelectAuthority
+    
+        self.expected_params = ['authority']
+        self.name = 'speech_incomplete_authority'
+        self.title = "Incomplete authorities"
+        self.description = "Authority records referenced from speech record fields 700, 710, or 711 that are missing 905 or 915"
+    
+        self.field_names = ['Authory ID', 'Heading', '905$a', '915$a']
+    
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
         
+        query = QueryDocument(
+            Condition('791', {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^ITS')})
+        )
+        
+        auth_ids = []
+        
+        for bib in BibSet.from_query(query, projection={'700': 1, '710': 1, '711': 1}):
+            auth_ids += bib.get_xrefs('700') + bib.get_xrefs('710') + bib.get_xrefs('711')
+            
+        query = {'_id': {'$in': auth_ids}}
+        results = []
+        
+        for auth in AuthSet.from_query(query, projection={'100': 1, '110': 1, '111': 1, '905': 1, '915': 1}):
+            if not auth.get_field('905') or not auth.get_field('915'):
+                results.append([auth.id, auth.heading_value('a'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
+            
+        return results
+    
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -618,6 +655,7 @@ class ReportList(object):
         # Field mismatch - 269 & 992
         
         # Incomplete authorities
+        SpeechIncompleteAuthority(),
         # Incorrect field - 991
         # Incorrect field - 992
         # Incorrect session - 791

@@ -452,8 +452,19 @@ class Reports(TestCase):
     
     # Incomplete authorities - speech
     def test_26(self):
-        pass
-    
+        report = ReportList.get_by_name('speech_incomplete_authority')
+        
+        Bib({'_id': 1}).set_values(
+            ('791', 'b', 1),
+            ('791', 'c', 1),
+            ('930', 'a', 'ITS'),
+            ('700', 'a', 6)
+        ).commit()
+        
+        results = report.execute({'authority': 1})
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][1], 'Person, A.')
+
     # Incorrect field 
     def test_10_21(self):
         pass
