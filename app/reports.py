@@ -485,6 +485,36 @@ class SpeechIncompleteAuthority(Report):
                 results.append([auth.id, auth.heading_value('a'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
             
         return results
+
+class SpeechMismatch(Report):
+    def __init__(self):
+        self.type = 'speech'
+        self.category = 'SPEECH'
+        self.type_code = 'ITS'
+        self.form_class = SelectAuthority
+        
+        self.expected_params = ['authority']
+        self.name = 'speech_field_mismatch_269_992'
+        self.title = "Field mismatch - 269 & 992"
+        
+        self.field_names = ['Record ID', '791$a', '269$a', '992$a']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition('791', {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^ITS')})
+        )
+        
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={'791': 1, '269': 1, '992': 1}):
+            if bib.get_value('269', 'a') != bib.get_value('992', 'a'):
+                results.append([bib.id, bib.get_value('791', 'a'), bib.get_value('269', 'a'), bib.get_value('992', 'a')])
+                
+        return results
         
 class SpeechIncorrect991(Report):
     def __init__(self):
@@ -701,6 +731,7 @@ class ReportList(object):
         # Duplicate speech records
         SpeechDuplicateRecord(),
         # Field mismatch - 269 & 992
+        SpeechMismatch(),
         
         # Incomplete authorities
         SpeechIncompleteAuthority(),
