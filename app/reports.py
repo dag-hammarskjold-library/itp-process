@@ -485,6 +485,54 @@ class SpeechIncompleteAuthority(Report):
                 results.append([auth.id, auth.heading_value('a'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
             
         return results
+        
+class SpeechIncorrect991(Report):
+    def __init__(self):
+        self.type = 'speech'
+        self.category = 'SPEECH'
+        self.type_code = 'ITS'
+        self.form_class = SelectAuthority
+    
+        self.expected_params = ['authority']
+        self.name = 'speech_incorrect_991'
+        self.title = "Incorrect field - 991"
+        self.description = ""
+    
+        self.field_names = ['Record ID', '791$a', '991$a', '991$b', '991$c', '991$d', '991$e']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition('791', {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^ITS')})
+        )
+        
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={'791': 1, '991': 1}):
+            for field in bib.get_fields('991'):
+                aparts = field.get_value('a').split('/')
+                syms = bib.get_values('791', 'a')
+                found = 0
+    
+                for sym in syms:
+                    try:
+                        body, session = _body_session_from_symbol(sym)
+                    except:
+                        warn('Body and session not detected in ' + field.get_value('a'))
+                
+                    if aparts[0:2] == [body, session]:                
+                        found += 1
+        
+                if found == 0 and bib.get_value('791', 'a')[:4] != 'S/PV':
+                    row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
+                    row.insert(0, '; '.join(syms))
+                    row.insert(0, bib.id)
+                    results.append(row)
+                
+        return results
     
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
@@ -657,6 +705,7 @@ class ReportList(object):
         # Incomplete authorities
         SpeechIncompleteAuthority(),
         # Incorrect field - 991
+        SpeechIncorrect991(),
         # Incorrect field - 992
         # Incorrect session - 791
         # Missing field - 039
