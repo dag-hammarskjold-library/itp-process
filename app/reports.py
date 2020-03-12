@@ -563,7 +563,56 @@ class SpeechIncorrect991(Report):
                     results.append(row)
                 
         return results
+
+class SpeechIncorrect992(Report):
+    def __init__(self):
+        self.name = 'speech_incorrect_field_992'
+        self.title = "Incorrect field - 992"
+        self.description = ""
+        
+        self.type = 'speech'
+        self.category = 'SPEECH'
+        self.type_code = 'ITS'
+        self.form_class = SelectAuthority
     
+        self.expected_params = ['authority']
+        
+        self.field_names = ['Symbol', 'Speech record ID', '992$a', 'Bib record ID', '992$a']
+
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition('791', {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^ITS')})
+        )
+        
+        results = []
+        check = {}
+        
+        for bib in BibSet.from_query(query, projection={'791': 1, '992': 1}):
+            sym = bib.get_value('791', 'a')
+            date1 = bib.get_value('992', 'a')
+            date2 = ''
+            
+            if sym in check:
+                date2 = check[sym].get_value('992', 'a')
+            else:
+                to_check = Bib.find_one(QueryDocument(Condition('191', {'a': sym})).compile(), {'992': 1})
+                
+                if to_check:
+                    date2 = to_check.get_value('992', 'a')
+                    check[sym] = to_check
+                else:
+                    warn(sym + ' not found')
+                    check[sym] = Bib()
+                    
+            if date1 != date2:
+                results.append([bib.get_value('791', 'a'), bib.id, date1, check[sym].id, date2])
+            
+        return results
+            
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -738,6 +787,7 @@ class ReportList(object):
         # Incorrect field - 991
         SpeechIncorrect991(),
         # Incorrect field - 992
+        SpeechIncorrect992(),
         # Incorrect session - 791
         # Missing field - 039
         SpeechMissingField('039'),

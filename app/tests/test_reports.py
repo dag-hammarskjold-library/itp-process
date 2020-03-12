@@ -329,10 +329,7 @@ class Reports(TestCase):
             args['authority'] = 1
             
             results = report.execute(args)
-            
             self.assertEqual(len(results), 1)
-        
-    
     
     # missing field - bib
 
@@ -556,8 +553,23 @@ class Reports(TestCase):
     def test_21(self):
         report = ReportList.get_by_name('speech_incorrect_field_992')
         
-        pass
+        Bib({'_id': 1}).set_values(
+            ('791', 'a', 'TEST'),
+            ('791', 'b', 1),
+            ('791', 'c', 1),
+            ('930', 'a', 'ITS'),
+            ('992', 'a', 'z')
+        ).commit()
         
+        Bib({'_id': 2}).set_values(
+            ('191', 'a', 'TEST'),
+            ('992', 'a', 'y')
+        ).commit()
+        
+        results = report.execute({'authority': 1})
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0][0], 'TEST')
+
     # incorrect session - speech
     def test_5(self):
         pass
