@@ -10,14 +10,12 @@ from collections import Counter
 
 class Report(object):
     def __init__(self):
-        # these attributes must be implmeted by the subclass
-        self.name = None
-        self.title = None
-        self.description = None
-        self.category = None
-        self.form_class = None
-        self.expected_params = None
-        self.output_fields = None
+        self.form_class = SeletAuthority
+        
+        # these attributes must be implemented by the subclasses
+        for att in ('name', 'title', 'description', 'category', 'form_class', 'expected_params', 'field_names'):
+            if not hasattr(self, att):
+                raise Exception('Required attribute "{}" is missing')
     
     def validate_args(self,args):
         for param in self.expected_params:
@@ -31,18 +29,14 @@ class Report(object):
 
 class MissingField(Report):
     def __init__(self,tag):
-        self.tag = tag
-        self.name = '{}_missing_{}'.format(self.type,tag)
+        self.name = '{}_missing_{}'.format(self.type, tag)
         self.title = 'Missing field - ' + tag
         self.description = '{} records from the given body/session that don\'t have a {} field.'.format(self.type.title(),tag)
+        
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        
-        self.output_fields = [
-            ('930','a'),
-            ('001',None),
-            (self.symbol_field,'a')
-        ]
+        self.tag = tag
+
         self.field_names = ['Record Type','Record ID', 'Document Symbol']
     
     def execute(self,args):
@@ -50,27 +44,32 @@ class MissingField(Report):
         
         body,session = _get_body_session(args['authority'])
         
-        bibs = Bib.match(
-            Condition(self.symbol_field,('b',body),('c',session)),
-            Condition('930',('a',Regex('^' + self.type_code))),
-            Condition(self.tag,modifier='not_exists'),
-            project=[f[0] for f in self.output_fields]
+        query = QueryDocument(
+            Condition(self.symbol_field, ('b',body), ('c',session)),
+            Condition('930', ('a',Regex('^' + self.type_code))),
+            Condition(self.tag, modifier='not_exists'),
         )
         
-        # list of lists
-        return _process_results(bibs,self.output_fields)
-
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '930': 1}):
+            results.append([bib.get_value('930', 'a'), bib.id, bib.get_value(self.symbol_field, 'a')])
+           
+        return results
+        
 ### Missing subfield type
 
 class MissingSubfield(Report):
     def __init__(self,tag,code):
-        self.tag = tag
-        self.code = code
         self.name = '{}_missing_{}'.format(self.type,tag + code)
         self.title = 'Missing subfield - {}${}'.format(tag,code)
         self.description = '{} records from the given body/session that don\'t have a {} field but no subfield ${}.'.format(self.type.title(),tag,code)
+        
+        self.tag = tag
+        self.code = code
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
+        
         self.output_fields = [
             ('930','a'),
             ('001',None),
@@ -83,21 +82,24 @@ class MissingSubfield(Report):
         
         body,session = _get_body_session(args['authority'])
         
-        bibs = Bib.match(
-            Condition(self.symbol_field,('b',body),('c',session)),
-            Condition('930',('a',Regex('^' + self.type_code))),
-            Condition(self.tag,modifier='exists'),
-            Condition(self.tag,(self.code,Regex('^.*')),modifier='not'),
-            project=[f[0] for f in self.output_fields]
+        query = QueryDocument(
+            Condition(self.symbol_field, ('b', body), ('c', session)),
+            Condition('930', ('a', Regex('^' + self.type_code))),
+            Condition(self.tag, modifier='exists'),
+            Condition(self.tag, (self.code, Regex('^.*')), modifier='not')
         )
         
-        # list of lists
-        return _process_results(bibs,self.output_fields)
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '930': 1}):
+            results.append([bib.get_value('930', 'a'), str(bib.id), bib.get_value(self.symbol_field, 'a')])
+        
+        return results
 
 ### Incorrect sesssion type
 
 class IncorrectSession(Report):
-    def __init__(self):    
+    def __init__(self):
         self.name = '{}_incorrect_session_{}'.format(self.type, self.symbol_field)
         self.title = 'Incorrect session - {}'.format(self.symbol_field)
         self.description = ''
@@ -135,6 +137,129 @@ class IncorrectSession(Report):
                     
         return results
 
+### 269 and 992 mismatch
+
+class Mismatch269_992(Report):
+    def __init__(self):
+        self.name = '{}_field_mismatch_269_992'.format(self.type)
+        self.title = "Field mismatch - 269 & 992"
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        
+        self.field_names = ['Record ID', self.symbol_field + '$a', '269$a', '992$a']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^{}'.format(self.type_code))})
+        )
+        
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '269': 1, '992': 1}):
+            if bib.get_value('269', 'a') != bib.get_value('992', 'a'):
+                results.append([bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_value('269', 'a'), bib.get_value('992', 'a')])
+                
+        return results
+        
+### incorrect 991
+  
+class Incorrect991(Report):
+    def __init__(self):
+        self.name = '{}_incorrect_991'.format(self.type)
+        self.title = "Incorrect field - 991"
+        self.description = ""
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+    
+        self.field_names = ['Record ID', self.symbol_field + '$a', '991$a', '991$b', '991$c', '991$d', '991$e']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^{}'.format(self.type_code))})
+        )
+        
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '991': 1}):
+            for field in bib.get_fields('991'):
+                aparts = field.get_value('a').split('/')
+                syms = bib.get_values(self.symbol_field, 'a')
+                found = 0
+    
+                for sym in syms:
+                    try:
+                        body, session = _body_session_from_symbol(sym)
+                    except:
+                        warn('Body and session not detected in ' + field.get_value('a'))
+                
+                    if aparts[0:2] == [body, session]:                
+                        found += 1
+        
+                if found == 0: # and bib.get_value(self.symbol_field, 'a')[:4] != 'S/PV':
+                    row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
+                    row.insert(0, '; '.join(syms))
+                    row.insert(0, bib.id)
+                    results.append(row)
+                
+        return results
+        
+### Incorrect 992
+
+class Incorrect992(Report):
+    def __init__(self):
+        self.name = '{}_incorrect_field_992'.format(self.type)
+        self.title = "Incorrect field - 992"
+        self.description = ""
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        
+        self.field_names = ['Symbol', '{} record ID'.format(self.type), '992$a', 'Bib record ID', '992$a']
+
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition('791', {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^{}'.format(self.type_code))})
+        )
+        
+        results = []
+        check = {}
+        
+        for bib in BibSet.from_query(query, projection={'791': 1, '992': 1}):
+            sym = bib.get_value('791', 'a')
+            date1 = bib.get_value('992', 'a')
+            date2 = ''
+            
+            if sym in check:
+                date2 = check[sym].get_value('992', 'a')
+            else:
+                to_check = Bib.find_one(QueryDocument(Condition('191', {'a': sym})).compile(), {'992': 1})
+                
+                if to_check:
+                    date2 = to_check.get_value('992', 'a')
+                    check[sym] = to_check
+                else:
+                    warn(sym + ' not found')
+                    check[sym] = Bib()
+                    
+            if date1 != date2:
+                results.append([bib.get_value('791', 'a'), bib.id, date1, check[sym].id, date2])
+            
+        return results
+       
 ### Auth reports
 
 class AgendaList(Report):
@@ -142,9 +267,11 @@ class AgendaList(Report):
         self.name = 'agenda_list'
         self.title = 'Agenda list'
         self.description = 'Agenda items from the given session'
+        
         self.category = "OTHER"
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
+        
         self.output_fields = [('191', 'a'), ('991', 'b'), ('991', 'd')]
         self.field_names = ['Document Symbol', 'Auth#', 'Agenda Item No.', 'Agenda Subject']
         
@@ -167,151 +294,111 @@ class AgendaList(Report):
 
 ### Bib reports
 # These reports are on records that have field 191 and 930$a='UND'
+
+class BibReport(Report):
+    def __init__(self):
+        self.type = 'bib'
+        self.category = 'BIB'
+        self.type_code = 'UND'
+        self.symbol_field = '191'
      
 class BibIncorrect793Comm(Report):
     def __init__(self):
         self.name = 'bib_incorrect_793_committees'
         self.title = 'Incorrect field - 793 (Committees)'
         self.description = 'Bib records where 191 starts with "A/C.<committee number>" and 793$a does not equal the committe number'
-        self.category = "BIB"
+
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        self.output_fields = [('191','a')]
+        
         self.field_names = ['Document Symbol']
+        
+        BibReport.__init__(self)
         
     def execute(self,args):
         self.validate_args(args)
      
         body,session = _get_body_session(args['authority'])
         
-        bibs = Bib.match(
-            Condition('191',('b',body),('c',session)),
-            Condition('930',('a',Regex('^UND'))),
-            project = ['191','793']
+        query = QueryDocument(
+            Condition('191', ('b',body), ('c',session)),
+            Condition('930', ('a', Regex('^UND'))),
         )
         
         results = []
-        for bib in bibs:
-            m = re.match(r'^A/C\.(\d)/', bib.symbol())
+        
+        for bib in BibSet.from_query(query, projection={'191': 1, '793': 1}):
+            m = re.match(r'^A/C\.(\d)/', bib.get_value('191', 'a'))
+            
             if m and bib.get_value('793','a') != '0' + m.group(1):
-                results.append(bib) 
+                results.append([bib.get_value('191', 'a')]) 
 
-        return _process_results(results,self.output_fields)
+        return results
        
-class BibIncorrect793Plen(Report):
+class BibIncorrect793Plen(BibReport):
     def __init__(self):
         self.name = 'bib_incorrect_793_plenary'
         self.title = 'Incorrect field - 793 (Plenary)'
         self.description = 'Bib records where 191 starts with "A/RES" or "A/<session>/L." and 793$a does not equal with "PL"'
-        self.category = "BIB"
+        
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        self.output_fields = [('191','a')]
+        
         self.field_names = ['Document Symbol']
+        
+        BibReport.__init__(self)
         
     def execute(self,args):
         self.validate_args(args)
      
         body,session = _get_body_session(args['authority'])
         
-        bibs = Bib.match(
-            Condition('191',('b',body),('c',session)),
-            Condition('930',('a',Regex('^UND'))),
-            project = ['191','793']
-        )
-        
-        results = []
-        for bib in bibs:
-            if re.match(r'^A/RES/',bib.symbol()) or re.match(r'^A/.+/L\.', bib.symbol()):
-                if bib.get_value('793','a') != 'PL':
-                    results.append(bib) 
-
-        return _process_results(results,self.output_fields)
-
-class BibMissingField(MissingField):
-    def __init__(self,tag):
-        self.type = 'bib'
-        self.category = 'BIB'
-        self.type_code = 'UND'
-        self.symbol_field = '191'
-        
-        super().__init__(tag)
-        
-class BibMissingSubfield(MissingSubfield):
-    def __init__(self,tag,code):
-        self.type = 'bib'
-        self.category = 'BIB'
-        self.type_code = 'UND'
-        self.symbol_field = '191'
-        
-        super().__init__(tag,code)
-
-class BibIncorrect991(Report):
-    def __init__(self):
-        # S/PV symbols are skipped because no there was no criteria provided for detecting session
-        
-        self.name = 'bib_incorrect_991'
-        self.title = 'Incorrect field - 991'
-        self.description = 'Bib records with a 991 that does not contain the correct agenda document symbol'
-        self.category = "BIB"
-        self.form_class = SelectAuthority
-        self.expected_params = ['authority']
-        #self.output_fields = [('191', 'a'), ('191', 'b'), ('191', 'c'), ('191', 'd'), ('991', 'd'), ('991', 'e')]
-        self.field_names = ['Record ID', '191$a', '991$a', '991$b', '991$c', '991$d', '991$e']
-        
-    def execute(self, args):
-        self.validate_args(args)
-        body, session = _get_body_session(args['authority'])
-        
-        bibset = BibSet.from_query(
-            QueryDocument(
-                Condition('191', {'b': body, 'c': session}),
-                Condition('930', {'a': Regex('^UND')}),
-            ),
-            projection={'191': 1, '991': 1}
+        query = QueryDocument(
+            Condition('191', ('b',body), ('c',session)),
+            Condition('930', ('a', Regex('^UND'))),
         )
         
         results = []
         
-        for bib in bibset:
-            for field in bib.get_fields('991'):
-                aparts = field.get_value('a').split('/')
-                syms = bib.get_values('191', 'a')
-                found = 0
-    
-                for sym in syms:
-                    body, session = _body_session_from_symbol(sym)
-                    
-                    if aparts[0:2] == [body, session]:                
-                        found += 1
-        
-                if found == 0 and bib.get_value('191', 'a')[:4] != 'S/PV':
-                    row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
-                    row.insert(0, '; '.join(syms))
-                    row.insert(0, bib.id)
-                    results.append(row)
-                    
+        for bib in BibSet.from_query(query, projection={'191': 1,'793': 1}):
+            if re.match(r'^A/RES/', bib.symbol()) or re.match(r'^A/.+/L\.', bib.symbol()):
+                if bib.get_value('793', 'a') != 'PL':
+                    results.append([bib.get_value('191', 'a')]) 
+
         return results
+
+class BibMissingField(BibReport, MissingField):
+    def __init__(self, tag):
+        BibReport.__init__(self)
+        MissingField.__init__(self, tag)
         
-class BibIncorrectSession191(IncorrectSession):
+class BibMissingSubfield(BibReport, MissingSubfield):
+    def __init__(self, tag, code):
+        BibReport.__init__(self)
+        MissingSubfield.__init__(self, tag, code)
+
+class BibIncorrect991(BibReport, Incorrect991):
+    def __init__(self):
+        BibReport.__init__(self)
+        Incorrect991.__init__(self)
+        
+class BibIncorrectSession191(BibReport, IncorrectSession):
     def __init__(self):    
-        self.category = "BIB"
-        self.type = 'bib'
-        self.type_code = 'UND'
-        self.symbol_field = '191'
+        BibReport.__init__(self)
+        IncorrectSession.__init__(self)
         
-        super().__init__()
-        
-class BibIncorrectSubfield191_9(Report):
+class BibIncorrectSubfield191_9(BibReport):
     def __init__(self):    
         self.name = 'bib_incorrect_subfield_191_9'
         self.title = 'Incorrect subfield - 191$9'
         self.description = ''
-        self.category = "BIB"
+        
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        #self.output_fields = [('191', 'a'), ('991', 'b'), ('991', 'd')]
+       
         self.field_names = ['Record ID', '191$a', '191$9']
+        
+        BibReport.__init__(self)
         
     def execute(self, args):
         self.validate_args(args)
@@ -347,16 +434,20 @@ class BibIncorrectSubfield191_9(Report):
                     
         return results
         
-class BibMissingSubfieldValue(Report):
+class BibMissingSubfieldValue(BibReport):
     def __init__(self, tag, code, value):
+        BibReport.__init__(self)
+        
+        self.name = 'bib_missing_subfield_value_{}_{}_{}'.format(tag, code, value)
+        self.title = 'Missing subfield value - {}${} {}'.format(tag, code, value)
+        self.description = ''
+        
         self.tag = tag
         self.code = code
         self.value = value
-        self.description = ''
+        
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        self.type = 'bib'
-        self.category = 'BIB'
         
         self.name = 'bib_missing_subfield_value_{}_{}_{}'.format(tag, code, value)
         self.title = 'Missing subfield value - {}${} {}'.format(tag, code, value)
@@ -399,35 +490,26 @@ class SpeechReport(Report):
         self.type_code = 'ITS'
         self.symbol_field = '791'
     
-class SpeechMissingField(MissingField):
-    def __init__(self,tag):
-        self.type = 'speech'
-        self.category = 'SPEECH'
-        self.type_code = 'ITS'
-        self.symbol_field = '791'
+class SpeechMissingField(SpeechReport, MissingField):
+    def __init__(self, tag):
+        SpeechReport.__init__(self)
+        MissingField.__init__(self, tag)
         
-        super().__init__(tag)
-        
-class SpeechMissingSubfield(MissingSubfield):
+class SpeechMissingSubfield(SpeechReport, MissingSubfield):
     def __init__(self,tag,code):
-        self.type = 'speech'
-        self.category = 'SPEECH'
-        self.type_code = 'ITS'
-        self.symbol_field = '791'
-        
-        super().__init__(tag,code)
+        SpeechReport.__init__(self)
+        MissingSubfield.__init__(self, tag, code)
 
-class SpeechDuplicateRecord(Report):
+class SpeechDuplicateRecord(SpeechReport):
     def __init__(self):
-        self.type = 'speech'
-        self.category = 'SPEECH'
-        self.type_code = 'ITS'
-        self.form_class = SelectAuthority
+        SpeechReport.__init__(self)
         
-        self.expected_params = ['authority']
         self.name = 'speech_duplicate_record'
         self.title = "Duplicate speech records"
         
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+
         self.field_names = ['791$a', '700$a', '991$d', 'Record IDs'] 
         
     def execute(self, args):
@@ -467,18 +549,16 @@ class SpeechDuplicateRecord(Report):
         
         return results
 
-class SpeechIncompleteAuthority(Report):
+class SpeechIncompleteAuthority(SpeechReport):
     def __init__(self):
-        self.type = 'speech'
-        self.category = 'SPEECH'
-        self.type_code = 'ITS'
-        self.form_class = SelectAuthority
-    
-        self.expected_params = ['authority']
+        SpeechReport.__init__(self)
         self.name = 'speech_incomplete_authority'
         self.title = "Incomplete authorities"
         self.description = "Authority records referenced from speech record fields 700, 710, or 711 that are missing 905 or 915"
-    
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+
         self.field_names = ['Authory ID', 'Heading', '905$a', '915$a']
     
     def execute(self, args):
@@ -504,132 +584,20 @@ class SpeechIncompleteAuthority(Report):
             
         return results
 
-class SpeechMismatch(Report):
+class SpeechMismatch(SpeechReport, Mismatch269_992):
     def __init__(self):
-        self.type = 'speech'
-        self.category = 'SPEECH'
-        self.type_code = 'ITS'
-        self.form_class = SelectAuthority
+        SpeechReport.__init__(self)
+        Mismatch269_992.__init__(self)
         
-        self.expected_params = ['authority']
-        self.name = 'speech_field_mismatch_269_992'
-        self.title = "Field mismatch - 269 & 992"
-        
-        self.field_names = ['Record ID', '791$a', '269$a', '992$a']
-        
-    def execute(self, args):
-        self.validate_args(args)
-        body, session = _get_body_session(args['authority'])
-        
-        query = QueryDocument(
-            Condition('791', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^ITS')})
-        )
-        
-        results = []
-        
-        for bib in BibSet.from_query(query, projection={'791': 1, '269': 1, '992': 1}):
-            if bib.get_value('269', 'a') != bib.get_value('992', 'a'):
-                results.append([bib.id, bib.get_value('791', 'a'), bib.get_value('269', 'a'), bib.get_value('992', 'a')])
-                
-        return results
-        
-class SpeechIncorrect991(Report):
+class SpeechIncorrect991(SpeechReport, Incorrect991):
     def __init__(self):
-        self.type = 'speech'
-        self.category = 'SPEECH'
-        self.type_code = 'ITS'
-        self.form_class = SelectAuthority
-    
-        self.expected_params = ['authority']
-        self.name = 'speech_incorrect_991'
-        self.title = "Incorrect field - 991"
-        self.description = ""
-    
-        self.field_names = ['Record ID', '791$a', '991$a', '991$b', '991$c', '991$d', '991$e']
-        
-    def execute(self, args):
-        self.validate_args(args)
-        body, session = _get_body_session(args['authority'])
-        
-        query = QueryDocument(
-            Condition('791', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^ITS')})
-        )
-        
-        results = []
-        
-        for bib in BibSet.from_query(query, projection={'791': 1, '991': 1}):
-            for field in bib.get_fields('991'):
-                aparts = field.get_value('a').split('/')
-                syms = bib.get_values('791', 'a')
-                found = 0
-    
-                for sym in syms:
-                    try:
-                        body, session = _body_session_from_symbol(sym)
-                    except:
-                        warn('Body and session not detected in ' + field.get_value('a'))
-                
-                    if aparts[0:2] == [body, session]:                
-                        found += 1
-        
-                if found == 0 and bib.get_value('791', 'a')[:4] != 'S/PV':
-                    row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
-                    row.insert(0, '; '.join(syms))
-                    row.insert(0, bib.id)
-                    results.append(row)
-                
-        return results
+        SpeechReport.__init__(self)
+        Incorrect991.__init__(self)
 
-class SpeechIncorrect992(Report):
+class SpeechIncorrect992(SpeechReport, Incorrect992):
     def __init__(self):
-        self.name = 'speech_incorrect_field_992'
-        self.title = "Incorrect field - 992"
-        self.description = ""
-        
-        self.type = 'speech'
-        self.category = 'SPEECH'
-        self.type_code = 'ITS'
-        self.form_class = SelectAuthority
-    
-        self.expected_params = ['authority']
-        
-        self.field_names = ['Symbol', 'Speech record ID', '992$a', 'Bib record ID', '992$a']
-
-    def execute(self, args):
-        self.validate_args(args)
-        body, session = _get_body_session(args['authority'])
-        
-        query = QueryDocument(
-            Condition('791', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^ITS')})
-        )
-        
-        results = []
-        check = {}
-        
-        for bib in BibSet.from_query(query, projection={'791': 1, '992': 1}):
-            sym = bib.get_value('791', 'a')
-            date1 = bib.get_value('992', 'a')
-            date2 = ''
-            
-            if sym in check:
-                date2 = check[sym].get_value('992', 'a')
-            else:
-                to_check = Bib.find_one(QueryDocument(Condition('191', {'a': sym})).compile(), {'992': 1})
-                
-                if to_check:
-                    date2 = to_check.get_value('992', 'a')
-                    check[sym] = to_check
-                else:
-                    warn(sym + ' not found')
-                    check[sym] = Bib()
-                    
-            if date1 != date2:
-                results.append([bib.get_value('791', 'a'), bib.id, date1, check[sym].id, date2])
-            
-        return results
+        SpeechReport.__init__(self)
+        Incorrect992.__init__(self)
         
 class SpeechIncorrectSession791(SpeechReport, IncorrectSession):
     def __init__(self):    
@@ -651,24 +619,31 @@ class VoteIncorrectSession(VoteReport, IncorrectSession):
         VoteReport.__init__(self)
         IncorrectSession.__init__(self)
 
-class VoteMissingField(MissingField):
-    def __init__(self,tag):
-        self.type = 'vote'
-        self.category = 'VOTING'
-        self.type_code = 'VOT'
-        self.symbol_field = '791'
-        
-        super().__init__(tag)
+class VoteMissingField(VoteReport, MissingField):
+    def __init__(self, tag):
+        VoteReport.__init__(self)
+        MissingField.__init__(self, tag)
 
-class VoteMissingSubfield(MissingSubfield):
+class VoteMissingSubfield(VoteReport, MissingSubfield):
     def __init__(self,tag,code):
-        self.type = 'vote'
-        self.category = 'VOTING'
-        self.type_code = 'VOT'
-        self.symbol_field = '791'
+        VoteReport.__init__(self)
+        MissingSubfield.__init__(self, tag, code)
         
-        super().__init__(tag,code)
+class VoteMismatch(VoteReport, Mismatch269_992):
+    def __init__(self):
+        VoteReport.__init__(self)
+        Mismatch269_992.__init__(self)
   
+class VoteIncorrect991(VoteReport, Incorrect991):
+    def __init__(self):
+        VoteReport.__init__(self)
+        Incorrect991.__init__(self)
+        
+class VoteIncorrect992(VoteReport, Incorrect991):
+    def __init__(self):
+        VoteReport.__init__(self)
+        Incorrect992.__init__(self)
+        
 ### "Other" reports
 
 class AnyMissingField(Report):
@@ -782,8 +757,11 @@ class ReportList(object):
         # voting category
 
         # Field mismatch - 269 & 992
+        VoteMismatch(),
         # Incorrect field - 991
+        VoteIncorrect991(),
         # Incorrect field - 992
+        VoteIncorrect992(),
         # Incorrect session - 791
         VoteIncorrectSession(),
         # Missing field - 039

@@ -39,31 +39,7 @@ class Reports(TestCase):
         
     ### bib
     
-    # Agenda List    
-    def old_test_24(self):
-        report = ReportList.get_by_name('agenda_list')
-        
-        for x in (range(5)):
-            Bib({'_id': x}).set_values(
-                ('191', 'a', 'A/TEST/'),
-                ('191', 'b', 1),
-                ('191', 'c', 1),
-                ('930', 'a', 'UND'),
-                ('991', 'b', 3),
-                ('991', 'd', 3),
-                ('991', 'b', 3, {'address': ['+']}),
-                ('991', 'd', 3, {'address': [1]}),
-            ).commit()
-        
-        args = {}
-        
-        args['authority'] = 1    
-        results = report.execute(args)
-        self.assertEqual(len(results), 10)
-        
-        for r in results:
-            self.assertEqual(r, ['A/TEST/', 3, 'AGENDA ITEM', 'AGENDA SUBJECT'])
-            
+    # Agenda List
     def test_24(self):
         report = ReportList.get_by_name('agenda_list')
         
@@ -534,32 +510,32 @@ class Reports(TestCase):
         report = ReportList.get_by_name('speech_missing_' + tag + code)
         
         Bib({'_id': 1}).set_values(
-            ('791','a','GOOD'),
-            ('791','b',1),
-            ('791','c',1),
-            ('930','a','ITS'),
-            (tag,code,3)
+            ('791', 'a', 'GOOD'),
+            ('791', 'b', 1),
+            ('791', 'c', 1),
+            ('930', 'a', 'ITS'),
+            (tag, code, 3)
         ).commit()
         
         Bib({'_id': 2}).set_values(
-            ('001',None,'2'),
-            ('791','a','BAD'),
-            ('791','b',1),
-            ('791','c',1),
-            ('930','a','ITS'),
-            (tag,'z','WRONG')
+            #('001', None, '2'),
+            ('791', 'a', 'BAD'),
+            ('791', 'b', 1),
+            ('791', 'c', 1),
+            ('930', 'a', 'ITS'),
+            (tag, 'z', 'WRONG')
         ).commit()
         
         Bib({'_id': 3}).set_values(
-            ('791','a','GOOD'),
-            ('791','b',1),
-            ('791','c',1),
-            ('930','a','ITS')
+            ('791', 'a', 'GOOD'),
+            ('791', 'b', 1),
+            ('791', 'c', 1),
+            ('930', 'a', 'ITS')
         ).commit()
 
         results = report.execute(args)
         self.assertEqual(len(results),1)
-        self.assertEqual(results[0],['ITS','2','BAD'])
+        self.assertEqual(results[0], ['ITS', '2', 'BAD'])
         
     ### vote
     
