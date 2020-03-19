@@ -6,3 +6,7 @@ function myFunction() {
         x.style.display = "none";
     }
 }
+
+function loading() {
+    $("#loading").show();
+}
