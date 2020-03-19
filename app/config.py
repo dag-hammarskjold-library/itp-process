@@ -29,8 +29,8 @@ and stored.
 class ProductionConfig(object):
     context = 'production'
     client = boto3.client('ssm')
-    connect_string = "mongodb://undlFilesAdmin:AF04-3DE7-F2EE-871B-5Mj0@18.235.152.183:8080/?authSource=undlFiles"
-    dbname = "undlFiles"
+    connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
+    dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
     collection_prefix = ''
     url_prefix="https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/"
     RPP = 10
