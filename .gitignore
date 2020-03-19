@@ -7,3 +7,4 @@ dbparam.json
 app_old.py
 .DS_Store
 app/query.py
+app.config.py

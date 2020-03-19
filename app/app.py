@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
+from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash,send_file
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from requests import get
 import boto3, re, os, pymongo
@@ -16,9 +16,12 @@ from app.config import Config
 from dlx import DB
 from dlx.marc import Bib, Auth, BibSet, QueryDocument,Condition,Or
 from bson.json_util import dumps
+from bson.objectid import ObjectId
 import bson
 import time, json
 from zappa.asynchronous import task
+from pymongo import MongoClient
+from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR
 
 
 ###############################################################################################
@@ -33,7 +36,7 @@ app = Flask(__name__)
 
 app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
-URL_BY_DEFAULT = 'https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/'
+URL_BY_DEFAULT = Config.url_prefix
 
 
 login_manager = LoginManager()
@@ -193,7 +196,7 @@ def delete_user(id):
 
 # check of the user exists
 @app.route("/checkUser", methods=['POST'])
-@login_required
+#@login_required
 def checkUser():
     """ User check Identification """
     if (request.form["inputEmail"]=="admin@un.org" and request.form["inputPassword"]=="admin"):
@@ -656,8 +659,497 @@ def get_report_by_id(name):
         return render_template('report.html', report=report, form=form)
 
 ####################################################
+# ITPP Display
+####################################################
+
+myMongoURI = Config.connect_string
+myClient = MongoClient(myMongoURI)
+myDatabase = myClient.undlFiles
+myCollection = myDatabase['itp_sample_output']
+
+################## DISPLAY ALL THE RECORDS OF THE SECTION ###########################################################
+
+@app.route('/itpp_itpsor/',methods=["GET"])
+@login_required
+def itpp_itpsor():
+
+    # delete old file in the server
+    if os.path.exists('itpsor.docx'):
+        deleteFile('itpsor.docx')
+    
+    # definition of the offset and the limit
+    offset=int(request.args["offset"])
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find().sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpsor'}).count()
+    
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal in [100,1000]:
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+    
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpsor'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=myTotal/defaultLimit
+    
+    # dynamic url generation
+    firstUrl="/itpp_itpsor?offset=0"
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl="/itpp_itpsor?offset={}".format(offset+defaultLimit) 
+    else:
+        nextUrl="/itpp_itpsor?offset={}".format(offset)
+        
+    if offset >= defaultLimit:
+        prevUrl="/itpp_itpsor?offset={}".format(offset-defaultLimit) 
+    else:
+        prevUrl="/itpp_itpsor?offset={}".format(offset)
+        
+    lastUrl="/itpp_itpsor?offset={}".format(myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpsor.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
+@app.route('/itpp_itpitsc/',methods=["GET"])
+@login_required
+def itpp_itpitsc_new():
+    
+    # delete old file in the server
+    if os.path.exists('itpitsc.docx'):
+        deleteFile('itpitsc.docx')
+    
+    # definition of the offset and the limit
+    offset=int(request.args["offset"])
+   # limit=int(request.args["limit"])
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpitsc'}, {'itshead': 1, 
+       'itssubhead': 1, 'itsentry': 1, 'docsymbol': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpitsc'}).count()
+    
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal in [100,1000]:
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+    
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitsc'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+
+    print(myRecords.count())
+
+    myOffset=myTotal/defaultLimit
+    
+    # dynamic url generation
+    firstUrl="/itpp_itpitsc?offset=0"
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl="/itpp_itpitsc?offset={}".format(offset+defaultLimit) 
+    else:
+        nextUrl="/itpp_itpitsc?offset={}".format(offset)
+        
+    if offset >= defaultLimit:
+        prevUrl="/itpp_itpitsc?offset={}".format(offset-defaultLimit) 
+    else:
+        prevUrl="/itpp_itpitsc?offset={}".format(offset)
+        
+    lastUrl="/itpp_itpitsc?offset={}".format(myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpitsc.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
+@app.route('/itpp_itpitsp/',methods=["GET"])
+@login_required
+def itpp_itpitsp_new():
+    
+    # delete old file in the server
+    if os.path.exists('itpitsp.docx'):
+        deleteFile('itpitsp.docx')
+    
+    # definition of the offset and the limit
+    offset=int(request.args["offset"])
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpitsp'}, {'itshead': 1, 
+       'itssubhead': 1, 'docsymbol': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpitsp'}).count()
+    
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal in [100,1000]:
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+    
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitsp'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+
+    print(myRecords.count())
+
+    myOffset=myTotal/defaultLimit
+    
+    # dynamic url generation
+    firstUrl="/itpp_itpitsp?offset=0"
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl="/itpp_itpitsp?offset={}".format(offset+defaultLimit) 
+    else:
+        nextUrl="/itpp_itpitsp?offset={}".format(offset)
+        
+    if offset >= defaultLimit:
+        prevUrl="/itpp_itpitsp?offset={}".format(offset-defaultLimit) 
+    else:
+        prevUrl="/itpp_itpitsp?offset={}".format(offset)
+        
+    lastUrl="/itpp_itpitsp?offset={}".format(myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpitsp.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
+@app.route('/itpp_itpitss/',methods=["GET"])
+@login_required
+def itpp_itpitss_new():
+    
+    # delete old file in the server
+    if os.path.exists('itpitss.docx'):
+        deleteFile('itpitss.docx')
+    
+    # definition of the offset and the limit
+    offset=int(request.args["offset"])
+   # limit=int(request.args["limit"])
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpitss'}, {'itshead': 1, 
+       'itssubhead': 1, 'itsentry': 1, 'docsymbol': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpitss'}).count()
+    
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal in [100,1000]:
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+    
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitss'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+
+    print(myRecords.count())
+
+    myOffset=myTotal/defaultLimit
+    
+    # dynamic url generation
+    firstUrl="/itpp_itpitss?offset=0"
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl="/itpp_itpitss?offset={}".format(offset+defaultLimit) 
+    else:
+        nextUrl="/itpp_itpitss?offset={}".format(offset)
+        
+    if offset >= defaultLimit:
+        prevUrl="/itpp_itpitss?offset={}".format(offset-defaultLimit) 
+    else:
+        prevUrl="/itpp_itpitss?offset={}".format(offset)
+        
+    lastUrl="/itpp_itpitss?offset={}".format(myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpitss.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+    
+################## UPDATE ###########################################################
+
+@app.route('/itpp_updateRecord/<recordID>',methods=["POST"]) 
+@login_required 
+def itpp_updateRecord(recordID):
+    
+    # Retrieving the values from the form sent
+    mySorentry=request.form["sorentry"]
+    myDocSymbol=request.form["docsymbol"]
+    mySornorm=request.form["sornorm"]
+    mySornote=request.form["sornote"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "sorentry":mySorentry,
+                "docSymbol":myDocSymbol,
+                "sornorm":mySornorm,
+                "sornote":mySornote
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect("/itpp_itpsor?limit=100&offset=0  ")
+
+
+@app.route('/itpp_updateRecorditpitsc/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpitsc(recordID):
+    
+    # Retrieving the values from the form sent
+    myitshead=request.form["itshead"]
+    myitssubhead=request.form["itssubhead"]
+    myitsentry=request.form["itsentry"]
+    mydocsymbol=request.form["docsymbol"]
+    myrecord_id=request.form["record_id"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "itshead":myitshead,
+                "itssubhead":myitssubhead,
+                "itsentry":myitsentry,
+                "docsymbol":mydocsymbol,
+                "record_id":myrecord_id
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect("/itpp_itpitsc?limit=100&offset=0  ")
+
+
+@app.route('/itpp_updateRecorditpitsp/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpitsp(recordID):
+    
+    # Retrieving the values from the form sent
+    myitshead=request.form["itshead"]
+    myitssubhead=request.form["itssubhead"]
+    mydocsymbol=request.form["docsymbol"]
+    myrecord_id=request.form["record_id"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "itshead":myitshead,
+                "itssubhead":myitssubhead,
+                "docsymbol":mydocsymbol,
+                "record_id":myrecord_id
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect("/itpp_itpitsp?limit=100&offset=0  ")
+
+
+@app.route('/itpp_updateRecorditpitss/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpitss(recordID):
+    
+    # Retrieving the values from the form sent
+    myitshead=request.form["itshead"]
+    myitssubhead=request.form["itssubhead"]
+    myitsentry=request.form["itsentry"]
+    mydocsymbol=request.form["docsymbol"]
+    myrecord_id=request.form["record_id"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "itshead":myitshead,
+                "itssubhead":myitssubhead,
+                "itsentry":myitsentry,                
+                "docsymbol":mydocsymbol,
+                "record_id":myrecord_id
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect("/itpp_itpitss?limit=100&offset=0  ")
+
+################## DELETION ###########################################################
+
+@app.route('/itpp_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpp_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect("/itpp_itpsor?limit=100&offset=0  ")
+
+@app.route('/itpitsc_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpitsc_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect("/itpp_itpitsc?limit=100&offset=0  ")
+
+@app.route('/itpitsp_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpitsp_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect("/itpp_itpitsp?limit=100&offset=0  ")
+
+
+@app.route('/itpitss_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpitss_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect("/itpp_itpitss?limit=100&offset=0  ")
+
+################## DOWNLOAD ###########################################################
+
+def deleteFile(filename):
+    os.remove(filename)
+
+@app.route("/itpp_itpsor/download")
+@login_required
+def DownloadWordFileITPSOR ():
+    generateWordDocITPSOR('List of documents',"Supplements to Official Records","A/72",'itpsor','itpsor')
+    path='itpsor.docx'
+
+    return send_file(path,as_attachment=True)
+
+@app.route("/itpp_itpitsc/download")
+@login_required
+def DownloadWordFileITPITSC ():
+    generateWordDocITPITSC('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES',"A/72",'itpitsc','itpitsc')
+    path='itpitsc.docx'
+    return send_file(path,as_attachment=True)
+
+@app.route("/itpp_itpitsp/download")
+@login_required
+def DownloadWordFileITPITSP ():
+    generateWordDocITPITSP('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - SPEAKERS',"A/72",'itpitsp','itpitsp')
+    path='itpitsp.docx'
+    return send_file(path,as_attachment=True)
+
+@app.route("/itpp_itpitss/download")
+@login_required
+def DownloadWordFileITPITSS ():
+    generateWordDocITPITSS('GENERAL ASSEMBLY – 72ND SESSION – 2017/2018','INDEX TO SPEECHES – SUBJECTS',"A/72",'itpitss','itpitss')
+    path='itpitss.docx'
+    return send_file(path,as_attachment=True)
+
+####################################################################################### 
+
+@app.route('/itpp_findRecord/<docSymbol>',methods=["POST"])  
+def itpp_findRecord(docSymbol):
+
+    # Defining and executing the request
+    myRecord=myCollection.find({"docSymbol": docSymbol})
+    if myRecord.count()==0:
+        flash('No record found !!! ', 'error')
+
+    # Redirection to the main page about itpsor
+    return render_template('itpsor.html',
+                           myRecord=myRecord
+                           )
+
+####################################################
 # START APPLICATION
 ####################################################  
 
 if __name__=="__main__":
     app.run(debug=True)
+
+
+

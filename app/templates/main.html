@@ -2,129 +2,130 @@
 
 <div class="container">
 
-    <h1>Main features</h1>
-    <hr>
     <h5 class="text-primary font-weight-bold"> Connected user : {{myUser.email}} </h5>
     <hr>
-    <div class="shadow">
-        <div class="card-deck mb-3 text-center mb-6">
 
-            <div>
-
+    <!-- Sections of the app -->
+    <div class="row">
+        <div class="col card mr-2">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Administration</h4>
             </div>
-            <!-- Administration -->
+            <div class="card-body">
+                <ul class="list-unstyled mt-3 mb-4 text-center font-weight-bold">
+                    <li> <a href="{{url_for('list_users')}}"><span class="text-dark"> <i class="fas fa-link"> User management</i></span></a></li>
+                    <li> <a href="{{url_for('administration')}}"><span class="text-dark"><i class="fas fa-link"> Log management</i></span></a></li>
 
-            <div class="card mb-6 shadow-sm">
-                <div class="card-header">
-                    <h4 class="my-0 font-weight-normal">Administration</h4>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                        <li> <a href="{{url_for('list_users')}}"><span class="text-dark"> User management</span></a></li>
-                        <li> <a href="{{url_for('administration')}}"><span class="text-dark">Log management</span></a></li>
-
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Section -->
-
-            <div class="card mb-6 shadow-sm">
-                <div class="card-header">
-                    <h4 class="my-0 font-weight-normal">Features</h4>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                        <li> <a href="{{url_for('list_itpp_itps')}}"><span class="text-dark">ITP Document Management</span></a></li>
-                    </ul>
-                </div>
+                </ul>
             </div>
         </div>
-
-
-        <!-- Reports -->
-
-        <div class="card mb-12 shadow-sm">
+        <div class="col card mr-2">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Main Features</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mt-3 mb-4 text-center font-weight-bold">
+                    <li> <a href="{{url_for('list_itpp_itps')}}"><span class="text-dark"><i class="fas fa-link">  ITP Document Management</i></span></a></li>
+                </ul>
+            </div>            
+        </div>  
+        <div class="col card mr-2">
+                <div class="card-header">
+                    <h4 class="my-0 font-weight-normal">Display Features</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                        <li> <a href="/itpp_itpsor?offset=0"><span class="text-dark"><i class="fas fa-link">  Supplements to Official Records : itpsor </i></span></a></li>
+                        <li> <a href="/itpp_itpitsc?offset=0" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Corporate names / countries : itpitsc</i></span></a></li>
+                        <li> <a href="/itpp_itpitsp?offset=0" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Speakers : itpitsp </i></span></a></li>
+                        <li> <a href="/itpp_itpitss?offset=0" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Subjects : itpitss </i></span></a></li>
+                    </ul>
+                </div>            
+        </div>
+   
+        <!-- old  -->
+        <div class="col card">
             <div class="card-header">
                 <h4 class="my-0 font-weight-normal">Reporting</h4>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <div class="card mb-3 shadow-sm">
-                            <div class="card-header">
-                                <h4 class="my-0 font-weight-normal">Bib Reports</h4>
-                            </div>
-                            <div class="card-body">
+            <div class="d-flex justify-content-start mt-4">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Bib Reports
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                 {% for report in reports %}
-                                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
                                     <!-- Implement the loop for generating the links for the reports -->
                                     {% if report.category=="BIB" %}
-                                    <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> * {{report.title}}</span></a></li>
+                                    <li> <a class="dropdown-item" href="{{url_for('get_report_by_id',name=report.name)}}" target="_self"><span class="text-dark"> <i class="fas fa-link">  {{report.title}}</i></span></a></li>
                                     {% endif %}
-                                </ul>
                                 {% endfor %}
-                            </div>
                         </div>
                     </div>
-                    <div class="col-sm-3">
-                        <div class="card mb-3 shadow-sm">
-                            <div class="card-header">
-                                <h4 class="my-0 font-weight-normal">Speech Reports</h4>
-                            </div>
-                            <div class="card-body">
-                                {% for report in reports %}
-                                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                                    <!-- Implement the loop for generating the links for the reports -->
-                                    {% if report.category=="SPEECH" %}
-                                    <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> * {{report.title}}</span></a></li>
-                                    {% endif %}
-                                </ul>
-                                {% endfor %}
-                            </div>
+            </div>
+            <!--end -->
+            <div class="d-flex justify-content-start mt-2">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Speech Reports
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            {% for report in reports %}
+                            <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                                <!-- Implement the loop for generating the links for the reports -->
+                                {% if report.category=="SPEECH" %}
+                                <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_self"><span class="text-dark"> <i class="fas fa-link">  {{report.title}}</i></span></a></li>
+                                {% endif %}
+                            </ul>
+                            {% endfor %}
                         </div>
                     </div>
-                    <div class="col-sm-3">
-                        <div class="card mb-3 shadow-sm">
-                            <div class="card-header">
-                                <h4 class="my-0 font-weight-normal">Voting Reports</h4>
-                            </div>
-                            <div class="card-body">
-                                {% for report in reports %}
-                                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                                    <!-- Implement the loop for generating the links for the reports -->
-                                    {% if report.category=="VOTING" %}
-                                    <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> * {{report.title}}</span></a></li>
-                                    {% endif %}
-                                </ul>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-3">
-                        <div class="card mb-3 shadow-sm">
-                            <div class="card-header">
-                                <h4 class="my-0 font-weight-normal">Other</h4>
-                            </div>
-                            <div class="card-body">
-                                {% for report in reports %}
-                                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                                    <!-- Implement the loop for generating the links for the reports -->
-                                    {% if report.category=="OTHER" %}
-                                    <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> * {{report.title}}</span></a></li>
-                                    {% endif %}
-                                </ul>
-                                {% endfor %}
-                            </div>
-                        </div>
+            </div>
+             <!--end -->
+        <div class="d-flex justify-content-start mt-2">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Voting Reports
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        {% for report in reports %}
+                        <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                            <!-- Implement the loop for generating the links for the reports -->
+                            {% if report.category=="VOTING" %}
+                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_self"><span class="text-dark"> <i class="fas fa-link">  {{report.title}}</i></span></a></li>
+                            {% endif %}
+                        </ul>
+                        {% endfor %}
                     </div>
                 </div>
-
-            </div>
         </div>
+    <!--end -->
+    <div class="d-flex justify-content-start mt-2">
+            <div class="dropdown"> 
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  Others Reports
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    {% for report in reports %}
+                    <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                        <!-- Implement the loop for generating the links for the reports -->
+                        {% if report.category=="OTHER" %}
+                        <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> <i class="fas fa-link">  {{report.title}}</i></span></a></li>
+                        {% endif %}
+                    </ul>
+                    {% endfor %}
+
+                </div>
+            </div>
     </div>
+<!--end -->
+</div>
+</div>
+                    
+                
 
 
+    <!-- End Sections of the app --> 
     <hr>
     <div class="text-bold text-right font-weight-bold">
         <a href="{{url_for('logout')}}"> Log out from the application </a>

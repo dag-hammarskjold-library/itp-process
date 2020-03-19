@@ -65,3 +65,4 @@ xlrd==1.2.0
 yarl==1.4.2
 zappa==0.49.0
 zipp==0.6.0
+python-docx==0.8.10
