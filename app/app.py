@@ -21,6 +21,7 @@ import bson
 import time, json
 from zappa.asynchronous import task
 from pymongo import MongoClient
+from copy import deepcopy
 from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR
 
 
@@ -337,6 +338,27 @@ def create_itpp_itp():
             return render_template('itpp_itp/create.html')
     else:
         return render_template('itpp_itp/create.html')
+
+@app.route("/itpp_itps/<id>/clone" )#methods=['POST'])
+@login_required
+def clone_itpp_itp(id):
+    try:
+        itp = Itpp_itp.objects.get(id=id)
+        clone = Itpp_itp(
+            name='Clone of ' + itp.name, 
+            body=itp.body, 
+            itp_session=itp.itp_session, 
+            body_session_auth=itp.body_session_auth,
+            sections = itp.sections
+        )
+        clone.save()
+        flash("Cloned document successfully.")
+        return redirect(url_for('list_itpp_itps'))
+    except:
+        flash("Could not clone the ITP Document.")
+        raise
+        return redirect(url_for('list_itpp_itps'))
+
 
 @app.route("/itpp_itps/<id>")
 @login_required
