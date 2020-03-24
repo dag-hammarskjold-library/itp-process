@@ -269,7 +269,8 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
             paragraph_format.line_spacing =  1.5
 
     # Save the word document generated
-    document.save(paramNameFileOutput+'.docx')
+    #document.save(paramNameFileOutput+'.docx')
+    return document
 
 
 def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
@@ -528,7 +529,8 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
         # Force a new line before next heading
         p2.add_run("\n")
 
-    document.save(paramNameFileOutput+'.docx')
+    #document.save(paramNameFileOutput+'.docx')
+    return document
     
 def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
@@ -786,7 +788,8 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
         # Force a new line before next heading
         p2.add_run("\n")
 
-    document.save(paramNameFileOutput+'.docx')    
+    #document.save(paramNameFileOutput+'.docx')   
+    return document 
         
 def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
 
@@ -1044,4 +1047,5 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
         # Force a new line before next heading
         p2.add_run("\n")
 
-    document.save(paramNameFileOutput+'.docx')    
+    #document.save(paramNameFileOutput+'.docx')  
+    return document  
