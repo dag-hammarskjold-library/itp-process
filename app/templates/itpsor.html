@@ -5,7 +5,7 @@
 <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3  bg-secondary border-bottom shadow-sm">
   <h3 class="my-0 mr-md-auto font-weight-normal text-center">Supplements to Official Records: itpsor  <span class="badge badge-pill badge-info">{{totalRecord}} records </span></h3>
   <a class="btn btn-outline-primary" href="{{url_for('main')}}">Main Menu</a>
-  <!-- <a class="btn btn-outline-primary" href="{{url_for('DownloadWordFileITPSOR')}}" onclick="loading();"><i class="fa fa-download">Word Document</i></a>-->
+  <a class="btn btn-outline-primary" href="{{url_for('DownloadWordFileITPSOR')}}" onclick="loading();"><i class="fa fa-download">Word Document</i></a>
 </div>
 <hr>
 <div class="row d-flex justify-content-center">
@@ -69,7 +69,7 @@
             </div>
             <br>
             <!-- Modal window -->
-            <div class="modal fade" id="maModal{{record["_id"]}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            <div class="modal fade" id="maModal{{record['_id']}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
                 aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -81,26 +81,26 @@
                         </div>
                         <div class="modal-body">
                             <!-- form for the update -->
-                            <form method="POST" action="{{url_for('itpp_updateRecord',recordID=record["_id"])}}">
+                            <form method="POST" action="{{url_for('itpp_updateRecord',recordID=record['_id'])}}">
                                  <!-- sorentry -->
                                 <div class="form-group">
                                     <label for="text">SORENTRY</label>
-                                    <input type="text" class="form-control" name="sorentry" id="sorentry" value="{{record["sorentry"]}}">
+                                    <input type="text" class="form-control" name="sorentry" id="sorentry" value="{{record['sorentry']}}">
                                 </div>
                                  <!-- docSymbol -->
                                 <div class="form-group">
                                     <label for="text">DOCSYMBOL</label>
-                                    <input type="text" class="form-control" name="docsymbol" id="docsymbol" value="{{record["docSymbol"]}}">
+                                    <input type="text" class="form-control" name="docsymbol" id="docsymbol" value="{{record['docSymbol']}}">
                                 </div>
                                  <!-- sornom -->
                                 <div class="form-group">
                                     <label for="text">SORNORM</label>
-                                    <input type="text" class="form-control" name="sornorm" id="sornorm" value="{{record["sornorm"]}}">
+                                    <input type="text" class="form-control" name="sornorm" id="sornorm" value="{{record['sornorm']}}">
                                 </div>
                                  <!-- sornote -->
                                 <div class="form-group">
                                     <label for="text">SORNOTE</label>
-                                    <input type="text" class="form-control" name="sornote" id="sornote" value="{{record["sornote"]}}">
+                                    <input type="text" class="form-control" name="sornote" id="sornote" value="{{record['sornote']}}">
                                 </div>
                             <button type="submit" class="btn btn-primary">Update the record</button>
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
