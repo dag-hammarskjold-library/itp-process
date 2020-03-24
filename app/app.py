@@ -728,19 +728,19 @@ def itpp_itpsor(offset=0):
     myOffset=int(myTotal/defaultLimit)
     
     # dynamic url generation
-    firstUrl="/itpp_itpsor/0"
+    firstUrl=url_for('itpp_itpsor',offset=0)
     
     if offset < (myOffset*defaultLimit):
-        nextUrl="/itpp_itpsor/{}".format(offset+defaultLimit) 
+        nextUrl=url_for('itpp_itpsor',offset=offset+defaultLimit)
     else:
-        nextUrl="/itpp_itpsor/{}".format(offset)
+        nextUrl=url_for('itpp_itpsor',offset=offset)
         
     if offset >= defaultLimit:
-        prevUrl="/itpp_itpsor/{}".format(offset-defaultLimit) 
+        prevUrl=url_for('itpp_itpsor',offset=offset-defaultLimit) 
     else:
-        prevUrl="/itpp_itpsor/{}".format(offset)
+        prevUrl=url_for('itpp_itpsor',offset=offset)
         
-    lastUrl="/itpp_itpsor/{}".format(myOffset*defaultLimit)
+    lastUrl=url_for('itpp_itpsor',offset=myOffset*defaultLimit)
     
     # return values to render
     return render_template('itpsor.html',
@@ -788,20 +788,21 @@ def itpp_itpitsc(offset=0):
 
     myOffset=int(myTotal/defaultLimit)
     
+
     # dynamic url generation
-    firstUrl="/itpp_itpitsc/0"
+    firstUrl=url_for('itpp_itpitsc',offset=0)
     
     if offset < (myOffset*defaultLimit):
-        nextUrl="/itpp_itpitsc/{}".format(offset+defaultLimit) 
+        nextUrl=url_for('itpp_itpitsc',offset=offset+defaultLimit)
     else:
-        nextUrl="/itpp_itpitsc/{}".format(offset)
+        nextUrl=url_for('itpp_itpitsc',offset=offset)
         
     if offset >= defaultLimit:
-        prevUrl="/itpp_itpitsc/{}".format(offset-defaultLimit) 
+        prevUrl=url_for('itpp_itpitsc',offset=offset-defaultLimit) 
     else:
-        prevUrl="/itpp_itpitsc/{}".format(offset)
+        prevUrl=url_for('itpp_itpitsc',offset=offset)
         
-    lastUrl="/itpp_itpitsc/{}".format(myOffset*defaultLimit)
+    lastUrl=url_for('itpp_itpitsc',offset=myOffset*defaultLimit)
     
     # return values to render
     return render_template('itpitsc.html',
@@ -850,19 +851,19 @@ def itpp_itpitsp(offset=0):
     myOffset=int(myTotal/defaultLimit)
     
     # dynamic url generation
-    firstUrl="/itpp_itpitsp/0"
+    firstUrl=url_for('itpp_itpitsp',offset=0)
     
     if offset < (myOffset*defaultLimit):
-        nextUrl="/itpp_itpitsp/{}".format(offset+defaultLimit) 
+        nextUrl=url_for('itpp_itpitsp',offset=offset+defaultLimit)
     else:
-        nextUrl="/itpp_itpitsp/{}".format(offset)
+        nextUrl=url_for('itpp_itpitsp',offset=offset)
         
     if offset >= defaultLimit:
-        prevUrl="/itpp_itpitsp/{}".format(offset-defaultLimit) 
+        prevUrl=url_for('itpp_itpitsp',offset=offset-defaultLimit) 
     else:
-        prevUrl="/itpp_itpitsp/{}".format(offset)
+        prevUrl=url_for('itpp_itpitsp',offset=offset)
         
-    lastUrl="/itpp_itpitsp/{}".format(myOffset*defaultLimit)
+    lastUrl=url_for('itpp_itpitsp',offset=myOffset*defaultLimit)
     
     # return values to render
     return render_template('itpitsp.html',
@@ -910,19 +911,19 @@ def itpp_itpitss(offset=0):
     myOffset=int(myTotal/defaultLimit)
     
     # dynamic url generation
-    firstUrl="/itpp_itpitss/0"
+    firstUrl=url_for('itpp_itpitss',offset=0)
     
     if offset < (myOffset*defaultLimit):
-        nextUrl="/itpp_itpitss/{}".format(offset+defaultLimit) 
+        nextUrl=url_for('itpp_itpitss',offset=offset+defaultLimit)
     else:
-        nextUrl="/itpp_itpitss/{}".format(offset)
+        nextUrl=url_for('itpp_itpitss',offset=offset)
         
     if offset >= defaultLimit:
-        prevUrl="/itpp_itpitss/{}".format(offset-defaultLimit) 
+        prevUrl=url_for('itpp_itpitss',offset=offset-defaultLimit) 
     else:
-        prevUrl="/itpp_itpitss/{}".format(offset)
+        prevUrl=url_for('itpp_itpitss',offset=offset)
         
-    lastUrl="/itpp_itpitss/{}".format(myOffset*defaultLimit)
+    lastUrl=url_for('itpp_itpitss',offset=myOffset*defaultLimit)
     
     # return values to render
     return render_template('itpitss.html',
@@ -964,7 +965,7 @@ def itpp_updateRecord(recordID):
     flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
 
     # Redirection to the main page about itpsor
-    return redirect("/itpp_itpsor?limit=100&offset=0  ")
+    return redirect(url_for('itpp_itpsor',offset=0))
 
 
 @app.route('/itpp_updateRecorditpitsc/<recordID>',methods=["POST"])  
@@ -994,8 +995,10 @@ def itpp_updateRecorditpitsc(recordID):
     
     flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
 
-    # Redirection to the main page about itpsor
-    return redirect("/itpp_itpitsc?limit=100&offset=0  ")
+    # Redirection 
+    return redirect(url_for('itpp_itpitsc',offset=0))
+    
+ 
 
 
 @app.route('/itpp_updateRecorditpitsp/<recordID>',methods=["POST"])  
@@ -1023,8 +1026,9 @@ def itpp_updateRecorditpitsp(recordID):
     
     flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
 
-    # Redirection to the main page about itpsor
-    return redirect("/itpp_itpitsp?limit=100&offset=0  ")
+    # Redirection 
+    return redirect(url_for('itpp_itpitsp',offset=0))
+
 
 
 @app.route('/itpp_updateRecorditpitss/<recordID>',methods=["POST"])  
@@ -1054,8 +1058,9 @@ def itpp_updateRecorditpitss(recordID):
     
     flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
 
-    # Redirection to the main page about itpsor
-    return redirect("/itpp_itpitss?limit=100&offset=0  ")
+    # Redirection
+    return  redirect(url_for('itpp_itpitss',offset=0))
+
 
 ################## DELETION ###########################################################
 
@@ -1069,7 +1074,7 @@ def itpp_deleteRecord(recordID):
     flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
 
     # Redirection to the main page about itpsor
-    return redirect("/itpp_itpsor?limit=100&offset=0  ")
+    return redirect(url_for('itpp_itpsor',offset=0))
 
 @app.route('/itpitsc_deleteRecord/<recordID>',methods=["POST"])  
 @login_required
@@ -1081,7 +1086,7 @@ def itpitsc_deleteRecord(recordID):
     flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
 
     # Redirection to the main page about itpsor
-    return redirect("/itpp_itpitsc?limit=100&offset=0  ")
+    return redirect(url_for('itpp_itpitsc',offset=0))
 
 @app.route('/itpitsp_deleteRecord/<recordID>',methods=["POST"])  
 @login_required
@@ -1093,7 +1098,7 @@ def itpitsp_deleteRecord(recordID):
     flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
 
     # Redirection to the main page about itpsor
-    return redirect("/itpp_itpitsp?limit=100&offset=0  ")
+    return redirect(url_for('itpp_itpitsp',offset=0))
 
 
 @app.route('/itpitss_deleteRecord/<recordID>',methods=["POST"])  
@@ -1106,7 +1111,7 @@ def itpitss_deleteRecord(recordID):
     flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
 
     # Redirection to the main page about itpsor
-    return redirect("/itpp_itpitss?limit=100&offset=0  ")
+    return redirect(url_for('itpp_itpitss',offset=0))
 
 ################## DOWNLOAD ###########################################################
 
