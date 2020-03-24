@@ -18,7 +18,7 @@ from dlx.marc import Bib, Auth, BibSet, QueryDocument,Condition,Or
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 import bson
-import time, json
+import time, json, io
 from zappa.asynchronous import task
 from pymongo import MongoClient
 from copy import deepcopy
@@ -44,6 +44,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 login_manager.login_message =""
+
+s3 = boto3.client('s3')
 
 
 ####################################################
@@ -1114,31 +1116,46 @@ def deleteFile(filename):
 @app.route("/itpp_itpsor/download")
 @login_required
 def DownloadWordFileITPSOR ():
-    generateWordDocITPSOR('List of documents',"Supplements to Official Records","A/72",'itpsor','itpsor')
+    document = generateWordDocITPSOR('List of documents',"Supplements to Official Records","A/72",'itpsor','itpsor')
     path='itpsor.docx'
-
-    return send_file(path,as_attachment=True)
+    file_stream = io.BytesIO()
+    document.save(file_stream)
+    file_stream.seek(0)
+    
+    return send_file(file_stream, as_attachment=True, attachment_filename=path)
 
 @app.route("/itpp_itpitsc/download")
 @login_required
 def DownloadWordFileITPITSC ():
-    generateWordDocITPITSC('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES',"A/72",'itpitsc','itpitsc')
+    document = generateWordDocITPITSC('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES',"A/72",'itpitsc','itpitsc')
     path='itpitsc.docx'
-    return send_file(path,as_attachment=True)
+    file_stream = io.BytesIO()
+    document.save(file_stream)
+    file_stream.seek(0)
+    
+    return send_file(file_stream, as_attachment=True, attachment_filename=path)
 
 @app.route("/itpp_itpitsp/download")
 @login_required
 def DownloadWordFileITPITSP ():
-    generateWordDocITPITSP('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - SPEAKERS',"A/72",'itpitsp','itpitsp')
+    document = generateWordDocITPITSP('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - SPEAKERS',"A/72",'itpitsp','itpitsp')
     path='itpitsp.docx'
-    return send_file(path,as_attachment=True)
+    file_stream = io.BytesIO()
+    document.save(file_stream)
+    file_stream.seek(0)
+
+    return send_file(file_stream, as_attachment=True, attachment_filename=path)
 
 @app.route("/itpp_itpitss/download")
 @login_required
 def DownloadWordFileITPITSS ():
-    generateWordDocITPITSS('GENERAL ASSEMBLY – 72ND SESSION – 2017/2018','INDEX TO SPEECHES – SUBJECTS',"A/72",'itpitss','itpitss')
+    document = generateWordDocITPITSS('GENERAL ASSEMBLY – 72ND SESSION – 2017/2018','INDEX TO SPEECHES – SUBJECTS',"A/72",'itpitss','itpitss')
     path='itpitss.docx'
-    return send_file(path,as_attachment=True)
+    file_stream = io.BytesIO()
+    document.save(file_stream)
+    file_stream.seek(0)
+
+    return send_file(file_stream, as_attachment=True, attachment_filename=path)
 
 ####################################################################################### 
 
