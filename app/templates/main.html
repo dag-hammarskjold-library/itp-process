@@ -21,7 +21,7 @@
         </div>
         <div class="col card mr-2">
             <div class="card-header">
-                <h4 class="my-0 font-weight-normal">Main Features</h4>
+                <h4 class="my-0 font-weight-normal">ITP Process</h4>
             </div>
             <div class="card-body">
                 <ul class="list-unstyled mt-3 mb-4 text-center font-weight-bold">
@@ -31,14 +31,14 @@
         </div>  
         <div class="col card mr-2">
                 <div class="card-header">
-                    <h4 class="my-0 font-weight-normal">Display Features</h4>
+                    <h4 class="my-0 font-weight-normal">Editor</h4>
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                        <li> <a href="/itpp_itpsor?offset=0"><span class="text-dark"><i class="fas fa-link">  Supplements to Official Records : itpsor </i></span></a></li>
-                        <li> <a href="/itpp_itpitsc?offset=0" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Corporate names / countries : itpitsc</i></span></a></li>
-                        <li> <a href="/itpp_itpitsp?offset=0" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Speakers : itpitsp </i></span></a></li>
-                        <li> <a href="/itpp_itpitss?offset=0" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Subjects : itpitss </i></span></a></li>
+                        <li> <a href="{{url_for('itpp_itpsor',offset=0)}}"><span class="text-dark"><i class="fas fa-link">  Supplements to Official Records : itpsor </i></span></a></li>
+                        <li> <a href="{{url_for('itpp_itpitsc',offset=0)}}" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Corporate names / countries : itpitsc</i></span></a></li>
+                        <li> <a href="{{url_for('itpp_itpitsp',offset=0)}}" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Speakers : itpitsp </i></span></a></li>
+                        <li> <a href="{{url_for('itpp_itpitss',offset=0)}}" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Subjects : itpitss </i></span></a></li>
                     </ul>
                 </div>            
         </div>
