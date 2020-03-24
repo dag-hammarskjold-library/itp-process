@@ -1,15 +1,3 @@
-{% if not snapshots %}
-<div class="row">
-    <div class="col">
-
-        <p>There are no snapshots available. You should create one before continuing.</p>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createSnapshot">
-            <span class="fa fa-plus"></span> Create Snapshot
-        </button>
-
-    </div>
-</div>
-<hr> {% endif %}
 <div class="row">
     <div class="col">
         <h3>Sections</h3>
@@ -177,25 +165,28 @@
             dataType: 'json',
             success: function(return_data) {
                 var i;
-                for (i=0; i<return_data.length; i++) {
+                for (i = 0; i < return_data.length; i++) {
                     var newA = document.createElement("a");
                     newA.id = return_data[i]['itp']['id'] + '/' + return_data[i]['section']['id'];
                     $(newA).addClass("cloneLink");
                     newA.href = "#";
                     newA.text = return_data[i]['itp']['name'] + ' / ' + return_data[i]['section']['name'];
-                    var f = "cloneLink('"+ return_data[i]['itp']['id'] + "','" + return_data[i]['section']['id'] +"')";
+                    var f = "cloneLink('" + return_data[i]['itp']['id'] + "','" + return_data[i]['section']['id'] + "')";
                     console.log(f);
                     $(newA).attr('onClick', f);
                     $("div#sectionList")
-                    .append(newA)
-                    .append('<br>');
+                        .append(newA)
+                        .append('<br>');
                 }
             }
         })
     });
 
     function cloneLink(sourceItpId, sectionId) {
-        var postData = {'sourceItpId': sourceItpId, 'sectionId': sectionId };
+        var postData = {
+            'sourceItpId': sourceItpId,
+            'sectionId': sectionId
+        };
         console.log(postData);
         $.ajax({
             url: "{{url_for('clone_section', target_itp_id=itp.id)}}",
@@ -211,10 +202,11 @@
     function editSection(id, name, order) {
         $('#updateSection input#section_id').val(id);
         $('#updateSection input#sectionName').val(name);
-        $('#updateSection input#sectionOrder').val(order); 
-        {%if snapshots %}
-        $('#updateSection input#dataSource').val(order); 
-        {% endif %}
+        $('#updateSection input#sectionOrder').val(order); { %
+            if snapshots %
+        }
+        $('#updateSection input#dataSource').val(order); { % endif %
+        }
         console.log(id, name, order)
     };
 </script>
