@@ -687,20 +687,21 @@ def get_report_by_id(name):
 myMongoURI = Config.connect_string
 myClient = MongoClient(myMongoURI)
 myDatabase = myClient.undlFiles
-myCollection = myDatabase['itp_sample_output']
+myCollection = myDatabase['itp_sample_output_copy']
 
 ################## DISPLAY ALL THE RECORDS OF THE SECTION ###########################################################
 
-@app.route('/itpp_itpsor/',methods=["GET"])
+@app.route('/itpp_itpsor/<offset>',methods=["GET"])
 @login_required
-def itpp_itpsor():
+def itpp_itpsor(offset=0):
 
     # delete old file in the server
     if os.path.exists('itpsor.docx'):
         deleteFile('itpsor.docx')
     
     # definition of the offset and the limit
-    offset=int(request.args["offset"])
+    #offset=int(request.args["offset"])
+    offset=int(offset)
     
     # retrieve the first value and the last value of the set
     firstId= myCollection.find().sort("_id",pymongo.ASCENDING)
@@ -713,7 +714,7 @@ def itpp_itpsor():
     if myTotal<100 :
         defaultLimit=10
     
-    if myTotal in [100,1000]:
+    if myTotal >=100 and myTotal <= 1000 :
         defaultLimit=25
         
     if myTotal > 1000:
@@ -722,22 +723,22 @@ def itpp_itpsor():
 
     myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpsor'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
 
-    myOffset=myTotal/defaultLimit
+    myOffset=int(myTotal/defaultLimit)
     
     # dynamic url generation
-    firstUrl="/itpp_itpsor?offset=0"
+    firstUrl="/itpp_itpsor/0"
     
     if offset < (myOffset*defaultLimit):
-        nextUrl="/itpp_itpsor?offset={}".format(offset+defaultLimit) 
+        nextUrl="/itpp_itpsor/{}".format(offset+defaultLimit) 
     else:
-        nextUrl="/itpp_itpsor?offset={}".format(offset)
+        nextUrl="/itpp_itpsor/{}".format(offset)
         
     if offset >= defaultLimit:
-        prevUrl="/itpp_itpsor?offset={}".format(offset-defaultLimit) 
+        prevUrl="/itpp_itpsor/{}".format(offset-defaultLimit) 
     else:
-        prevUrl="/itpp_itpsor?offset={}".format(offset)
+        prevUrl="/itpp_itpsor/{}".format(offset)
         
-    lastUrl="/itpp_itpsor?offset={}".format(myOffset*defaultLimit)
+    lastUrl="/itpp_itpsor/{}".format(myOffset*defaultLimit)
     
     # return values to render
     return render_template('itpsor.html',
@@ -751,17 +752,16 @@ def itpp_itpsor():
                            URL_PREFIX=URL_BY_DEFAULT
                            )
 
-@app.route('/itpp_itpitsc/',methods=["GET"])
+@app.route('/itpp_itpitsc/<offset>',methods=["GET"])
 @login_required
-def itpp_itpitsc_new():
+def itpp_itpitsc(offset=0):
     
     # delete old file in the server
     if os.path.exists('itpitsc.docx'):
         deleteFile('itpitsc.docx')
     
     # definition of the offset and the limit
-    offset=int(request.args["offset"])
-   # limit=int(request.args["limit"])
+    offset=int(offset)
     
     # retrieve the first value and the last value of the set
     firstId= myCollection.find({'section': 'itpitsc'}, {'itshead': 1, 
@@ -775,7 +775,7 @@ def itpp_itpitsc_new():
     if myTotal<100 :
         defaultLimit=10
     
-    if myTotal in [100,1000]:
+    if myTotal >=100 and myTotal <= 1000 :
         defaultLimit=25
         
     if myTotal > 1000:
@@ -784,25 +784,22 @@ def itpp_itpitsc_new():
 
     myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitsc'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
 
-
-    print(myRecords.count())
-
-    myOffset=myTotal/defaultLimit
+    myOffset=int(myTotal/defaultLimit)
     
     # dynamic url generation
-    firstUrl="/itpp_itpitsc?offset=0"
+    firstUrl="/itpp_itpitsc/0"
     
     if offset < (myOffset*defaultLimit):
-        nextUrl="/itpp_itpitsc?offset={}".format(offset+defaultLimit) 
+        nextUrl="/itpp_itpitsc/{}".format(offset+defaultLimit) 
     else:
-        nextUrl="/itpp_itpitsc?offset={}".format(offset)
+        nextUrl="/itpp_itpitsc/{}".format(offset)
         
     if offset >= defaultLimit:
-        prevUrl="/itpp_itpitsc?offset={}".format(offset-defaultLimit) 
+        prevUrl="/itpp_itpitsc/{}".format(offset-defaultLimit) 
     else:
-        prevUrl="/itpp_itpitsc?offset={}".format(offset)
+        prevUrl="/itpp_itpitsc/{}".format(offset)
         
-    lastUrl="/itpp_itpitsc?offset={}".format(myOffset*defaultLimit)
+    lastUrl="/itpp_itpitsc/{}".format(myOffset*defaultLimit)
     
     # return values to render
     return render_template('itpitsc.html',
@@ -816,16 +813,16 @@ def itpp_itpitsc_new():
                            URL_PREFIX=URL_BY_DEFAULT
                            )
 
-@app.route('/itpp_itpitsp/',methods=["GET"])
+@app.route('/itpp_itpitsp/<offset>',methods=["GET"])
 @login_required
-def itpp_itpitsp_new():
+def itpp_itpitsp(offset=0):
     
     # delete old file in the server
     if os.path.exists('itpitsp.docx'):
         deleteFile('itpitsp.docx')
     
     # definition of the offset and the limit
-    offset=int(request.args["offset"])
+    offset=int(offset)
     
     # retrieve the first value and the last value of the set
     firstId= myCollection.find({'section': 'itpitsp'}, {'itshead': 1, 
@@ -839,7 +836,7 @@ def itpp_itpitsp_new():
     if myTotal<100 :
         defaultLimit=10
     
-    if myTotal in [100,1000]:
+    if myTotal >=100 and myTotal <= 1000 :      
         defaultLimit=25
         
     if myTotal > 1000:
@@ -848,25 +845,22 @@ def itpp_itpitsp_new():
 
     myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitsp'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
 
-
-    print(myRecords.count())
-
-    myOffset=myTotal/defaultLimit
+    myOffset=int(myTotal/defaultLimit)
     
     # dynamic url generation
-    firstUrl="/itpp_itpitsp?offset=0"
+    firstUrl="/itpp_itpitsp/0"
     
     if offset < (myOffset*defaultLimit):
-        nextUrl="/itpp_itpitsp?offset={}".format(offset+defaultLimit) 
+        nextUrl="/itpp_itpitsp/{}".format(offset+defaultLimit) 
     else:
-        nextUrl="/itpp_itpitsp?offset={}".format(offset)
+        nextUrl="/itpp_itpitsp/{}".format(offset)
         
     if offset >= defaultLimit:
-        prevUrl="/itpp_itpitsp?offset={}".format(offset-defaultLimit) 
+        prevUrl="/itpp_itpitsp/{}".format(offset-defaultLimit) 
     else:
-        prevUrl="/itpp_itpitsp?offset={}".format(offset)
+        prevUrl="/itpp_itpitsp/{}".format(offset)
         
-    lastUrl="/itpp_itpitsp?offset={}".format(myOffset*defaultLimit)
+    lastUrl="/itpp_itpitsp/{}".format(myOffset*defaultLimit)
     
     # return values to render
     return render_template('itpitsp.html',
@@ -880,17 +874,16 @@ def itpp_itpitsp_new():
                            URL_PREFIX=URL_BY_DEFAULT
                            )
 
-@app.route('/itpp_itpitss/',methods=["GET"])
+@app.route('/itpp_itpitss/<offset>',methods=["GET"])
 @login_required
-def itpp_itpitss_new():
+def itpp_itpitss(offset=0):
     
     # delete old file in the server
     if os.path.exists('itpitss.docx'):
         deleteFile('itpitss.docx')
     
     # definition of the offset and the limit
-    offset=int(request.args["offset"])
-   # limit=int(request.args["limit"])
+    offset=int(offset)
     
     # retrieve the first value and the last value of the set
     firstId= myCollection.find({'section': 'itpitss'}, {'itshead': 1, 
@@ -899,39 +892,35 @@ def itpp_itpitss_new():
     
     # retrieve the set of data
     myTotal = myCollection.find({'section': 'itpitss'}).count()
-    
+
     # definition of the default limit
     if myTotal<100 :
         defaultLimit=10
     
-    if myTotal in [100,1000]:
+    if myTotal >=100 and myTotal <= 1000 :
         defaultLimit=25
         
     if myTotal > 1000:
         defaultLimit=100
-    
 
     myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitss'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
 
-
-    print(myRecords.count())
-
-    myOffset=myTotal/defaultLimit
+    myOffset=int(myTotal/defaultLimit)
     
     # dynamic url generation
-    firstUrl="/itpp_itpitss?offset=0"
+    firstUrl="/itpp_itpitss/0"
     
     if offset < (myOffset*defaultLimit):
-        nextUrl="/itpp_itpitss?offset={}".format(offset+defaultLimit) 
+        nextUrl="/itpp_itpitss/{}".format(offset+defaultLimit) 
     else:
-        nextUrl="/itpp_itpitss?offset={}".format(offset)
+        nextUrl="/itpp_itpitss/{}".format(offset)
         
     if offset >= defaultLimit:
-        prevUrl="/itpp_itpitss?offset={}".format(offset-defaultLimit) 
+        prevUrl="/itpp_itpitss/{}".format(offset-defaultLimit) 
     else:
-        prevUrl="/itpp_itpitss?offset={}".format(offset)
+        prevUrl="/itpp_itpitss/{}".format(offset)
         
-    lastUrl="/itpp_itpitss?offset={}".format(myOffset*defaultLimit)
+    lastUrl="/itpp_itpitss/{}".format(myOffset*defaultLimit)
     
     # return values to render
     return render_template('itpitss.html',
