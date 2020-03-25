@@ -13,6 +13,7 @@ from docx.enum.text import WD_LINE_SPACING,WD_BREAK
 from docx.oxml.shared import OxmlElement, qn
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.enum.dml import MSO_THEME_COLOR_INDEX
+from zappa.asynchronous import task
 
 def add_hyperlink(paragraph, text, url):
     # This gets access to the document.xml.rels file and gets a new relation id value
@@ -43,7 +44,7 @@ def add_hyperlink(paragraph, text, url):
 
     return hyperlink
 
-
+@task
 def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
 
     # Setting some Variables
@@ -271,7 +272,7 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Save the word document generated
     document.save(paramNameFileOutput+'.docx')
 
-
+@task
 def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
     # Setting some Variables
@@ -529,7 +530,8 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
         p2.add_run("\n")
 
     document.save(paramNameFileOutput+'.docx')
-    
+
+@task   
 def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
     # Setting some Variables
@@ -787,7 +789,8 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
         p2.add_run("\n")
 
     document.save(paramNameFileOutput+'.docx')    
-        
+
+@task       
 def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
 
     # Setting some Variables
