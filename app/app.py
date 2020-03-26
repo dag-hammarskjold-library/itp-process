@@ -1130,41 +1130,27 @@ def DownloadWordFileITPSOR():
     if os.environ.get('ZAPPA') == "true":
         #If the os.environ contains ZAPPA="true", we run the async task
         response = get_document_async('generateWordDocITPSOR', param_title, param_subtitle, body_session, param_section, param_name_file_output)
-        print(response)
-        return redirect(url_for('response', response_id=response.response_id))
+        flash("The document is being generated. You will receive a copy by email.")
+        return redirect(url_for('DownloadWordFileITPSOR'))
+        #return redirect(url_for('response', response_id=response.response_id))
     else:
         # Otherwise we run it locally so we can get the file stream to work correctly
-        return_file = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        document = generateWordDocITPSOR(param_title, param_subtitle, body_session, param_section, param_name_file_output)
         file_stream = io.BytesIO()
-        return_file.save(file_stream)
+        document.save(file_stream)
         file_stream.seek(0)
         return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
 
-@task(capture_response=True)
+# Put the remaining functions here...
+
+@task
 def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output):
-    # Here we can also email the file I think.
+    ses_client = boto3.client('ses')
+    # Configure all of the email settings here
+    # e.g., https://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-using-sdk-python.html
+
     document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
-    s3_client = boto3.client('s3')
-    key_name = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
-    with open(document_name, 'rb') as data:
-        s3_client.upload_fileobj(data, Config.bucket_name, key_name)
-
-@app.route('/async-response/<response_id>')
-def response(response_id):
-    response = get_async_response(response_id)
-    if response is None:
-        abort(404)
-
-    if response['status'] == 'complete':
-        return jsonify(response['response'])
-
-    sleep(5)
-
-    return "Not yet ready. Redirecting.", 302, {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Location': url_for('response', response_id=response_id, backoff=5),
-        'X-redirect-reason': "Not yet ready.",
-    }
+    # Make an email and attach the file
 
 ####################################################################################### 
 
