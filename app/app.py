@@ -1134,8 +1134,6 @@ def DownloadWordFileITPSOR():
         return redirect(url_for('response', response_id=response.response_id))
     else:
         # Otherwise we run it locally so we can get the file stream to work correctly
-
-        # Here we can also email the file I think.
         return_file = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
         file_stream = io.BytesIO()
         return_file.save(file_stream)
@@ -1144,6 +1142,7 @@ def DownloadWordFileITPSOR():
 
 @task(capture_response=True)
 def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output):
+    # Here we can also email the file I think.
     document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
     s3_client = boto3.client('s3')
     key_name = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
