@@ -18,7 +18,7 @@ from dlx.marc import Bib, Auth, BibSet, QueryDocument,Condition,Or
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 import bson
-import time, json, io
+import time, json, io, uuid
 from time import sleep
 from zappa.asynchronous import task, get_async_response
 from pymongo import MongoClient
@@ -1120,56 +1120,35 @@ def deleteFile(filename):
     os.remove(filename)
 
 @app.route("/itpp_itpsor/download")
-@login_required
-def DownloadWordFileITPSOR ():
-    path='itpsor.docx'
-    x = generateWordDocITPSOR('List of documents',"Supplements to Official Records","A/72",'itpsor','itpsor')
-    try:
-        return redirect(url_for('response', response_id=x.response_id))
-    except AttributeError:
-        return send_file(x, as_attachment=True, attachment_filename=path)
-    '''
-    
-    file_stream = io.BytesIO()
-    document.save(file_stream)
-    file_stream.seek(0)
-    
-    return send_file(file_stream, as_attachment=True, attachment_filename=path)
-    '''
-    
+def DownloadWordFileITPSOR():
+    param_title = 'List of documents'
+    param_subtitle = "Supplements to Official Records"
+    body_session = "A/72"
+    param_section = 'itpsor'
+    param_name_file_output = param_section
 
-@app.route("/itpp_itpitsc/download")
-@login_required
-def DownloadWordFileITPITSC ():
-    document = generateWordDocITPITSC('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES',"A/72",'itpitsc','itpitsc')
-    path='itpitsc.docx'
-    file_stream = io.BytesIO()
-    document.save(file_stream)
-    file_stream.seek(0)
-    
-    return send_file(file_stream, as_attachment=True, attachment_filename=path)
+    if os.environ.get('ZAPPA') == "true":
+        #If the os.environ contains ZAPPA="true", we run the async task
+        response = get_document_async('generateWordDocITPSOR', param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        print(response)
+        return redirect(url_for('response', response_id=response.response_id))
+    else:
+        # Otherwise we run it locally so we can get the file stream to work correctly
 
-@app.route("/itpp_itpitsp/download")
-@login_required
-def DownloadWordFileITPITSP ():
-    document = generateWordDocITPITSP('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - SPEAKERS',"A/72",'itpitsp','itpitsp')
-    path='itpitsp.docx'
-    file_stream = io.BytesIO()
-    document.save(file_stream)
-    file_stream.seek(0)
+        # Here we can also email the file I think.
+        return_file = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        return_file.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
 
-    return send_file(file_stream, as_attachment=True, attachment_filename=path)
-
-@app.route("/itpp_itpitss/download")
-@login_required
-def DownloadWordFileITPITSS ():
-    document = generateWordDocITPITSS('GENERAL ASSEMBLY – 72ND SESSION – 2017/2018','INDEX TO SPEECHES – SUBJECTS',"A/72",'itpitss','itpitss')
-    path='itpitss.docx'
-    file_stream = io.BytesIO()
-    document.save(file_stream)
-    file_stream.seek(0)
-
-    return send_file(file_stream, as_attachment=True, attachment_filename=path)
+@task(capture_response=True)
+def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output):
+    document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
+    s3_client = boto3.client('s3')
+    key_name = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+    with open(document_name, 'rb') as data:
+        s3_client.upload_fileobj(data, Config.bucket_name, key_name)
 
 @app.route('/async-response/<response_id>')
 def response(response_id):
@@ -1187,7 +1166,6 @@ def response(response_id):
         'Location': url_for('response', response_id=response_id, backoff=5),
         'X-redirect-reason': "Not yet ready.",
     }
-
 
 ####################################################################################### 
 
