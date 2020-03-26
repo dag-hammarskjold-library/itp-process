@@ -3,6 +3,7 @@ from docx.shared import Inches
 from pymongo import MongoClient
 import sys
 import os
+import io
 from app.config import Config
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -14,6 +15,7 @@ from docx.oxml.shared import OxmlElement, qn
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.enum.dml import MSO_THEME_COLOR_INDEX
 from zappa.asynchronous import task
+from flask import send_file
 
 def add_hyperlink(paragraph, text, url):
     # This gets access to the document.xml.rels file and gets a new relation id value
@@ -44,7 +46,7 @@ def add_hyperlink(paragraph, text, url):
 
     return hyperlink
 
-@task
+@task(capture_response=True)
 def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
 
     # Setting some Variables
@@ -271,7 +273,14 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     # Save the word document generated
     #document.save(paramNameFileOutput+'.docx')
-    return document
+    path='itpsor.docx'
+    file_stream = io.BytesIO()
+    document.save(file_stream)
+    file_stream.seek(0)
+    
+    #return send_file(file_stream, as_attachment=True, attachment_filename=path)
+
+    return file_stream
 
 @task
 def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):

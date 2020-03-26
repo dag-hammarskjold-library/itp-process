@@ -19,7 +19,8 @@ from bson.json_util import dumps
 from bson.objectid import ObjectId
 import bson
 import time, json, io
-from zappa.asynchronous import task
+from time import sleep
+from zappa.asynchronous import task, get_async_response
 from pymongo import MongoClient
 from copy import deepcopy
 from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR
@@ -1121,13 +1122,21 @@ def deleteFile(filename):
 @app.route("/itpp_itpsor/download")
 @login_required
 def DownloadWordFileITPSOR ():
-    document = generateWordDocITPSOR('List of documents',"Supplements to Official Records","A/72",'itpsor','itpsor')
     path='itpsor.docx'
+    x = generateWordDocITPSOR('List of documents',"Supplements to Official Records","A/72",'itpsor','itpsor')
+    try:
+        return redirect(url_for('response', response_id=x.response_id))
+    except AttributeError:
+        return send_file(x, as_attachment=True, attachment_filename=path)
+    '''
+    
     file_stream = io.BytesIO()
     document.save(file_stream)
     file_stream.seek(0)
     
     return send_file(file_stream, as_attachment=True, attachment_filename=path)
+    '''
+    
 
 @app.route("/itpp_itpitsc/download")
 @login_required
@@ -1161,6 +1170,24 @@ def DownloadWordFileITPITSS ():
     file_stream.seek(0)
 
     return send_file(file_stream, as_attachment=True, attachment_filename=path)
+
+@app.route('/async-response/<response_id>')
+def response(response_id):
+    response = get_async_response(response_id)
+    if response is None:
+        abort(404)
+
+    if response['status'] == 'complete':
+        return jsonify(response['response'])
+
+    sleep(5)
+
+    return "Not yet ready. Redirecting.", 302, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Location': url_for('response', response_id=response_id, backoff=5),
+        'X-redirect-reason': "Not yet ready.",
+    }
+
 
 ####################################################################################### 
 

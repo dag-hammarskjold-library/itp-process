@@ -6,6 +6,7 @@
         "runtime": "python3.7",
         "s3_bucket": "zappa-7la88m1as",
         "timeout_seconds": 600,
+        "async_response_table": "itpp-responses"
         "environment_variables": {
             "FLASK_ENV": "development"
         }
@@ -17,8 +18,21 @@
         "runtime": "python3.7",
         "s3_bucket": "zappa-7la88m1as",
         "timeout_seconds": 120,
+        "async_response_table": "itpp-responses"
         "environment_variables": {
             "FLASK_ENV": "production"
+        }
+    },
+    "foo": {
+        "app_function": "app.app.app",
+        "aws_region": "us-east-1",
+        "project_name": "itp-process",
+        "runtime": "python3.7",
+        "s3_bucket": "zappa-7la88m1as",
+        "timeout_seconds": 600,
+        "async_response_table": "itpp-responses"
+        "environment_variables": {
+            "FLASK_ENV": "development"
         }
     }
 }
