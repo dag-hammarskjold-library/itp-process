@@ -45,6 +45,7 @@
                     <td>{{ itp.body_session_auth }}</td>
                     <td><i class="fas fa-eye"><a href="{{url_for('get_itpp_itp_by_id', id=itp.id)}}"> View </a></i> <br>
                         <i class="fas fa-edit"><a href="{{url_for('update_itpp_itp', id=itp.id)}}">  Edit </a></i> <br>
+                        <i class="fas fa-copy"><a href="{{url_for('clone_itpp_itp', id=itp.id)}}"> Clone </a></i> <br>
                         <i class="fas fa-trash-alt"><a href="{{url_for('delete_itpp_itp', id=itp.id)}}"> Delete </a></i></td>
                 </tr>
                 {% endfor %}
