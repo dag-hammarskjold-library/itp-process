@@ -21,7 +21,7 @@
 <div id="loading">
     <img src="{{ url_for('static', filename='img/ajax-loader.gif') }}">
 </div>
-<div id="content">
+<div id="content" class="container">
     <div class="container customize shadow">
         <div class="container mt-4 mb-4">
             <h1>Snapshot generation</h1>
@@ -40,7 +40,7 @@
         
     </div>
     <br>
-    <div id="output">
+    <div id="output" class="container">
         <!--<div class="container mt-4 mb-4" >
             <h4>Current snapshots:</h4>
             {% for snapshot in snapshots %}
@@ -53,10 +53,10 @@
             <div class="card-header">
                 <h4 class="my-0 font-weight-normal">Existing Snapshots</h4>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-sm-3">
-                        <div class="card mb-3 shadow-sm">
+            <div class="row mt-2">
+                
+                    <div class="col-sm-4">
+                        
                             <div class="card-header">
                                 <h4 class="my-0 font-weight-normal">General Assembly</h4>
                             </div>
@@ -70,10 +70,10 @@
                                 </ul>
                                 {% endfor %}
                             </div>
-                        </div>
+                       
                     </div>
-                    <div class="col-sm-3">
-                        <div class="card mb-3 shadow-sm">
+                    <div class="col-sm-4">
+                       
                             <div class="card-header">
                                 <h4 class="my-0 font-weight-normal">Security Council</h4>
                             </div>
@@ -87,10 +87,10 @@
                                 </ul>
                                 {% endfor %}
                             </div>
-                        </div>
+                       
                     </div>
-                    <div class="col-sm-3">
-                        <div class="card mb-3 shadow-sm">
+                    <div class="col-sm-4">
+                       
                             <div class="card-header">
                                 <h4 class="my-0 font-weight-normal">ECOSOC</h4>
                             </div>
@@ -104,11 +104,11 @@
                                 </ul>
                                 {% endfor %}
                             </div>
-                        </div>
+                 
                     </div>
+            </div>
 
-
-    </div>
+        </div>
     <br>
 
 
