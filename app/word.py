@@ -3,6 +3,9 @@ from docx.shared import Inches
 from pymongo import MongoClient
 import sys
 import os
+import io
+import uuid
+import boto3
 from app.config import Config
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -14,6 +17,9 @@ from docx.oxml.shared import OxmlElement, qn
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.enum.dml import MSO_THEME_COLOR_INDEX
 from zappa.asynchronous import task
+from flask import send_file, jsonify
+
+s3_client = boto3.client('s3')
 
 def add_hyperlink(paragraph, text, url):
     # This gets access to the document.xml.rels file and gets a new relation id value
@@ -44,7 +50,7 @@ def add_hyperlink(paragraph, text, url):
 
     return hyperlink
 
-@task
+
 def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
 
     # Setting some Variables
@@ -269,11 +275,9 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
             paragraph_format = p.paragraph_format
             paragraph_format.line_spacing =  1.5
 
-    # Save the word document generated
-    #document.save(paramNameFileOutput+'.docx')
     return document
 
-@task
+
 def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
     # Setting some Variables
@@ -530,10 +534,9 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
         # Force a new line before next heading
         p2.add_run("\n")
 
-    #document.save(paramNameFileOutput+'.docx')
     return document
 
-@task   
+  
 def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
     # Setting some Variables
@@ -789,11 +792,10 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
                 
         # Force a new line before next heading
         p2.add_run("\n")
-
-    #document.save(paramNameFileOutput+'.docx')   
+  
     return document    
 
-@task
+
 def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
 
     # Setting some Variables
@@ -1049,6 +1051,5 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
                 
         # Force a new line before next heading
         p2.add_run("\n")
-
-    #document.save(paramNameFileOutput+'.docx')  
+ 
     return document  

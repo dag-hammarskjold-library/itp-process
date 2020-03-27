@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, abort, jsonify, Response, ses
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from requests import get
 import boto3, re, os, pymongo
+from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.snapshot import Snapshot
@@ -18,11 +19,15 @@ from dlx.marc import Bib, Auth, BibSet, QueryDocument,Condition,Or
 from bson.json_util import dumps
 from bson.objectid import ObjectId
 import bson
-import time, json, io
-from zappa.asynchronous import task
+import time, json, io, uuid
+from time import sleep
+from zappa.asynchronous import task, get_async_response
 from pymongo import MongoClient
 from copy import deepcopy
 from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
 
 
 ###############################################################################################
@@ -142,6 +147,43 @@ def create_user():
             return redirect(url_for('create_user'))
     else:
         return render_template('createuser.html')
+
+@app.route("/users/<id>/validate")
+@login_required
+def validate_user_by_id(id):
+    try:
+        user = Itpp_user.objects.get(id=id)
+    except:
+        abort(404)
+    
+    if user.email == 'admin@un.org':
+        flash("The user identified by admin@un.org cannot be validated.")
+        return redirect(request.referrer)
+
+    ses_client = boto3.client('ses')
+    response = ses_client.get_identity_verification_attributes(
+        Identities = [
+            user.email
+        ]
+    )
+
+    print(response)
+
+    try:
+        verification_status = response['VerificationAttributes'][user.email]['VerificationStatus']
+        if verification_status != 'Success':
+            flash("The user's validation is still pending.")
+        else:
+            user.ses_verified = 'Success'
+            user.save()
+            flash("The user's validation was successful.")
+    except KeyError:
+        ses_client.verify_email_identity(EmailAddress=user.email)
+        user.ses_verified = 'Pending'
+        user.save()
+        flash("We have sent a validation email to the user.")
+
+    return redirect(request.referrer)
 
 # Retrieve a user
 @app.route("/users/<id>")
@@ -1119,48 +1161,181 @@ def deleteFile(filename):
     os.remove(filename)
 
 @app.route("/itpp_itpsor/download")
-@login_required
-def DownloadWordFileITPSOR ():
-    document = generateWordDocITPSOR('List of documents',"Supplements to Official Records","A/72",'itpsor','itpsor')
-    path='itpsor.docx'
-    file_stream = io.BytesIO()
-    document.save(file_stream)
-    file_stream.seek(0)
-    
-    return send_file(file_stream, as_attachment=True, attachment_filename=path)
+def DownloadWordFileITPSOR():
+    param_title = 'List of documents'
+    param_subtitle = "Supplements to Official Records"
+    body_session = "A/72"
+    param_section = 'itpsor'
+    param_name_file_output = param_section
+    key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+
+    if os.environ.get('ZAPPA') == "true":
+        #If the os.environ contains ZAPPA="true", we run the async task
+        if current_user['ses_verified'] == 'Success':
+            response = get_document_async(
+                'generateWordDocITPSOR', 
+                param_title, 
+                param_subtitle, 
+                body_session, 
+                param_section, 
+                param_name_file_output,
+                key)
+
+            flash("The document is being generated. You will receive a copy by email.")
+        else:
+            flash("The user cannot receive emails. Please validate the user before sending emails.")
+        return redirect(request.referrer)
+        
+    else:
+        # Otherwise we run it locally so we can get the file stream to work correctly
+        document = generateWordDocITPSOR(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
 
 @app.route("/itpp_itpitsc/download")
 @login_required
 def DownloadWordFileITPITSC ():
-    document = generateWordDocITPITSC('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES',"A/72",'itpitsc','itpitsc')
-    path='itpitsc.docx'
-    file_stream = io.BytesIO()
-    document.save(file_stream)
-    file_stream.seek(0)
-    
-    return send_file(file_stream, as_attachment=True, attachment_filename=path)
+    param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
+    param_subtitle = "INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES"
+    body_session = "A/72"
+    param_section = 'itpitsc'
+    param_name_file_output = param_section
+    key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+
+    if os.environ.get('ZAPPA') == "true":
+        if current_user['ses_verified'] == 'Success':
+            response = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+            flash("The document is being generated. You will receive a copy by email.")
+        else:
+            flash("The user cannot receive emails. Please validate the user before sending emails.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
 
 @app.route("/itpp_itpitsp/download")
 @login_required
 def DownloadWordFileITPITSP ():
-    document = generateWordDocITPITSP('GENERAL ASSEMBLY - 72ND SESSION-2017/2018','INDEX TO SPEECHES - SPEAKERS',"A/72",'itpitsp','itpitsp')
-    path='itpitsp.docx'
-    file_stream = io.BytesIO()
-    document.save(file_stream)
-    file_stream.seek(0)
+    param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
+    param_subtitle = "INDEX TO SPEECHES - SPEAKERS"
+    body_session = "A/72"
+    param_section = 'itpitsp'
+    param_name_file_output = param_section
+    key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
 
-    return send_file(file_stream, as_attachment=True, attachment_filename=path)
+    if os.environ.get('ZAPPA') == "true":
+        if current_user['ses_verified'] == 'Success':
+            response = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+            flash("The document is being generated. You will receive a copy by email.")
+        else:
+            flash("The user cannot receive emails. Please validate the user before sending emails.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
 
 @app.route("/itpp_itpitss/download")
 @login_required
 def DownloadWordFileITPITSS ():
-    document = generateWordDocITPITSS('GENERAL ASSEMBLY – 72ND SESSION – 2017/2018','INDEX TO SPEECHES – SUBJECTS',"A/72",'itpitss','itpitss')
-    path='itpitss.docx'
-    file_stream = io.BytesIO()
-    document.save(file_stream)
-    file_stream.seek(0)
+    param_title = 'GENERAL ASSEMBLY – 72ND SESSION – 2017/2018'
+    param_subtitle = "INDEX TO SPEECHES – SUBJECTS"
+    body_session = "A/72"
+    param_section = 'itpitss'
+    param_name_file_output = param_section
+    key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
 
-    return send_file(file_stream, as_attachment=True, attachment_filename=path)
+    if os.environ.get('ZAPPA') == "true":
+        if current_user['ses_verified'] == 'Success':
+            response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+            flash("The document is being generated. You will receive a copy by email.")
+        else:
+            flash("The user cannot receive emails. Please validate the user before sending emails.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
+
+@task(capture_response=True)
+def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output, key):
+
+    try:
+        document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        s3_client = boto3.client('s3')
+        filename = '/tmp/' + param_name_file_output + '.docx'
+        document.save(filename)
+        response = s3_client.upload_file(filename, Config.bucket_name, key)
+        send_email(key)
+        return True
+    except ClientError as e:
+        print(e)
+        return False
+    
+    return True
+
+def send_email(filename):
+    ses_client = boto3.client('ses', region_name='us-east-1')
+    s3_client = boto3.client('s3')
+    local_file = '/tmp/' + filename.split('/')[1]
+    s3_client.download_file(Config.bucket_name, filename, local_file)
+    # Make an email and attach the file
+    SENDER = 'undhllibrary@gmail.com'
+    RECIPIENT = current_user['email']
+    SUBJECT = "ITPP Word Document"
+    ATTACHMENT = local_file
+    BODY_TEXT = "Hello,\r\nPlease see the attached file you requested."
+    BODY_HTML = """\
+    <html>
+    <head></head>
+    <body>
+    <h1>Hello!</h1>
+    <p>Please see the attached file you requested.</p>
+    </body>
+    </html>
+    """
+    CHARSET = "utf-8"
+
+    msg = MIMEMultipart('mixed')
+    # Add subject, from and to lines.
+    msg['Subject'] = SUBJECT 
+    msg['From'] = SENDER 
+    msg['To'] = RECIPIENT
+
+    msg_body = MIMEMultipart('alternative')
+    textpart = MIMEText(BODY_TEXT.encode(CHARSET), 'plain', CHARSET)
+    htmlpart = MIMEText(BODY_HTML.encode(CHARSET), 'html', CHARSET)
+    msg_body.attach(textpart)
+    msg_body.attach(htmlpart)
+    att = MIMEApplication(open(ATTACHMENT, 'rb').read())
+    att.add_header('Content-Disposition','attachment',filename=os.path.basename(ATTACHMENT))
+    msg.attach(msg_body)
+    msg.attach(att)
+
+    # The good news is that this works. The bad news is that it sends multiple copies of the same message.
+    try:
+        response = ses_client.send_raw_email(
+            Source=SENDER,
+            Destinations=[
+                RECIPIENT
+            ],
+            RawMessage={
+                'Data':msg.as_string(),
+            },
+        )
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+
+    return {}
 
 ####################################################################################### 
 
