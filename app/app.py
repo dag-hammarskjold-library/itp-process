@@ -1171,18 +1171,21 @@ def DownloadWordFileITPSOR():
 
     if os.environ.get('ZAPPA') == "true":
         #If the os.environ contains ZAPPA="true", we run the async task
-        response = get_document_async(
-            'generateWordDocITPSOR', 
-            param_title, 
-            param_subtitle, 
-            body_session, 
-            param_section, 
-            param_name_file_output,
-            key)
+        if current_user['ses_verified'] == 'Success':
+            response = get_document_async(
+                'generateWordDocITPSOR', 
+                param_title, 
+                param_subtitle, 
+                body_session, 
+                param_section, 
+                param_name_file_output,
+                key)
 
-        flash("The document is being generated. You will receive a copy by email.")
-        #return redirect(url_for('DownloadWordFileITPSOR'))
+            flash("The document is being generated. You will receive a copy by email.")
+        else:
+            flash("The user cannot receive emails. Please validate the user before sending emails.")
         return redirect(request.referrer)
+        
     else:
         # Otherwise we run it locally so we can get the file stream to work correctly
         document = generateWordDocITPSOR(param_title, param_subtitle, body_session, param_section, param_name_file_output)
@@ -1202,8 +1205,11 @@ def DownloadWordFileITPITSC ():
     key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
 
     if os.environ.get('ZAPPA') == "true":
-        response = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
-        flash("The document is being generated. You will receive a copy by email.")
+        if current_user['ses_verified'] == 'Success':
+            response = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+            flash("The document is being generated. You will receive a copy by email.")
+        else:
+            flash("The user cannot receive emails. Please validate the user before sending emails.")
         return redirect(request.referrer)
     else:
         document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
@@ -1223,8 +1229,11 @@ def DownloadWordFileITPITSP ():
     key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
 
     if os.environ.get('ZAPPA') == "true":
-        response = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
-        flash("The document is being generated. You will receive a copy by email.")
+        if current_user['ses_verified'] == 'Success':
+            response = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+            flash("The document is being generated. You will receive a copy by email.")
+        else:
+            flash("The user cannot receive emails. Please validate the user before sending emails.")
         return redirect(request.referrer)
     else:
         document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
@@ -1244,8 +1253,11 @@ def DownloadWordFileITPITSS ():
     key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
 
     if os.environ.get('ZAPPA') == "true":
-        response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
-        flash("The document is being generated. You will receive a copy by email.")
+        if current_user['ses_verified'] == 'Success':
+            response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+            flash("The document is being generated. You will receive a copy by email.")
+        else:
+            flash("The user cannot receive emails. Please validate the user before sending emails.")
         return redirect(request.referrer)
     else:
         document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
@@ -1278,7 +1290,7 @@ def send_email(filename):
     s3_client.download_file(Config.bucket_name, filename, local_file)
     # Make an email and attach the file
     SENDER = 'undhllibrary@gmail.com'
-    RECIPIENT = "mariusagricola@gmail.com"  # Replace this with current_user['email']
+    RECIPIENT = current_user['email']
     SUBJECT = "ITPP Word Document"
     ATTACHMENT = local_file
     BODY_TEXT = "Hello,\r\nPlease see the attached file you requested."
