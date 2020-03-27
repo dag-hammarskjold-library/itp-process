@@ -148,6 +148,43 @@ def create_user():
     else:
         return render_template('createuser.html')
 
+@app.route("/users/<id>/validate")
+@login_required
+def validate_user_by_id(id):
+    try:
+        user = Itpp_user.objects.get(id=id)
+    except:
+        abort(404)
+    
+    if user.email == 'admin@un.org':
+        flash("The user identified by admin@un.org cannot be validated.")
+        return redirect(request.referrer)
+
+    ses_client = boto3.client('ses')
+    response = ses_client.get_identity_verification_attributes(
+        Identities = [
+            user.email
+        ]
+    )
+
+    print(response)
+
+    try:
+        verification_status = response['VerificationAttributes'][user.email]['VerificationStatus']
+        if verification_status != 'Success':
+            flash("The user's validation is still pending.")
+        else:
+            user.ses_verified = 'Success'
+            user.save()
+            flash("The user's validation was successful.")
+    except KeyError:
+        ses_client.verify_email_identity(EmailAddress=user.email)
+        user.ses_verified = 'Pending'
+        user.save()
+        flash("We have sent a validation email to the user.")
+
+    return redirect(request.referrer)
+
 # Retrieve a user
 @app.route("/users/<id>")
 @login_required
