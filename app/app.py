@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, abort, jsonify, Response, ses
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from requests import get
 import boto3, re, os, pymongo
+from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.snapshot import Snapshot
@@ -1133,9 +1134,8 @@ def DownloadWordFileITPSOR():
     if os.environ.get('ZAPPA') == "true":
         #If the os.environ contains ZAPPA="true", we run the async task
         response = get_document_async('generateWordDocITPSOR', param_title, param_subtitle, body_session, param_section, param_name_file_output)
-        flash("The document is being generated. You will receive a copy by email.")
-        return redirect(url_for('DownloadWordFileITPSOR'))
-        #return redirect(url_for('response', response_id=response.response_id))
+        #return redirect(url_for('DownloadWordFileITPSOR'))
+        return redirect(url_for('response', response_id=response.response_id, referrer="DownloadWordFileITPSOR"))
     else:
         # Otherwise we run it locally so we can get the file stream to work correctly
         document = generateWordDocITPSOR(param_title, param_subtitle, body_session, param_section, param_name_file_output)
@@ -1146,20 +1146,58 @@ def DownloadWordFileITPSOR():
 
 # Put the remaining functions here...
 
-@task
+@task(capture_response=True)
 def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output):
-    ses_client = boto3.client('ses', region_name='us-east-1')
 
     document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
+
+    s3_client = boto3.client('s3')
     filename = '/tmp/' + param_name_file_output + '.docx'
     document.save(filename)
-    
 
+    remote_key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+    try:
+        s3_client.upload_file(filename, Config.bucket_name, remote_key)
+    except ClientError as e:
+        print(e)
+        return False
+
+    return remote_key
+
+@app.route('/async-response/<response_id>')
+def response(response_id):
+    response = get_async_response(response_id)
+    referrer = request.args.get('referrer')
+    print(referrer)
+    if response is None:
+        abort(404)
+
+    if response['status'] == 'complete':
+        #return jsonify(response['response'])
+        send_email(response['response'])
+        flash("The document is being generated. You will receive a copy by email.")
+        return redirect(url_for(referrer))
+        #return send_file(response['response'], as_attachment=True)
+
+    sleep(5)
+
+    return "Not yet ready. Redirecting.", 302, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Location': url_for('response', response_id=response_id, referrer=referrer, backoff=5),
+        'X-redirect-reason': "Not yet ready.",
+    }
+
+   
+def send_email(filename):
+    ses_client = boto3.client('ses', region_name='us-east-1')
+    s3_client = boto3.client('s3')
+    local_file = '/tmp/' + filename.split('/')[1]
+    s3_client.download_file(Config.bucket_name, filename, local_file)
     # Make an email and attach the file
     SENDER = 'undhllibrary@gmail.com'
     RECIPIENT = "mariusagricola@gmail.com"  # Replace this with current_user['email']
-    SUBJECT = document_name
-    ATTACHMENT = filename
+    SUBJECT = "ITPP Word Document"
+    ATTACHMENT = local_file
     BODY_TEXT = "Hello,\r\nPlease see the attached file you requested."
     BODY_HTML = """\
     <html>
