@@ -24,6 +24,9 @@ from zappa.asynchronous import task, get_async_response
 from pymongo import MongoClient
 from copy import deepcopy
 from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
 
 
 ###############################################################################################
@@ -1145,12 +1148,61 @@ def DownloadWordFileITPSOR():
 
 @task
 def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output):
-    ses_client = boto3.client('ses')
-    # Configure all of the email settings here
-    # e.g., https://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-using-sdk-python.html
+    ses_client = boto3.client('ses', region_name='us-east-1')
 
     document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
+    filename = '/tmp/' + param_name_file_output + '.docx'
+    document.save(filename)
+    
+
     # Make an email and attach the file
+    SENDER = 'undhllibrary@gmail.com'
+    RECIPIENT = "mariusagricola@gmail.com"  # Replace this with current_user['email']
+    SUBJECT = document_name
+    ATTACHMENT = filename
+    BODY_TEXT = "Hello,\r\nPlease see the attached file you requested."
+    BODY_HTML = """\
+    <html>
+    <head></head>
+    <body>
+    <h1>Hello!</h1>
+    <p>Please see the attached file you requested.</p>
+    </body>
+    </html>
+    """
+    CHARSET = "utf-8"
+
+    msg = MIMEMultipart('mixed')
+    # Add subject, from and to lines.
+    msg['Subject'] = SUBJECT 
+    msg['From'] = SENDER 
+    msg['To'] = RECIPIENT
+
+    msg_body = MIMEMultipart('alternative')
+    textpart = MIMEText(BODY_TEXT.encode(CHARSET), 'plain', CHARSET)
+    htmlpart = MIMEText(BODY_HTML.encode(CHARSET), 'html', CHARSET)
+    msg_body.attach(textpart)
+    msg_body.attach(htmlpart)
+    att = MIMEApplication(open(ATTACHMENT, 'rb').read())
+    att.add_header('Content-Disposition','attachment',filename=os.path.basename(ATTACHMENT))
+    msg.attach(msg_body)
+    msg.attach(att)
+
+    # The good news is that this works. The bad news is that it sends multiple copies of the same message.
+    try:
+        response = ses_client.send_raw_email(
+            Source=SENDER,
+            Destinations=[
+                RECIPIENT
+            ],
+            RawMessage={
+                'Data':msg.as_string(),
+            },
+        )
+    except ClientError as e:
+        print(e.response['Error']['Message'])
+
+    return {}
 
 ####################################################################################### 
 
