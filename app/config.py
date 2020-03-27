@@ -32,7 +32,6 @@ class ProductionConfig(object):
     connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
     dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
     collection_prefix = ''
-    bucket_prefix = ''
     bucket_name = 'itpp-zappa-bucket'
     url_prefix="https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/"
     RPP = 10
@@ -41,7 +40,6 @@ class DevelopmentConfig(ProductionConfig):
     # Provide overrides for production settings here.
     context='development'
     collection_prefix = 'dev_'
-    bucket_prefix = 'dev-'
     DEBUG = True
 
 class TestConfig(ProductionConfig):

@@ -1130,12 +1130,22 @@ def DownloadWordFileITPSOR():
     body_session = "A/72"
     param_section = 'itpsor'
     param_name_file_output = param_section
+    key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
 
     if os.environ.get('ZAPPA') == "true":
         #If the os.environ contains ZAPPA="true", we run the async task
-        response = get_document_async('generateWordDocITPSOR', param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        response = get_document_async(
+            'generateWordDocITPSOR', 
+            param_title, 
+            param_subtitle, 
+            body_session, 
+            param_section, 
+            param_name_file_output,
+            key)
+
+        flash("The document is being generated. You will receive a copy by email.")
         #return redirect(url_for('DownloadWordFileITPSOR'))
-        return redirect(url_for('response', response_id=response.response_id, referrer="DownloadWordFileITPSOR"))
+        return redirect(request.referrer)
     else:
         # Otherwise we run it locally so we can get the file stream to work correctly
         document = generateWordDocITPSOR(param_title, param_subtitle, body_session, param_section, param_name_file_output)
@@ -1144,50 +1154,86 @@ def DownloadWordFileITPSOR():
         file_stream.seek(0)
         return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
 
-# Put the remaining functions here...
+@app.route("/itpp_itpitsc/download")
+@login_required
+def DownloadWordFileITPITSC ():
+    param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
+    param_subtitle = "INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES"
+    body_session = "A/72"
+    param_section = 'itpitsc'
+    param_name_file_output = param_section
+    key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+
+    if os.environ.get('ZAPPA') == "true":
+        response = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        flash("The document is being generated. You will receive a copy by email.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
+
+@app.route("/itpp_itpitsp/download")
+@login_required
+def DownloadWordFileITPITSP ():
+    param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
+    param_subtitle = "INDEX TO SPEECHES - SPEAKERS"
+    body_session = "A/72"
+    param_section = 'itpitsp'
+    param_name_file_output = param_section
+    key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+
+    if os.environ.get('ZAPPA') == "true":
+        response = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        flash("The document is being generated. You will receive a copy by email.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
+
+@app.route("/itpp_itpitss/download")
+@login_required
+def DownloadWordFileITPITSS ():
+    param_title = 'GENERAL ASSEMBLY – 72ND SESSION – 2017/2018'
+    param_subtitle = "INDEX TO SPEECHES – SUBJECTS"
+    body_session = "A/72"
+    param_section = 'itpitss'
+    param_name_file_output = param_section
+    key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+
+    if os.environ.get('ZAPPA') == "true":
+        response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        flash("The document is being generated. You will receive a copy by email.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=param_name_file_output + '.docx')
 
 @task(capture_response=True)
-def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output):
+def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output, key):
 
-    document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
-
-    s3_client = boto3.client('s3')
-    filename = '/tmp/' + param_name_file_output + '.docx'
-    document.save(filename)
-
-    remote_key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
     try:
-        s3_client.upload_file(filename, Config.bucket_name, remote_key)
+        document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        s3_client = boto3.client('s3')
+        filename = '/tmp/' + param_name_file_output + '.docx'
+        document.save(filename)
+        response = s3_client.upload_file(filename, Config.bucket_name, key)
+        send_email(key)
+        return True
     except ClientError as e:
         print(e)
         return False
+    
+    return True
 
-    return remote_key
-
-@app.route('/async-response/<response_id>')
-def response(response_id):
-    response = get_async_response(response_id)
-    referrer = request.args.get('referrer')
-    print(referrer)
-    if response is None:
-        abort(404)
-
-    if response['status'] == 'complete':
-        #return jsonify(response['response'])
-        send_email(response['response'])
-        flash("The document is being generated. You will receive a copy by email.")
-        return redirect(url_for(referrer))
-        #return send_file(response['response'], as_attachment=True)
-
-    sleep(5)
-
-    return "Not yet ready. Redirecting.", 302, {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Location': url_for('response', response_id=response_id, referrer=referrer, backoff=5),
-        'X-redirect-reason': "Not yet ready.",
-    }
-
-   
 def send_email(filename):
     ses_client = boto3.client('ses', region_name='us-east-1')
     s3_client = boto3.client('s3')
