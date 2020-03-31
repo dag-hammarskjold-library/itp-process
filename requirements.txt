@@ -30,6 +30,7 @@ jmespath==0.9.4
 jsonschema==3.1.1
 kappa==0.6.0
 lambda-packages==0.20.0
+lxml==4.5.0
 MarkupSafe==1.1.1
 mongoengine==0.18.2
 mongomock==3.18.0
@@ -42,6 +43,7 @@ placebo==0.9.0
 pymongo==3.10.1
 pyrsistent==0.15.4
 python-dateutil==2.6.1
+python-docx==0.8.10
 python-slugify==4.0.0
 PyYAML==5.1.2
 requests==2.22.0
@@ -62,7 +64,7 @@ Werkzeug==0.16.0
 wsgi-request-logger==0.4.6
 WTForms==2.2.1
 xlrd==1.2.0
+xmldiff==2.4
 yarl==1.4.2
 zappa==0.49.0
 zipp==0.6.0
-python-docx==0.8.10
