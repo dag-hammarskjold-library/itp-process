@@ -13,8 +13,8 @@
             </div>
             <div class="card-body">
                 <ul class="list-unstyled mt-3 mb-4 text-center font-weight-bold">
-                    <li> <a href="{{url_for('list_users')}}"><span class="text-dark"> <i class="fas fa-link"> User management</i></span></a></li>
-                    <li> <a href="{{url_for('administration')}}"><span class="text-dark"><i class="fas fa-link"> Log management</i></span></a></li>
+                    <li> <a href="{{url_for('list_users')}}"><span class="text-dark"> * User management</span></a></li>
+                    <li> <a href="{{url_for('administration')}}"><span class="text-dark">* Log management </span></a></li>
 
                 </ul>
             </div>
@@ -25,8 +25,8 @@
             </div>
             <div class="card-body">
                 <ul class="list-unstyled mt-3 mb-4 text-center font-weight-bold">
-                    <li> <a href="{{url_for('list_itpp_itps')}}"><span class="text-dark"><i class="fas fa-link">  ITP Document Management</i></span></a></li>
-                    <li> <a href="{{url_for('displaySnapshot')}}"><span class="text-dark"><i class="fas fa-link">  Snapshot Management</i></span></a></li>
+                    <li> <a href="{{url_for('list_itpp_itps')}}"><span class="text-dark">* ITP Document Management</span></a></li>
+                    <li> <a href="{{url_for('displaySnapshot')}}"><span class="text-dark">* Snapshot Management</span></a></li>
                 </ul>
             </div>
         </div>
@@ -36,10 +36,10 @@
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                        <li> <a href="{{url_for('itpp_itpsor',offset=0)}}"><span class="text-dark"><i class="fas fa-link">  Supplements to Official Records : itpsor </i></span></a></li>
-                        <li> <a href="{{url_for('itpp_itpitsc',offset=0)}}" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Corporate names / countries : itpitsc</i></span></a></li>
-                        <li> <a href="{{url_for('itpp_itpitsp',offset=0)}}" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Speakers : itpitsp </i></span></a></li>
-                        <li> <a href="{{url_for('itpp_itpitss',offset=0)}}" ><span class="text-dark"><i class="fas fa-link">  Index to Speeches – Subjects : itpitss </i></span></a></li>
+                        <li> <a href="{{url_for('itpp_itpsor',offset=0)}}"><span class="text-dark">* Supplements to Official Records : itpsor </span></a></li>
+                        <li> <a href="{{url_for('itpp_itpitsc',offset=0)}}" ><span class="text-dark">* Index to Speeches – Corporate names / countries : itpitsc</span></a></li>
+                        <li> <a href="{{url_for('itpp_itpitsp',offset=0)}}" ><span class="text-dark">* Index to Speeches – Speakers : itpitsp </span></a></li>
+                        <li> <a href="{{url_for('itpp_itpitss',offset=0)}}" ><span class="text-dark">* Index to Speeches – Subjects : itpitss </span></a></li>
                     </ul>
                 </div>            
         </div>
@@ -56,10 +56,10 @@
                     </div>
                     <div class="card-body">
                         {% for report in reports %}
-                        <ul class="">
+                        <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
                             <!-- Implement the loop for generating the links for the reports -->
                             {% if report.category=="BIB" %}
-                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_self"><span class="text-dark"> <i class="fas fa-link">  {{report.title}}</i></span></a></li>
+                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> * {{report.title}} </span></a></li>
                             {% endif %} 
                         </ul>
                         {% endfor %}
@@ -74,10 +74,10 @@
                     </div>
                     <div class="card-body">
                         {% for report in reports %}
-                        <ul class="">
+                        <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
                             <!-- Implement the loop for generating the links for the reports -->
                             {% if report.category=="SPEECH" %}
-                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_self"><span class="text-dark"> <i class="fas fa-link">  {{report.title}}</i></span></a></li>
+                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> * {{report.title}}</span></a></li>
                             {% endif %} 
                         </ul>
                         {% endfor %}
@@ -92,10 +92,10 @@
                     </div>
                     <div class="card-body">
                         {% for report in reports %}
-                        <ul class="">
+                        <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
                             <!-- Implement the loop for generating the links for the reports -->
                             {% if report.category=="VOTING" %}
-                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_self"><span class="text-dark"> <i class="fas fa-link">  {{report.title}}</i></span></a></li>
+                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> * {{report.title}}</span></a></li>
                             {% endif %} 
                         </ul>
                         {% endfor %}
@@ -110,10 +110,10 @@
                     </div>
                     <div class="card-body">
                         {% for report in reports %}
-                        <ul class="">
+                        <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
                             <!-- Implement the loop for generating the links for the reports -->
                             {% if report.category=="OTHER" %}
-                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_self"><span class="text-dark"> <i class="fas fa-link">  {{report.title}}</i></span></a></li>
+                            <li> <a href="{{url_for('get_report_by_id',name=report.name)}}" target="_blank"><span class="text-dark"> * {{report.title}}</span></a></li>
                             {% endif %} 
                         </ul>
                         {% endfor %}
