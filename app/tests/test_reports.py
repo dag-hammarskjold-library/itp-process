@@ -239,33 +239,34 @@ class Reports(TestCase):
         args = {}
         args['authority'] = 1
         
-        for tag in ('793','991','992'):
+        for tag in ('991', '992'):
             report = ReportList.get_by_name('bib_missing_' + tag)
             
             Bib({'_id': 1}).set_values(
-                ('191','a','GOOD'),
-                ('191','b',1),
-                ('191','c',1),
-                ('930','a','UND'),
-                (tag,'a',3)
+                ('191', 'a', 'GOOD'),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('930', 'a', 'UND'),
+                (tag, 'a', 3)
             ).commit()
             
             Bib({'_id': 2}).set_values(
-                ('191','a','BAD'),
-                ('191','b',1),
-                ('191','c',1),
-                ('930','a','UND')
+                ('191', 'a', 'X/SR.1/BAD'),
+                ('191', 'b', 1),
+                ('191', 'c', 1),
+                ('930', 'a', 'UND')
             ).commit()
             
             results = report.execute(args)
-            self.assertEqual(results[0][2],'BAD')
+            self.assertEqual(len(results), 1)
+            self.assertEqual(results[0][2], 'X/SR.1/BAD')
     
     # missing subfield - bib
     def test_7a_12a(self):
         args = {}
         args['authority'] = 1
         
-        for t in [('191','9'),('991','d')]:
+        for t in [('991','d')]:
             tag,code = t[0],t[1]
             report = ReportList.get_by_name('bib_missing_' + tag + code)
             
@@ -322,6 +323,7 @@ class Reports(TestCase):
                 ('191', 'b', 1),
                 ('191', 'c', 1),
                 ('930', 'a', 'UND'),
+                ('991', 'e', 'Participation'),
                 (params)
             ).commit()
             
@@ -535,7 +537,7 @@ class Reports(TestCase):
 
         results = report.execute(args)
         self.assertEqual(len(results),1)
-        self.assertEqual(results[0], ['ITS', '2', 'BAD'])
+        self.assertEqual(results[0][0:3], ['ITS', '2', 'BAD'])
         
     ### vote
     
@@ -631,22 +633,22 @@ class Reports(TestCase):
         args = {}
         args['authority'] = 1
         
-        for tag in ('039','856','991','992'):
+        for tag in ('039', '856', '991', '992'):
             report = ReportList.get_by_name('vote_missing_' + tag)
             
             Bib({'_id': 1}).set_values(
-                ('791','a','GOOD'),
-                ('791','b',1),
-                ('791','c',1),
-                ('930','a','VOT'),
-                (tag,'a','x', {'auth_control': False})
+                ('791', 'a', 'GOOD'),
+                ('791', 'b', 1),
+                ('791', 'c', 1),
+                ('930', 'a', 'VOT'),
+                (tag, 'a', 'x', {'auth_control': False})
             ).commit()
             
             Bib({'_id': 2}).set_values(
-                ('791','a','BAD'),
-                ('791','b',1),
-                ('791','c',1),
-                ('930','a','VOT')
+                ('791', 'a', 'BAD'),
+                ('791', 'b', 1),
+                ('791', 'c', 1),
+                ('930', 'a', 'VOT')
             ).commit()
             
             results = report.execute(args)
