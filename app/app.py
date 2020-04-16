@@ -1236,7 +1236,7 @@ def DownloadWordFileITPITSP ():
             flash("The user cannot receive emails. Please validate the user before sending emails.")
         return redirect(request.referrer)
     else:
-        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        document = generateWordDocITPITSP(param_title, param_subtitle, body_session, param_section, param_name_file_output)
         file_stream = io.BytesIO()
         document.save(file_stream)
         file_stream.seek(0)
@@ -1260,7 +1260,7 @@ def DownloadWordFileITPITSS ():
             flash("The user cannot receive emails. Please validate the user before sending emails.")
         return redirect(request.referrer)
     else:
-        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        document = generateWordDocITPITSS(param_title, param_subtitle, body_session, param_section, param_name_file_output)
         file_stream = io.BytesIO()
         document.save(file_stream)
         file_stream.seek(0)

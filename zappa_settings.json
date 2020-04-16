@@ -6,7 +6,7 @@
         "runtime": "python3.7",
         "s3_bucket": "zappa-7la88m1as",
         "timeout_seconds": 600,
-        "async_response_table": "itpp-responses"
+        "async_response_table": "itpp-responses",
         "environment_variables": {
             "FLASK_ENV": "development",
             "ZAPPA": "true"
@@ -19,7 +19,7 @@
         "runtime": "python3.7",
         "s3_bucket": "zappa-7la88m1as",
         "timeout_seconds": 120,
-        "async_response_table": "itpp-responses"
+        "async_response_table": "itpp-responses",
         "environment_variables": {
             "FLASK_ENV": "production",
             "ZAPPA": "true"
@@ -32,7 +32,7 @@
         "runtime": "python3.7",
         "s3_bucket": "zappa-7la88m1as",
         "timeout_seconds": 600,
-        "async_response_table": "itpp-responses"
+        "async_response_table": "itpp-responses",
         "environment_variables": {
             "FLASK_ENV": "development",
             "ZAPPA": "true"
