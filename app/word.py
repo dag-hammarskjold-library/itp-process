@@ -718,7 +718,7 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
 
         # Breaks management
         paragraph_format = p.paragraph_format
-        #paragraph_format.space_after = Pt(1)
+        paragraph_format.space_after = Pt(1)
                
         # Breaks management
         paragraph_format.keep_together = True
@@ -765,9 +765,6 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
                 # retrieve docsymbol value
                 docsymbols=itsentrie["docsymbols"]
                 
-                # adding separator
-                #p2.add_run(" - ")
-
                 # retrieving size of the list
                 mySize=len(docsymbols)
 

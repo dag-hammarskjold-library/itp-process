@@ -28,6 +28,8 @@ from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordD
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
+from boto3 import client
+import platform
 
 
 ###############################################################################################
@@ -1287,6 +1289,66 @@ def itpp_findRecord(docSymbol):
     return render_template('itpsor.html',
                            myRecord=myRecord
                            )
+
+
+####################################################
+# WORD DOCUMENTS LIST
+####################################################  
+
+@app.route("/files")
+@login_required
+def list_files():
+ 
+    ############ PROCESS AWS (files created during the period)
+
+    # assign the s3 object
+
+    myS3 = Config.client
+
+    # assign the appropiate bucket
+
+    myList=s3.list_objects_v2(Bucket=Config.bucket_name)["Contents"]
+
+    # definition of some variables
+
+    myFilesNumber=0
+    myData=[]
+ 
+
+    # retrieving and building list of records 
+    for obj in myList:
+        #myRecord.clear()
+        myRecord=[]
+        myName= obj["Key"]
+        myRecord.append(myName)
+
+        myLastModified=obj["LastModified"]
+        myRecord.append(myLastModified)
+
+        mySize=obj["Size"]
+        myRecord.append(mySize)
+
+        myFilesNumber+=1
+
+        # Add the record to the dataList
+        myData.append(myRecord)
+
+    return render_template('generatedfiles.html',myData=myData,myFilesNumber=myFilesNumber)
+
+@app.route("/files/download/<filename>")
+@login_required
+def newDownload(filename):    
+
+    s3 = boto3.resource('s3')
+    #s3.meta.client.download_file(Config.bucket_name, filename,"/Users/yalshire/Desktop/{}".format(filename))
+    if platform.system()=="Darwin":
+        s3.meta.client.download_file(Config.bucket_name, filename,"/tmp/{}".format(filename))
+        flash("File downloaded successfully in /tmp/")
+    else:
+        s3.meta.client.download_file(Config.bucket_name, filename,"C:\{}".format(filename))
+        flash("File downloaded successfully in C:\ ")
+    
+    return redirect(url_for('list_files'))
 
 ####################################################
 # START APPLICATION
