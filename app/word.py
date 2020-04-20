@@ -459,7 +459,8 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
 
         # Breaks management
         paragraph_format = p.paragraph_format
-        #paragraph_format.space_after = Pt(1)
+        # last update
+        paragraph_format.space_after = Pt(1)
                
         # Breaks management
         paragraph_format.keep_together = True
@@ -974,7 +975,7 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
         # Breaks management
         paragraph_format = p.paragraph_format
-        #paragraph_format.space_after = Pt(1)
+        paragraph_format.space_after = Pt(1)
                
         # Breaks management
         paragraph_format.keep_together = True
