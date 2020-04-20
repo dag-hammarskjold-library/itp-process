@@ -1306,8 +1306,10 @@ def list_files():
     myS3 = Config.client
 
     # assign the appropiate bucket
-
-    myList=s3.list_objects_v2(Bucket=Config.bucket_name)["Contents"]
+    try:
+        myList=s3.list_objects_v2(Bucket=Config.bucket_name)["Contents"]
+    except KeyError:
+        myList = []
 
     # definition of some variables
 
