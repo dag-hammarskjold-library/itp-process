@@ -1341,16 +1341,13 @@ def list_files():
 @login_required
 def newDownload(filename):    
 
-    s3 = boto3.resource('s3')
-    #s3.meta.client.download_file(Config.bucket_name, filename,"/Users/yalshire/Desktop/{}".format(filename))
-    if platform.system()=="Darwin":
-        s3.meta.client.download_file(Config.bucket_name, filename,"/tmp/{}".format(filename))
-        flash("File downloaded successfully in /tmp/")
-    else:
-        s3.meta.client.download_file(Config.bucket_name, filename,"C:\{}".format(filename))
-        flash("File downloaded successfully in C:\ ")
-    
-    return redirect(url_for('list_files'))
+    s3 = boto3.client('s3')
+    try:
+        s3_file = s3.get_object(Bucket=Config.bucket_name, Key=filename)
+    except:
+        abort(404)
+
+    return send_file(s3_file['Body'], as_attachment=True, attachment_filename=filename)
 
 ####################################################
 # START APPLICATION
