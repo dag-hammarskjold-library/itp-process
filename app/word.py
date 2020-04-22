@@ -1051,3 +1051,93 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
         p2.add_run("\n")
  
     return document  
+
+def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,paramSection,paramNameFileOutput):
+    
+    # Setting some Variables
+
+    myMongoURI=Config.connect_string
+    myClient = MongoClient(myMongoURI)
+    myDatabase=myClient.undlFiles
+    myCollection=myDatabase['itp_sample_output_copy']
+    myTitle=paramTitle
+    mySubTitle1=paramSubTitle1
+    mySubTitle2=paramSubTitle2
+    setOfData=myCollection.find({'section': paramSection,'bodysession': bodysession})
+
+    # Creation of the word document
+    document = Document()
+
+    # Marging of the document
+
+    section.top_margin = Cm(2.54)
+    section.bottom_margin = Cm(2.54)
+    section.left_margin = Cm(2.54)
+    section.right_margin = Cm(2.54)    
+    
+    ################## HEADER ###############################################
+    
+    styles = document.styles
+    new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
+    new_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    
+    font = new_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(8)
+    font.bold = False
+    font.color.rgb = RGBColor(0, 0, 0)
+    
+    # Adding the header to the document
+    
+    header=document.sections[0].header
+    
+    ################## SUBHEADER 1 ###############################################
+    
+    new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
+    new_sub_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    
+    font = new_sub_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(8)
+    font.bold = False
+    font.color.rgb = RGBColor(0, 0, 0)
+    
+
+    ################## SUBHEADER 2 ###############################################
+    
+    new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
+    new_sub_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    
+    font = new_sub_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(8)
+    font.bold = False
+    font.color.rgb = RGBColor(0, 0, 0)
+    
+
+    
+    ################## WRITING THE DOCUMENT ###############################################
+    
+    # Adding the Header to the document
+    
+    p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Adding the sub Header 1 to the document
+    
+    p1=header.add_paragraph(mySubTitle1.upper(), style='New sub Heading')
+    p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Adding the sub Header 2 to the document
+    
+    p2=header.add_paragraph(mySubTitle2.upper(), style='New sub Heading')
+    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+ 
+    return document  

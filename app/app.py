@@ -981,6 +981,66 @@ def itpp_itpitss(offset=0):
                            URL_PREFIX=URL_BY_DEFAULT
                            )
     
+@app.route('/itpp_itpres/<offset>',methods=["GET"])
+@login_required
+def itpp_itpres(offset=0):
+    
+    # delete old file in the server
+    if os.path.exists('itpres.docx'):
+        deleteFile('itpres.docx')
+    
+    # definition of the offset and the limit
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpres'}, {'ainumber': 1, 
+       'bodysession': 1, 'meeting': 1, 'docsymbol': 1, 'record_id': 1, 'section': 1, 'title': 1, 'vote': 1, 'votedate': 1, 'subject': 1, 'subjectsubtitle': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpres'}).count()
+
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpres'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpres',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpres',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpres',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpres',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpres',offset=offset)
+        
+    lastUrl=url_for('itpp_itpres',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpres.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
 ################## UPDATE ###########################################################
 
 @app.route('/itpp_updateRecord/<recordID>',methods=["POST"]) 
@@ -1106,6 +1166,46 @@ def itpp_updateRecorditpitss(recordID):
     return  redirect(url_for('itpp_itpitss',offset=0))
 
 
+@app.route('/itpp_updateRecorditpres/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpres(recordID):
+    
+    # Retrieving the values from the form sent
+    myainumber=request.form["ainumber"]
+    mybodysession=request.form["bodysession"]
+    myrecord_id=request.form["record_id"]
+    mymeeting=request.form["meeting"]
+    mysection=request.form["section"]
+    mytitle=request.form["title"]
+    myvotedate=request.form["votedate"]
+    myvote=request.form["vote"]
+    mysubject=request.form["subject"]
+    mysubjectsubtitle=request.form["subjectsubtitle"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "ainumber":myainumber,
+                "bodysession":mybodysession,          
+                "record_id":myrecord_id,
+                "meeting":mymeeting,
+                "section":mysection,
+                "title":mytitle,
+                "votedate":myvotedate,                
+                "vote":myvote,
+                "subject":mysubject,
+                "subjectsubtitle":mysubjectsubtitle             
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection
+    return  redirect(url_for('itpp_itpres',offset=0))
+
 ################## DELETION ###########################################################
 
 @app.route('/itpp_deleteRecord/<recordID>',methods=["POST"])  
@@ -1156,6 +1256,18 @@ def itpitss_deleteRecord(recordID):
 
     # Redirection to the main page about itpsor
     return redirect(url_for('itpp_itpitss',offset=0))
+
+@app.route('/itpres_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpres_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpres',offset=0))
 
 ################## DOWNLOAD ###########################################################
 
