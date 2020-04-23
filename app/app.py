@@ -24,7 +24,7 @@ from time import sleep
 from zappa.asynchronous import task, get_async_response
 from pymongo import MongoClient
 from copy import deepcopy
-from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR
+from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR,generateWordDocITPRES
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -1366,6 +1366,28 @@ def DownloadWordFileITPITSS ():
         return redirect(request.referrer)
     else:
         document = generateWordDocITPITSS(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+@app.route("/itpp_itpres/download")
+@login_required
+def DownloadWordFileITPRES ():
+    param_title = 'LIST OF RESOLUTIONS'
+    param_subtitle = "INDEX TO SPEECHES – SUBJECTS"
+    body_session = "A/72"
+    param_section = 'itpres'
+    param_name_file_output = param_section
+    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+    if os.environ.get('ZAPPA') == "true":
+        response = get_document_async('generateWordDocITPRES', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        flash("The document is being generated and will be in the Downloads section shortly.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPRES(param_title, param_subtitle, body_session, param_section, param_name_file_output)
         file_stream = io.BytesIO()
         document.save(file_stream)
         file_stream.seek(0)

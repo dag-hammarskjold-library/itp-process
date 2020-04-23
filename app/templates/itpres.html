@@ -5,7 +5,7 @@
 <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3  bg-secondary border-bottom shadow-sm">
   <h3 class="my-0 mr-md-auto font-weight-normal text-center">List of Resolutions: itpres  <span class="badge badge-pill badge-info">{{totalRecord}} records </span></h3>
   <a class="btn btn-outline-primary" href="{{url_for('main')}}">Main Menu</a>
-  <a class="btn btn-outline-primary" href="{{url_for('DownloadWordFileITPSOR')}}" onclick="loading();"><i class="fa fa-download">Word Document</i></a>
+  <a class="btn btn-outline-primary" href="{{url_for('DownloadWordFileITPRES')}}" onclick="loading();"><i class="fa fa-download">Word Document</i></a>
 </div>
 <hr>
 <div class="row d-flex justify-content-center">
@@ -177,22 +177,4 @@
     </ul>
 </div>
 
-<script>
-    $(function(){
-        $('#btnsearch').click(function(){
-            var docSymbol = $('#searchparam').val();
-            console.log(docSymbol);
-            $.ajax({
-                url: '/itpp_findRecord/' + docSymbol ,
-                type: 'POST',
-                success: function(response){
-                    console.log(response);
-                },
-                error: function(error){
-                    console.log(error);
-                }
-            });
-        });
-    });
-</script>
 {% endblock %}

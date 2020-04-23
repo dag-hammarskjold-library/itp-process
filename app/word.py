@@ -1052,7 +1052,7 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
  
     return document  
 
-def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,paramSection,paramNameFileOutput):
+def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
     # Setting some Variables
 
@@ -1061,8 +1061,8 @@ def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,p
     myDatabase=myClient.undlFiles
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
-    mySubTitle1=paramSubTitle1
-    mySubTitle2=paramSubTitle2
+    mySubTitle1=paramSubTitle
+    mySubTitle2=paramSubTitle
     setOfData=myCollection.find({'section': paramSection,'bodysession': bodysession})
 
     # Creation of the word document
@@ -1070,10 +1070,10 @@ def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,p
 
     # Marging of the document
 
-    section.top_margin = Cm(2.54)
-    section.bottom_margin = Cm(2.54)
-    section.left_margin = Cm(2.54)
-    section.right_margin = Cm(2.54)    
+    #section.top_margin = Cm(2.54)
+    #section.bottom_margin = Cm(2.54)
+    #section.left_margin = Cm(2.54)
+    #section.right_margin = Cm(2.54)    
     
     ################## HEADER ###############################################
     
@@ -1102,25 +1102,9 @@ def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,p
     
     font = new_sub_heading_style.font
     font.name = 'Arial'
-    font.size = Pt(8)
+    font.size = Pt(12)
     font.bold = False
     font.color.rgb = RGBColor(0, 0, 0)
-    
-
-    ################## SUBHEADER 2 ###############################################
-    
-    new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
-    new_sub_heading_style.base_style = styles['Heading 1']
-    
-    # Font settings
-    
-    font = new_sub_heading_style.font
-    font.name = 'Arial'
-    font.size = Pt(8)
-    font.bold = False
-    font.color.rgb = RGBColor(0, 0, 0)
-    
-
     
     ################## WRITING THE DOCUMENT ###############################################
     
@@ -1131,13 +1115,13 @@ def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,p
     
     # Adding the sub Header 1 to the document
     
-    p1=header.add_paragraph(mySubTitle1.upper(), style='New sub Heading')
-    p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    #p1=header.add_paragraph(mySubTitle1.upper(), style='New sub Heading')
+    #p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     # Adding the sub Header 2 to the document
     
-    p2=header.add_paragraph(mySubTitle2.upper(), style='New sub Heading')
-    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    #p2=header.add_paragraph(mySubTitle2.upper(), style='New sub Heading')
+    #p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
  
     return document  
