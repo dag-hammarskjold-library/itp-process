@@ -1070,7 +1070,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     # Setting some Variables
 
-    myMongoURI=DATABASE_CONSTRING
+    myMongoURI=Config.connect_string
     myClient = MongoClient(myMongoURI)
     myDatabase=myClient.undlFiles
     myCollection=myDatabase['itp_sample_output_copy']
@@ -1234,11 +1234,11 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             firstlineValue= record["meeting"].split(".")
             row_cells = table.add_row().cells
 
-            add_hyperlink(row_cells[0].paragraphs[0],firstTitle[3],URL_PREFIX+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]+"/"+firstTitle[3])
+            add_hyperlink(row_cells[0].paragraphs[0],firstTitle[3],Config.url_prefix+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]+"/"+firstTitle[3])
             row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             row_cells[1].text=record["title"]
             row_cells[1].paragraphs[0].style="tableContent"   
-            add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],URL_PREFIX+firstlineValue[0]+"."+firstlineValue[1])
+            add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValue[0]+"."+firstlineValue[1])
             row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
             row_cells[3].text=record["ainumber"]
             row_cells[4].text=record["vote"]
@@ -1278,13 +1278,13 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             firstlineValuePlus=firstlineValue[0].split("/")
             row_cells = table.add_row().cells
 
-            add_hyperlink(row_cells[0].paragraphs[0],firstTitle[2],URL_PREFIX+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]) 
+            add_hyperlink(row_cells[0].paragraphs[0],firstTitle[2],Config.url_prefix+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]) 
             row_cells[1].paragraphs[0].text=record["subject"].upper()
             paragraph_format = row_cells[1].paragraphs[0].paragraph_format
             paragraph_format.space_before = Pt(0)
             paragraph_format.space_after = Pt(0)
             row_cells[1].add_paragraph(record["subjectsubtitle"],style="tableContent1")
-            add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],URL_PREFIX+firstlineValuePlus[0]+"/"+ firstlineValuePlus[2]+ "."+firstlineValue[1])
+            add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValuePlus[0]+"/"+ firstlineValuePlus[2]+ "."+firstlineValue[1])
             row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
             row_cells[3].text=record["vote"]
 
