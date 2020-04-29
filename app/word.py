@@ -18,6 +18,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.enum.dml import MSO_THEME_COLOR_INDEX
 from zappa.asynchronous import task
 from flask import send_file, jsonify
+from docx.enum.table import WD_ALIGN_VERTICAL
 
 s3_client = boto3.client('s3')
 
