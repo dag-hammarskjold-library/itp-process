@@ -18,6 +18,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.enum.dml import MSO_THEME_COLOR_INDEX
 from zappa.asynchronous import task
 from flask import send_file, jsonify
+from docx.enum.table import WD_ALIGN_VERTICAL
 
 s3_client = boto3.client('s3')
 
@@ -1052,8 +1053,21 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
  
     return document  
 
-def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,paramSection,paramNameFileOutput):
+def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
+    
+    
+    # Function to keep the header visible for the table
+
+    def set_repeat_table_header(row):
+
+        tr = row._tr
+        trPr = tr.get_or_add_trPr()
+        tblHeader = OxmlElement('w:tblHeader')
+        tblHeader.set(qn('w:val'), "true")
+        trPr.append(tblHeader)
+        return row
+
     # Setting some Variables
 
     myMongoURI=Config.connect_string
@@ -1061,19 +1075,11 @@ def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,p
     myDatabase=myClient.undlFiles
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
-    mySubTitle1=paramSubTitle1
-    mySubTitle2=paramSubTitle2
+    mySubTitle1=paramSubTitle
     setOfData=myCollection.find({'section': paramSection,'bodysession': bodysession})
 
     # Creation of the word document
     document = Document()
-
-    # Marging of the document
-
-    section.top_margin = Cm(2.54)
-    section.bottom_margin = Cm(2.54)
-    section.left_margin = Cm(2.54)
-    section.right_margin = Cm(2.54)    
     
     ################## HEADER ###############################################
     
@@ -1085,15 +1091,15 @@ def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,p
     
     font = new_heading_style.font
     font.name = 'Arial'
-    font.size = Pt(8)
-    font.bold = False
+    font.size = Pt(12)
+    font.bold = True
     font.color.rgb = RGBColor(0, 0, 0)
     
     # Adding the header to the document
     
     header=document.sections[0].header
     
-    ################## SUBHEADER 1 ###############################################
+    ################## SUBHEADER ###############################################
     
     new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
     new_sub_heading_style.base_style = styles['Heading 1']
@@ -1102,42 +1108,206 @@ def generateWordDocITPRES(paramTitle,paramSubTitle1,paramSubTitle2,bodysession,p
     
     font = new_sub_heading_style.font
     font.name = 'Arial'
-    font.size = Pt(8)
-    font.bold = False
+    font.size = Pt(12)
+    font.bold = True
     font.color.rgb = RGBColor(0, 0, 0)
-    
 
-    ################## SUBHEADER 2 ###############################################
+    ################## FIRST LINE ###############################################
     
-    new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
-    new_sub_heading_style.base_style = styles['Heading 1']
+    first_line = styles.add_style('first line', WD_STYLE_TYPE.PARAGRAPH)
     
     # Font settings
     
-    font = new_sub_heading_style.font
+    font = first_line.font
     font.name = 'Arial'
     font.size = Pt(8)
-    font.bold = False
+    font.italic=True
     font.color.rgb = RGBColor(0, 0, 0)
     
+    ################## TABLE CONTENT ###############################################
+    
+    tableContent_style = styles.add_style('tableContent', WD_STYLE_TYPE.PARAGRAPH)
+    tableContent_style.base_style = styles['Normal']
+    
+    # Font settings
+    
+    font = tableContent_style.font
+    font.name = 'Arial'
+    font.size = Pt(8)
 
     
+    # Hanging indent    
+
+    pf = tableContent_style.paragraph_format
+    pf.first_line_indent = Inches(-0.07)
+    #pf.first_line_indent = Inches(10)
+
+    ################## TABLE CONTENT 1 ###############################################
+    
+    tableContent_style1 = styles.add_style('tableContent1', WD_STYLE_TYPE.PARAGRAPH)
+    tableContent_style1.base_style = styles['Normal']
+    
+    # Font settings
+    
+    font = tableContent_style1.font
+    font.name = 'Arial'
+    font.size = Pt(8)
+
+    
+    # Hanging indent    
+
+    pf1 = tableContent_style1.paragraph_format
+    pf1.left_indent = Pt(10)
+    pf1.space_before = Pt(1)
+    
+    #pf.first_line_indent = Inches(10)
+
     ################## WRITING THE DOCUMENT ###############################################
     
-    # Adding the Header to the document
+    # Header Generation
     
-    p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    if (bodysession[0] in ["A","E"]):
+        p=header.add_paragraph(mySubTitle1.upper(),style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    else : 
+        p=header.add_paragraph(myTitle.upper(), style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+        # Adding the sub Header to the document
+    
+        p=header.add_paragraph(mySubTitle1, style='New sub Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+ 
+    # First line generation
+
+    paragraph_format = p.paragraph_format
+    paragraph_format.space_after = Pt(20)
+    paragraph_format.left_indent=Cm(0.508)
+
+    p=document.add_paragraph("Vote reads Yes-No-Abstain",style='first line')
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    # Adding the sub Header 1 to the document
-    
-    p1=header.add_paragraph(mySubTitle1.upper(), style='New sub Heading')
-    p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    # Adding the sub Header 2 to the document
-    
-    p2=header.add_paragraph(mySubTitle2.upper(), style='New sub Heading')
-    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    paragraph_format = p.paragraph_format
+    paragraph_format.left_indent=Inches(0.35)
+
+    # creation of the table
+
+    table = document.add_table(rows=1, cols=5)
+
+    # set the header visible
+    set_repeat_table_header(table.rows[0])
+
+    # Retrieve the first line
+    hdr_cells = table.rows[0].cells
+
+
+
+    # Definition of the column names
+    myRecords=setOfData
+
+    if (bodysession[0] in ["A","E"]):
+
+        firstTitle= myRecords[0]["docsymbol"].split("/")
+        baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/" + firstTitle[2] + "/" 
+        firstlineValue= myRecords[0]["meeting"].split(".")
+        baseUrl2="("+firstlineValue[0]+".-)"
+
+
+        run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
+        run.underline=True
+        run = hdr_cells[1].paragraphs[0].add_run('Title')
+        run.underline=True
+        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date' +  "            " + baseUrl2)
+        run.underline=True
+        run = hdr_cells[3].paragraphs[0].add_run('A.I. No.')
+        run.underline=True
+        run = hdr_cells[4].paragraphs[0].add_run('Vote')
+        run.underline=True
+
+        # writing the others lines
+
+        for record in myRecords:
+            firstTitle=""
+            firstlineValue=""
+            firstTitle= record["docsymbol"].split("/")
+            firstlineValue= record["meeting"].split(".")
+            row_cells = table.add_row().cells
+
+            add_hyperlink(row_cells[0].paragraphs[0],firstTitle[3],Config.url_prefix+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]+"/"+firstTitle[3])
+            row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            row_cells[1].text=record["title"]
+            row_cells[1].paragraphs[0].style="tableContent"   
+            add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValue[0]+"."+firstlineValue[1])
+            row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
+            row_cells[3].text=record["ainumber"]
+            row_cells[4].text=record["vote"]
+
+
+        # Definition of the size of the column
+
+        widths = (Inches(0.73), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
+        for row in table.rows:
+            for idx, width in enumerate(widths):
+                row.cells[idx].width = width
+
+    else :
+
+        firstTitle= myRecords[0]["docsymbol"].split("/")
+        baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/"
+        firstlineValue= (myRecords[0]["meeting"].split("."))[0].split("/")
+
+        baseUrl2="("+firstlineValue[0]+"/"+ firstlineValue[2] +".-)"
+
+        run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
+        run.underline=True
+        run = hdr_cells[1].paragraphs[0].add_run('Subject')
+        run.underline=True
+        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date' +  "            " + baseUrl2)
+        run.underline=True
+        run = hdr_cells[3].paragraphs[0].add_run('Vote')
+        run.underline=True
+
+        # writing the others lines
+
+        for record in myRecords:
+            firstTitle=""
+            firstlineValue=""
+            firstTitle= record["docsymbol"].split("/")
+            firstlineValue= record["meeting"].split(".")
+            firstlineValuePlus=firstlineValue[0].split("/")
+            row_cells = table.add_row().cells
+
+            add_hyperlink(row_cells[0].paragraphs[0],firstTitle[2],Config.url_prefix+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]) 
+            row_cells[1].paragraphs[0].text=record["subject"].upper()
+            paragraph_format = row_cells[1].paragraphs[0].paragraph_format
+            paragraph_format.space_before = Pt(0)
+            paragraph_format.space_after = Pt(0)
+            row_cells[1].add_paragraph(record["subjectsubtitle"],style="tableContent1")
+            add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValuePlus[0]+"/"+ firstlineValuePlus[2]+ "."+firstlineValue[1])
+            row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
+            row_cells[3].text=record["vote"]
+
+        # Definition of the size of the column
+
+        widths = (Inches(1.4), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
+        for row in table.rows:
+            for idx, width in enumerate(widths):
+                row.cells[idx].width = width
+
+    # Definition of the font
+
+    for row in table.rows:
+        for cell in row.cells:
+            paragraphs = cell.paragraphs
+            for paragraph in paragraphs:
+                # Adding styling
+                for run in paragraph.runs:
+                    font = run.font
+                    font.name="Arial"
+                    font.size= Pt(8)
+
+    # Save the document
     
  
     return document  
