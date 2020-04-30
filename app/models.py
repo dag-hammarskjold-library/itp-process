@@ -16,6 +16,7 @@ class Itpp_user(UserMixin, Document):
     username = StringField(max_length=200)
     password_hash = StringField(max_length=200)
     status = StringField(max_length=200)
+    ses_verified = StringField(max_length=200)
     created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
     updated = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
 

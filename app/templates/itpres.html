@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %} Supplements to Official Records {% endblock %}
+{% block content %}
+
+<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3  bg-secondary border-bottom shadow-sm">
+  <h3 class="my-0 mr-md-auto font-weight-normal text-center">List of Resolutions: itpres  <span class="badge badge-pill badge-info">{{totalRecord}} records </span></h3>
+  <a class="btn btn-outline-primary" href="{{url_for('main')}}">Main Menu</a>
+  <a class="btn btn-outline-primary" href="{{url_for('DownloadWordFileITPRES')}}" onclick="loading();"><i class="fa fa-download">Word Document</i></a>
+</div>
+<hr>
+<div class="row d-flex justify-content-center">
+    <div class="col-auto ml-5 mt-2">
+        <h5> Pagination </h5>    
+    </div>
+    <div class="col-auto">
+        <a href="{{firstUrl}}" class="btn btn-info" role="button"><i class="fa fa-angle-double-left"> First </i></a>
+        <a href="{{prevUrl}}" class="btn btn-info" role="button"><i class="fa fa-angle-left"> Previous</i></a>
+        <a href="{{nextUrl}}" class="btn btn-info" role="button"><i class="fa fa-angle-right"> Next </i></a>
+        <a href="{{lastUrl}}" class="btn btn-info" role="button"><i class="fa fa-angle-double-right"> Last </i></a>
+    </div>
+          
+</div>
+<hr>
+    <!-- Mail -->
+    <div>
+        {% with mails = get_flashed_messages(category_filter=["message"]) %}
+        {% if mails %}
+            {% if category_filter!="error" %}    
+                <div class="alert alert-success" role="alert">
+                    <ul>
+                    {%- for msg in mails %}
+                    <li>{{ msg }}</li>
+                    {% endfor -%}
+                    </ul>
+                </div>
+            {% endif %}
+            {% if category_filter=="error" %}    
+                <div class="alert alert-danger" role="alert">
+                    <ul>
+                    {%- for msg in mails %}
+                    <li>{{ msg }}</li>
+                    {% endfor -%}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endif %}
+        {% endwith %}      
+    </div>
+<hr>
+<div class="shadow d-flex justify-content-center">
+    <ul>
+        {% for record in myRecords %}
+        <div>
+            <div class="row card" >
+                <div class="col">
+                    <h5 class="card-header"><strong>ID </strong> {{record["_id"]}}</h5>
+                    <p class="card-text ml-3"> <strong>AINUMBER</strong> {{record["ainumber"]}}</p>
+                    <p class="card-text ml-3"> <strong>BODYSESSION</strong> {{record["bodysession"]}}</p>
+                    <p class="card-text ml-3"> <strong>RECORD_ID</strong> {{record["record_id"]}}</p>
+                    <p class="card-text ml-3"><strong>MEETING</strong> <a href="{{URL_PREFIX}}{{ record['meeting'] }}" target="_blank">{{record["meeting"]}}</a></p>
+                    <p class="card-text ml-3"> <strong>SECTION</strong> {{record["section"]}}</p>
+                    <p class="card-text ml-3"> <strong>TITLE</strong> {{record["title"]}}</p>
+                    <p class="card-text ml-3"> <strong>VOTE</strong> {{record["vote"]}}</p>
+                    <p class="card-text ml-3"> <strong>VOTEDATE</strong> {{record["votedate"]}}</p>
+                    <p class="card-text ml-3"> <strong>SUBJECT</strong> {{record["subject"]}}</p>
+                    <p class="card-text ml-3"> <strong>SUBJECT SUBTITLE</strong> {{record["subjectsubtitle"]}}</p>
+                </div>
+                <div class="col mb-2 mt-2 ml-3 ">
+                    <button type="button" class="btn btn-info btn-xs" data-toggle="modal" data-target="#maModal{{record["_id"]}}"> <i class="fa fa-edit"> Update the record</i></button>
+                    <button type="button" class="btn btn-danger btn-xs" data-toggle="modal" data-target="#maModaltwo{{record["_id"]}}"><i class="fa fa-trash"> Delete the record</i></button>
+                </div>
+            </div>
+            <br>
+            <!-- Modal window -->
+            <div class="modal fade" id="maModal{{record['_id']}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel"> Record updating  {{record["_id"]}}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- form for the update -->
+                            <form method="POST" action="{{url_for('itpp_updateRecorditpres',recordID=record['_id'])}}">
+                                 <!-- AINUMBER -->
+                                <div class="form-group">
+                                    <label for="text">AINUMBER</label>
+                                    <input type="text" class="form-control" name="ainumber" id="ainumber" value="{{record['ainumber']}}">
+                                </div>
+                                 <!-- BODYSESSION -->
+                                <div class="form-group">
+                                    <label for="text">BODYSESSION</label>
+                                    <input type="text" class="form-control" name="bodysession" id="bodysession" value="{{record['bodysession']}}">
+                                </div>
+                                 <!-- RECORD_ID -->
+                                <div class="form-group">
+                                    <label for="text">RECORD_ID</label>
+                                    <input type="text" class="form-control" name="record_id" id="record_id" value="{{record['record_id']}}">
+                                </div>
+                                 <!-- MEETING -->
+                                <div class="form-group">
+                                    <label for="text">MEETING</label>
+                                    <input type="text" class="form-control" name="meeting" id="meeting" value="{{record['meeting']}}">
+                                </div>
+                                 <!-- SECTION -->
+                                <div class="form-group">
+                                    <label for="text">SECTION</label>
+                                    <input type="text" class="form-control" name="section" id="section" value="{{record['section']}}">
+                                </div>
+                                 <!-- TITLE -->
+                                <div class="form-group">
+                                    <label for="text">TITLE</label>
+                                    <input type="text" class="form-control" name="title" id="title" value="{{record['title']}}">
+                                </div>
+                                 <!-- VOTE -->
+                                <div class="form-group">
+                                    <label for="text">VOTE</label>
+                                    <input type="text" class="form-control" name="vote" id="vote" value="{{record['vote']}}">
+                                </div>
+                                 <!-- VOTEDATE -->
+                                 <div class="form-group">
+                                    <label for="text">VOTEDATE</label>
+                                    <input type="text" class="form-control" name="votedate" id="votedate" value="{{record['votedate']}}">
+                                </div>
+                                 <!-- SUBJECT -->
+                                <div class="form-group">
+                                    <label for="text">SUBJECT</label>
+                                    <input type="text" class="form-control" name="subject" id="subject" value="{{record['subject']}}">
+                                </div>
+                                 <!-- SUBJECT SUBTITLE-->
+                                 <div class="form-group">
+                                    <label for="text">SUBJECT SUBTITLE</label>
+                                    <input type="text" class="form-control" name="subjectsubtitle" id="subjectsubtitle" value="{{record['subjectsubtitle']}}">
+                                </div>
+                            <button type="submit" class="btn btn-primary">Update the record</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Other Modal -->
+                    <!-- Modal window -->
+            <div class="modal fade" id="maModaltwo{{record["_id"]}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel"> Deletion </h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- form for the update -->
+                            <p> Be careful, you are trying to delete the record with the ID <strong>{{record["_id"]}}</strong> </p>
+                            <p> This action is not reversible, are you sure you want to delete this record? </p>
+                            <form method="POST" action="{{url_for('itpp_deleteRecord',recordID=record["_id"])}}">
+                            <button type="submit" class="btn btn-danger">Yes</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+    $(function(){
+        $('#btnsearch').click(function(){
+            var docSymbol = $('#searchparam').val();
+            console.log(docSymbol);
+            $.ajax({
+                url: '/itpp_findRecord/' + docSymbol ,
+                type: 'POST',
+                success: function(response){
+                    console.log(response);
+                },
+                error: function(error){
+                    console.log(error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

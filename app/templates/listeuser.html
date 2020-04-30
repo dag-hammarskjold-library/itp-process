@@ -28,6 +28,7 @@
                     <th scope="col">Username</th>
                     <th scope="col">Email</th>
                     <th scope="col">Created</th>
+                    <th scope="col">Email Verified</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -37,7 +38,12 @@
                     <td>{{ User.username }}</td>
                     <td>{{ User.email }}</td>
                     <td>{{ User.created }}</td>
-                    <td><i class="fas fa-edit"><a href="{{url_for('update_user', id=User.id)}}">  Edit </a></i> | <i class="fas fa-trash-alt"><a href="{{url_for('delete_user', id=User.id)}}"> Delete </a></i></td>
+                    <td>{{ User.ses_verified }} <a href="{{url_for('validate_user_by_id', id=User.id)}}"><i class="fas fa-sync"></i></a> </td>
+                    <td>
+                        <i class="fas fa-edit"><a href="{{url_for('update_user', id=User.id)}}">  Edit </a></i> |
+                        <i class="fas fa-trash-alt"><a href="{{url_for('delete_user', id=User.id)}}"> Delete </a></i> {% if User.ses_verified is none %} |
+                        <i class="fas fa-user-check"><a href="{{url_for('validate_user_by_id', id=User.id)}}"> Verify Email </a></i> {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

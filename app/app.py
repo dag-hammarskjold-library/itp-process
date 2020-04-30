@@ -1,8 +1,9 @@
 import logging
-from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash
+from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash,send_file
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from requests import get
 import boto3, re, os, pymongo
+from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import Aggregation
@@ -17,9 +18,19 @@ from app.config import Config
 from dlx import DB
 from dlx.marc import Bib, Auth, BibSet, QueryDocument,Condition,Or
 from bson.json_util import dumps
+from bson.objectid import ObjectId
 import bson
-import time, json
-from zappa.asynchronous import task
+import time, json, io, uuid, math
+from time import sleep
+from zappa.asynchronous import task, get_async_response
+from pymongo import MongoClient
+from copy import deepcopy
+from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR,generateWordDocITPRES
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from boto3 import client
+import platform
 
 
 ###############################################################################################
@@ -34,13 +45,15 @@ app = Flask(__name__)
 
 app.secret_key=b'a=pGw%4L1tB{aK6'
 connect(host=Config.connect_string,db=Config.dbname)
-URL_BY_DEFAULT = 'https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/'
+URL_BY_DEFAULT = Config.url_prefix
 
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 login_manager.login_message =""
+
+s3 = boto3.client('s3')
 
 
 ####################################################
@@ -138,6 +151,43 @@ def create_user():
     else:
         return render_template('createuser.html')
 
+@app.route("/users/<id>/validate")
+@login_required
+def validate_user_by_id(id):
+    try:
+        user = Itpp_user.objects.get(id=id)
+    except:
+        abort(404)
+    
+    if user.email == 'admin@un.org':
+        flash("The user identified by admin@un.org cannot be validated.")
+        return redirect(request.referrer)
+
+    ses_client = boto3.client('ses')
+    response = ses_client.get_identity_verification_attributes(
+        Identities = [
+            user.email
+        ]
+    )
+
+    print(response)
+
+    try:
+        verification_status = response['VerificationAttributes'][user.email]['VerificationStatus']
+        if verification_status != 'Success':
+            flash("The user's validation is still pending.")
+        else:
+            user.ses_verified = 'Success'
+            user.save()
+            flash("The user's validation was successful.")
+    except KeyError:
+        ses_client.verify_email_identity(EmailAddress=user.email)
+        user.ses_verified = 'Pending'
+        user.save()
+        flash("We have sent a validation email to the user.")
+
+    return redirect(request.referrer)
+
 # Retrieve a user
 @app.route("/users/<id>")
 @login_required
@@ -194,7 +244,7 @@ def delete_user(id):
 
 # check of the user exists
 @app.route("/checkUser", methods=['POST'])
-@login_required
+#@login_required
 def checkUser():
     """ User check Identification """
     if (request.form["inputEmail"]=="admin@un.org" and request.form["inputPassword"]=="admin"):
@@ -298,6 +348,7 @@ def executeSnapshot():
     number=0
     body,session=_get_body_session(request.form.get("authority"))
     body=body.split('/')[0]#_get_body_session returns A/ and 72 ; only temporary to ensure that rules are correctly read
+    print(f"body and session are {body} and {session}")
     transform_and_write_snapshot(body, session)
     # the code of the execution should be here
     # don't forget to return the number of records created
@@ -334,6 +385,27 @@ def create_itpp_itp():
             return render_template('itpp_itp/create.html')
     else:
         return render_template('itpp_itp/create.html')
+
+@app.route("/itpp_itps/<id>/clone" )#methods=['POST'])
+@login_required
+def clone_itpp_itp(id):
+    try:
+        itp = Itpp_itp.objects.get(id=id)
+        clone = Itpp_itp(
+            name='Clone of ' + itp.name, 
+            body=itp.body, 
+            itp_session=itp.itp_session, 
+            body_session_auth=itp.body_session_auth,
+            sections = itp.sections
+        )
+        clone.save()
+        flash("Cloned document successfully.")
+        return redirect(url_for('list_itpp_itps'))
+    except:
+        flash("Could not clone the ITP Document.")
+        raise
+        return redirect(url_for('list_itpp_itps'))
+
 
 @app.route("/itpp_itps/<id>")
 @login_required
@@ -689,8 +761,768 @@ def get_report_by_id(name):
         return render_template('report.html', report=report, form=form)
 
 ####################################################
+# ITPP Display
+####################################################
+
+myMongoURI = Config.connect_string
+myClient = MongoClient(myMongoURI)
+myDatabase = myClient.undlFiles
+myCollection = myDatabase['itp_sample_output_copy']
+
+################## DISPLAY ALL THE RECORDS OF THE SECTION ###########################################################
+
+@app.route('/itpp_itpsor/<offset>',methods=["GET"])
+@login_required
+def itpp_itpsor(offset=0):
+
+    # delete old file in the server
+    if os.path.exists('itpsor.docx'):
+        deleteFile('itpsor.docx')
+    
+    # definition of the offset and the limit
+    #offset=int(request.args["offset"])
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find().sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpsor'}).count()
+    
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+    
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpsor'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpsor',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpsor',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpsor',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpsor',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpsor',offset=offset)
+        
+    lastUrl=url_for('itpp_itpsor',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpsor.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
+@app.route('/itpp_itpitsc/<offset>',methods=["GET"])
+@login_required
+def itpp_itpitsc(offset=0):
+    
+    # delete old file in the server
+    if os.path.exists('itpitsc.docx'):
+        deleteFile('itpitsc.docx')
+    
+    # definition of the offset and the limit
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpitsc'}, {'itshead': 1, 
+       'itssubhead': 1, 'itsentry': 1, 'docsymbol': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpitsc'}).count()
+    
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+    
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitsc'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpitsc',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpitsc',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpitsc',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpitsc',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpitsc',offset=offset)
+        
+    lastUrl=url_for('itpp_itpitsc',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpitsc.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
+@app.route('/itpp_itpitsp/<offset>',methods=["GET"])
+@login_required
+def itpp_itpitsp(offset=0):
+    
+    # delete old file in the server
+    if os.path.exists('itpitsp.docx'):
+        deleteFile('itpitsp.docx')
+    
+    # definition of the offset and the limit
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpitsp'}, {'itshead': 1, 
+       'itssubhead': 1, 'docsymbol': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpitsp'}).count()
+    
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :      
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+    
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitsp'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpitsp',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpitsp',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpitsp',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpitsp',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpitsp',offset=offset)
+        
+    lastUrl=url_for('itpp_itpitsp',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpitsp.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
+@app.route('/itpp_itpitss/<offset>',methods=["GET"])
+@login_required
+def itpp_itpitss(offset=0):
+    
+    # delete old file in the server
+    if os.path.exists('itpitss.docx'):
+        deleteFile('itpitss.docx')
+    
+    # definition of the offset and the limit
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpitss'}, {'itshead': 1, 
+       'itssubhead': 1, 'itsentry': 1, 'docsymbol': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpitss'}).count()
+
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpitss'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpitss',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpitss',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpitss',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpitss',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpitss',offset=offset)
+        
+    lastUrl=url_for('itpp_itpitss',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpitss.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+    
+@app.route('/itpp_itpres/<offset>',methods=["GET"])
+@login_required
+def itpp_itpres(offset=0):
+    
+    # delete old file in the server
+    if os.path.exists('itpres.docx'):
+        deleteFile('itpres.docx')
+    
+    # definition of the offset and the limit
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpres'}, {'ainumber': 1, 
+       'bodysession': 1, 'meeting': 1, 'docsymbol': 1, 'record_id': 1, 'section': 1, 'title': 1, 'vote': 1, 'votedate': 1, 'subject': 1, 'subjectsubtitle': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpres'}).count()
+
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpres'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpres',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpres',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpres',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpres',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpres',offset=offset)
+        
+    lastUrl=url_for('itpp_itpres',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpres.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
+################## UPDATE ###########################################################
+
+@app.route('/itpp_updateRecord/<recordID>',methods=["POST"]) 
+@login_required 
+def itpp_updateRecord(recordID):
+    
+    # Retrieving the values from the form sent
+    mySorentry=request.form["sorentry"]
+    myDocSymbol=request.form["docsymbol"]
+    mySornorm=request.form["sornorm"]
+    mySornote=request.form["sornote"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "sorentry":mySorentry,
+                "docSymbol":myDocSymbol,
+                "sornorm":mySornorm,
+                "sornote":mySornote
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpsor',offset=0))
+
+
+@app.route('/itpp_updateRecorditpitsc/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpitsc(recordID):
+    
+    # Retrieving the values from the form sent
+    myitshead=request.form["itshead"]
+    myitssubhead=request.form["itssubhead"]
+    myitsentry=request.form["itsentry"]
+    mydocsymbol=request.form["docsymbol"]
+    myrecord_id=request.form["record_id"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "itshead":myitshead,
+                "itssubhead":myitssubhead,
+                "itsentry":myitsentry,
+                "docsymbol":mydocsymbol,
+                "record_id":myrecord_id
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection 
+    return redirect(url_for('itpp_itpitsc',offset=0))
+    
+ 
+
+
+@app.route('/itpp_updateRecorditpitsp/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpitsp(recordID):
+    
+    # Retrieving the values from the form sent
+    myitshead=request.form["itshead"]
+    myitssubhead=request.form["itssubhead"]
+    mydocsymbol=request.form["docsymbol"]
+    myrecord_id=request.form["record_id"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "itshead":myitshead,
+                "itssubhead":myitssubhead,
+                "docsymbol":mydocsymbol,
+                "record_id":myrecord_id
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection 
+    return redirect(url_for('itpp_itpitsp',offset=0))
+
+
+
+@app.route('/itpp_updateRecorditpitss/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpitss(recordID):
+    
+    # Retrieving the values from the form sent
+    myitshead=request.form["itshead"]
+    myitssubhead=request.form["itssubhead"]
+    myitsentry=request.form["itsentry"]
+    mydocsymbol=request.form["docsymbol"]
+    myrecord_id=request.form["record_id"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "itshead":myitshead,
+                "itssubhead":myitssubhead,
+                "itsentry":myitsentry,                
+                "docsymbol":mydocsymbol,
+                "record_id":myrecord_id
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection
+    return  redirect(url_for('itpp_itpitss',offset=0))
+
+
+@app.route('/itpp_updateRecorditpres/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpres(recordID):
+    
+    # Retrieving the values from the form sent
+    myainumber=request.form["ainumber"]
+    mybodysession=request.form["bodysession"]
+    myrecord_id=request.form["record_id"]
+    mymeeting=request.form["meeting"]
+    mysection=request.form["section"]
+    mytitle=request.form["title"]
+    myvotedate=request.form["votedate"]
+    myvote=request.form["vote"]
+    mysubject=request.form["subject"]
+    mysubjectsubtitle=request.form["subjectsubtitle"]
+    
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "ainumber":myainumber,
+                "bodysession":mybodysession,          
+                "record_id":myrecord_id,
+                "meeting":mymeeting,
+                "section":mysection,
+                "title":mytitle,
+                "votedate":myvotedate,                
+                "vote":myvote,
+                "subject":mysubject,
+                "subjectsubtitle":mysubjectsubtitle             
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection
+    return  redirect(url_for('itpp_itpres',offset=0))
+
+################## DELETION ###########################################################
+
+@app.route('/itpp_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpp_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpsor',offset=0))
+
+@app.route('/itpitsc_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpitsc_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpitsc',offset=0))
+
+@app.route('/itpitsp_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpitsp_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpitsp',offset=0))
+
+
+@app.route('/itpitss_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpitss_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpitss',offset=0))
+
+@app.route('/itpres_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpres_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpres',offset=0))
+
+################## DOWNLOAD ###########################################################
+
+def deleteFile(filename):
+    os.remove(filename)
+
+@app.route("/itpp_itpsor/download")
+def DownloadWordFileITPSOR():
+    param_title = 'List of documents'
+    param_subtitle = "Supplements to Official Records"
+    body_session = "A/72"
+    param_section = 'itpsor'
+    param_name_file_output = param_section
+    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+    if os.environ.get('ZAPPA') == "true":
+        #If the os.environ contains ZAPPA="true", we run the async task
+        response = get_document_async(
+            'generateWordDocITPSOR', 
+            param_title, 
+            param_subtitle, 
+            body_session, 
+            param_section, 
+            param_name_file_output,
+            key)
+        flash("The document is being generated and will be in the Downloads section shortly.")
+        return redirect(request.referrer)
+        
+    else:
+        # Otherwise we run it locally so we can get the file stream to work correctly
+        document = generateWordDocITPSOR(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+@app.route("/itpp_itpitsc/download")
+@login_required
+def DownloadWordFileITPITSC ():
+    param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
+    param_subtitle = "INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES"
+    body_session = "A/72"
+    param_section = 'itpitsc'
+    param_name_file_output = param_section
+    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+    if os.environ.get('ZAPPA') == "true":
+        response = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        flash("The document is being generated and will be in the Downloads section shortly.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+@app.route("/itpp_itpitsp/download")
+@login_required
+def DownloadWordFileITPITSP ():
+    param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
+    param_subtitle = "INDEX TO SPEECHES - SPEAKERS"
+    body_session = "A/72"
+    param_section = 'itpitsp'
+    param_name_file_output = param_section
+    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+    if os.environ.get('ZAPPA') == "true":
+        response = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        flash("The document is being generated and will be in the Downloads section shortly.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSP(param_title, param_subtitle, body_session, param_section, key)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+@app.route("/itpp_itpitss/download")
+@login_required
+def DownloadWordFileITPITSS ():
+    param_title = 'GENERAL ASSEMBLY – 72ND SESSION – 2017/2018'
+    param_subtitle = "INDEX TO SPEECHES – SUBJECTS"
+    body_session = "A/72"
+    param_section = 'itpitss'
+    param_name_file_output = param_section
+    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+    if os.environ.get('ZAPPA') == "true":
+        response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        flash("The document is being generated and will be in the Downloads section shortly.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPITSS(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+@app.route("/itpp_itpres/download")
+@login_required
+def DownloadWordFileITPRES():
+    param_title = 'RESOLUTIONS ADOPTED BY THE SECURITY COUNCIL'
+    param_subtitle = "LIST OF RESOLUTIONS"
+    body_session = "A/72"
+    param_section = 'itpres'
+    param_name_file_output = param_section
+    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+    if os.environ.get('ZAPPA') == "true":
+        response = get_document_async('generateWordDocITPRES', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        flash("The document is being generated and will be in the Downloads section shortly.")
+        return redirect(request.referrer)
+    else:
+        document = generateWordDocITPRES(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        file_stream = io.BytesIO()
+        document.save(file_stream)
+        file_stream.seek(0)
+        return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+@task(capture_response=True)
+def get_document_async(document_name, param_title, param_subtitle, body_session, param_section, param_name_file_output, key):
+
+    try:
+        document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        s3_client = boto3.client('s3')
+        filename = '/tmp/' + key
+        document.save(filename)
+        response = s3_client.upload_file(filename, Config.bucket_name, key)
+        return True
+    except ClientError as e:
+        print(e)
+        return False
+    
+    return True
+
+####################################################################################### 
+
+@app.route('/itpp_findRecord/<docSymbol>',methods=["POST"])  
+def itpp_findRecord(docSymbol):
+
+    # Defining and executing the request
+    myRecord=myCollection.find({"docSymbol": docSymbol})
+    if myRecord.count()==0:
+        flash('No record found !!! ', 'error')
+
+    # Redirection to the main page about itpsor
+    return render_template('itpsor.html',
+                           myRecord=myRecord
+                           )
+
+
+####################################################
+# WORD DOCUMENTS LIST
+####################################################  
+
+@app.route("/files")
+@login_required
+def list_files():
+ 
+    ############ PROCESS AWS (files created during the period)
+
+    # assign the s3 object
+
+    myS3 = Config.client
+
+    # assign the appropiate bucket
+    try:
+        myList=s3.list_objects_v2(Bucket=Config.bucket_name)["Contents"]
+    except KeyError:
+        myList = []
+
+    # definition of some variables
+
+    myFilesNumber=0
+    myData=[]
+ 
+
+    # retrieving and building list of records 
+    for obj in myList:
+        #myRecord.clear()
+        myRecord=[]
+        myName= obj["Key"]
+        myRecord.append(myName)
+
+        myLastModified=obj["LastModified"]
+        myRecord.append(myLastModified)
+
+        mySize=obj["Size"]
+        myRecord.append(mySize)
+
+        myFilesNumber+=1
+
+        # Add the record to the dataList
+        myData.append(myRecord)
+
+    return render_template('generatedfiles.html',myData=myData,myFilesNumber=myFilesNumber)
+
+@app.route("/files/download/<filename>")
+@login_required
+def newDownload(filename):    
+
+    s3 = boto3.client('s3')
+    try:
+        s3_file = s3.get_object(Bucket=Config.bucket_name, Key=filename)
+    except:
+        abort(404)
+
+    return send_file(s3_file['Body'], as_attachment=True, attachment_filename=filename)
+
+####################################################
 # START APPLICATION
 ####################################################  
 
 if __name__=="__main__":
     app.run(debug=True)
+
+
+
