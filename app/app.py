@@ -6,7 +6,7 @@ import boto3, re, os, pymongo
 from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
-from app.aggregations import Aggregation
+#from app.aggregations import Aggregation
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
@@ -1516,6 +1516,14 @@ def newDownload(filename):
         abort(404)
 
     return send_file(s3_file['Body'], as_attachment=True, attachment_filename=filename)
+
+@app.route('/itp/executesection/',methods=["GET"])
+@login_required
+def executeSection():
+
+
+
+    return render_template('executedsection.html')
 
 ####################################################
 # START APPLICATION
