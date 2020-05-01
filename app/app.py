@@ -1408,7 +1408,8 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
     body_session = body_session
     param_section = param_section
     param_name_file_output = param_section
-    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+    myTab=body_session.split("/")
+    key = '{}-{}-{}.docx'.format(myTab[0]+myTab[1],param_name_file_output,str(math.floor(datetime.utcnow().timestamp())))
 
     if os.environ.get('ZAPPA') == "true":
         if param_section=="itpres":
