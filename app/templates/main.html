@@ -12,7 +12,7 @@
                 <h4 class="my-0 font-weight-normal">Administration</h4>
             </div>
             <div class="card-body">
-                <ul class="list-unstyled mt-3 mb-4 text-center font-weight-bold">
+                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
                     <li> <a href="{{url_for('list_users')}}"><span class="text-dark"> * User management</span></a></li>
                     <li> <a href="{{url_for('administration')}}"><span class="text-dark">* Log management </span></a></li>
 
@@ -23,11 +23,13 @@
             <div class="card-header">
                 <h4 class="my-0 font-weight-normal">ITP Process</h4>
             </div>
-            <div class="card-body">
-                <ul class="list-unstyled mt-3 mb-4 text-center font-weight-bold">
-                    <li> <a href="{{url_for('list_itpp_itps')}}"><span class="text-dark">* ITP Document Management</span></a></li>
-                    <li> <a href="{{url_for('displaySnapshot')}}"><span class="text-dark">* Snapshot Management</span></a></li>
-                    <li> <a href="{{url_for('list_files')}}"><span class="text-dark">* List of word document generated </span></a></li>
+            <div class="card-body ">
+                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                    <li> <a href="{{url_for('list_itpp_itps')}}"><span class="text-dark text-left">* ITP Document Management</span></a></li>
+                    <li> <a href="{{url_for('displaySnapshot')}}"><span class="text-dark text-left">* Snapshot Management</span></a></li>
+                    <!-- <li> <a href=""><span class="text-dark text-left">* Section Execution</span></a></li> -->
+                    <li> <a href="{{url_for('wordGeneration')}}"><span class="text-dark text-left">* Generate word document based on section </span></a></li>
+                    <li> <a href="{{url_for('list_files')}}"><span class="text-dark text-left">* List of word document generated </span></a></li>
                 </ul>
             </div>
         </div>

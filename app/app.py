@@ -1274,120 +1274,177 @@ def itpres_deleteRecord(recordID):
 def deleteFile(filename):
     os.remove(filename)
 
-@app.route("/itpp_itpsor/download")
-def DownloadWordFileITPSOR():
-    param_title = 'List of documents'
-    param_subtitle = "Supplements to Official Records"
-    body_session = "A/72"
-    param_section = 'itpsor'
-    param_name_file_output = param_section
-    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
-    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+# @app.route("/itpp_itpsor/download")
+# def DownloadWordFileITPSOR(param_title,param_subtitle,body_session,param_section):
+#     #param_title = 'List of documents'
+#     #param_subtitle = "Supplements to Official Records"
+#     #body_session = "A/72"
+#     #param_section = 'itpsor'
+#     param_title = param_title
+#     param_subtitle = param_subtitle
+#     body_session = body_session
+#     param_section = param_section
+#     param_name_file_output = param_section
+#     #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+#     key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
 
-    if os.environ.get('ZAPPA') == "true":
-        #If the os.environ contains ZAPPA="true", we run the async task
-        response = get_document_async(
-            'generateWordDocITPSOR', 
-            param_title, 
-            param_subtitle, 
-            body_session, 
-            param_section, 
-            param_name_file_output,
-            key)
-        flash("The document is being generated and will be in the Downloads section shortly.")
-        return redirect(request.referrer)
+#     if os.environ.get('ZAPPA') == "true":
+#         #If the os.environ contains ZAPPA="true", we run the async task
+#         response = get_document_async(
+#             'generateWordDocITPSOR', 
+#             param_title, 
+#             param_subtitle, 
+#             body_session, 
+#             param_section, 
+#             param_name_file_output,
+#             key)
+#         flash("The document is being generated and will be in the Downloads section shortly.")
+#         return redirect(request.referrer)
         
-    else:
-        # Otherwise we run it locally so we can get the file stream to work correctly
-        document = generateWordDocITPSOR(param_title, param_subtitle, body_session, param_section, param_name_file_output)
-        file_stream = io.BytesIO()
-        document.save(file_stream)
-        file_stream.seek(0)
-        return send_file(file_stream, as_attachment=True, attachment_filename=key)
+#     else:
+#         # Otherwise we run it locally so we can get the file stream to work correctly
+#         document = generateWordDocITPSOR(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+#         file_stream = io.BytesIO()
+#         document.save(file_stream)
+#         file_stream.seek(0)
+#         return send_file(file_stream, as_attachment=True, attachment_filename=key)
 
-@app.route("/itpp_itpitsc/download")
+# @app.route("/itpp_itpitsc/download")
+# @login_required
+# def DownloadWordFileITPITSC ():
+#     param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
+#     param_subtitle = "INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES"
+#     body_session = "A/72"
+#     param_section = 'itpitsc'
+#     param_name_file_output = param_section
+#     #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+#     key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+#     if os.environ.get('ZAPPA') == "true":
+#         response = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+#         flash("The document is being generated and will be in the Downloads section shortly.")
+#         return redirect(request.referrer)
+#     else:
+#         document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+#         file_stream = io.BytesIO()
+#         document.save(file_stream)
+#         file_stream.seek(0)
+#         return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+# @app.route("/itpp_itpitsp/download")
+# @login_required
+# def DownloadWordFileITPITSP ():
+#     param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
+#     param_subtitle = "INDEX TO SPEECHES - SPEAKERS"
+#     body_session = "A/72"
+#     param_section = 'itpitsp'
+#     param_name_file_output = param_section
+#     #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+#     key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+#     if os.environ.get('ZAPPA') == "true":
+#         response = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+#         flash("The document is being generated and will be in the Downloads section shortly.")
+#         return redirect(request.referrer)
+#     else:
+#         document = generateWordDocITPITSP(param_title, param_subtitle, body_session, param_section, key)
+#         file_stream = io.BytesIO()
+#         document.save(file_stream)
+#         file_stream.seek(0)
+#         return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+# @app.route("/itpp_itpitss/download")
+# @login_required
+# def DownloadWordFileITPITSS ():
+#     param_title = 'GENERAL ASSEMBLY – 72ND SESSION – 2017/2018'
+#     param_subtitle = "INDEX TO SPEECHES – SUBJECTS"
+#     body_session = "A/72"
+#     param_section = 'itpitss'
+#     param_name_file_output = param_section
+#     #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+#     key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+#     if os.environ.get('ZAPPA') == "true":
+#         response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+#         flash("The document is being generated and will be in the Downloads section shortly.")
+#         return redirect(request.referrer)
+#     else:
+#         document = generateWordDocITPITSS(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+#         file_stream = io.BytesIO()
+#         document.save(file_stream)
+#         file_stream.seek(0)
+#         return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+# @app.route("/itpp_itpres/download")
+# @login_required
+# def DownloadWordFileITPRES():
+#     param_title = 'RESOLUTIONS ADOPTED BY THE SECURITY COUNCIL'
+#     param_subtitle = "LIST OF RESOLUTIONS"
+#     body_session = "A/72"
+#     param_section = 'itpres'
+#     param_name_file_output = param_section
+#     #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
+#     key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+
+#     if os.environ.get('ZAPPA') == "true":
+#         response = get_document_async('generateWordDocITPRES', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+#         flash("The document is being generated and will be in the Downloads section shortly.")
+#         return redirect(request.referrer)
+#     else:
+#         document = generateWordDocITPRES(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+#         file_stream = io.BytesIO()
+#         document.save(file_stream)
+#         file_stream.seek(0)
+#         return send_file(file_stream, as_attachment=True, attachment_filename=key)
+
+
+###### NEW DOWNLOAD ############
+
+@app.route("/generateWordFile")
 @login_required
-def DownloadWordFileITPITSC ():
-    param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
-    param_subtitle = "INDEX TO SPEECHES - CORPORATE NAMES/COUNTRIES"
-    body_session = "A/72"
-    param_section = 'itpitsc'
+def generateWordFile(param_title,param_subtitle,body_session,param_section):
+    param_title = param_title
+    param_subtitle = param_subtitle
+    body_session = body_session
+    param_section = param_section
     param_name_file_output = param_section
-    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
     key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
 
     if os.environ.get('ZAPPA') == "true":
-        response = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        if param_section=="itpres":
+            response = get_document_async('generateWordDocITPRES', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        if param_section=="itpsor":
+            response = get_document_async('generateWordDocITPSOR', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        if param_section=="itpitsc":
+            response = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        if param_section=="itpitsp":
+            response = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        if param_section=="itpitss":
+            response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        
         flash("The document is being generated and will be in the Downloads section shortly.")
         return redirect(request.referrer)
+
     else:
-        document = generateWordDocITPITSC(param_title, param_subtitle, body_session, param_section, param_name_file_output)
-        file_stream = io.BytesIO()
-        document.save(file_stream)
-        file_stream.seek(0)
-        return send_file(file_stream, as_attachment=True, attachment_filename=key)
 
-@app.route("/itpp_itpitsp/download")
-@login_required
-def DownloadWordFileITPITSP ():
-    param_title = 'GENERAL ASSEMBLY - 72ND SESSION-2017/2018'
-    param_subtitle = "INDEX TO SPEECHES - SPEAKERS"
-    body_session = "A/72"
-    param_section = 'itpitsp'
-    param_name_file_output = param_section
-    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
-    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+        if param_section=="itpres":
+            document = get_document_async('generateWordDocITPRES', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+  
 
-    if os.environ.get('ZAPPA') == "true":
-        response = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
-        flash("The document is being generated and will be in the Downloads section shortly.")
-        return redirect(request.referrer)
-    else:
-        document = generateWordDocITPITSP(param_title, param_subtitle, body_session, param_section, key)
-        file_stream = io.BytesIO()
-        document.save(file_stream)
-        file_stream.seek(0)
-        return send_file(file_stream, as_attachment=True, attachment_filename=key)
+        if param_section=="itpsor":
+            document = get_document_async('generateWordDocITPSOR', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+   
+        if param_section=="itpitsc":
+            document = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+     
 
-@app.route("/itpp_itpitss/download")
-@login_required
-def DownloadWordFileITPITSS ():
-    param_title = 'GENERAL ASSEMBLY – 72ND SESSION – 2017/2018'
-    param_subtitle = "INDEX TO SPEECHES – SUBJECTS"
-    body_session = "A/72"
-    param_section = 'itpitss'
-    param_name_file_output = param_section
-    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
-    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
+        if param_section=="itpitsp":
+            document = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+     
 
-    if os.environ.get('ZAPPA') == "true":
-        response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
-        flash("The document is being generated and will be in the Downloads section shortly.")
-        return redirect(request.referrer)
-    else:
-        document = generateWordDocITPITSS(param_title, param_subtitle, body_session, param_section, param_name_file_output)
-        file_stream = io.BytesIO()
-        document.save(file_stream)
-        file_stream.seek(0)
-        return send_file(file_stream, as_attachment=True, attachment_filename=key)
-
-@app.route("/itpp_itpres/download")
-@login_required
-def DownloadWordFileITPRES():
-    param_title = 'RESOLUTIONS ADOPTED BY THE SECURITY COUNCIL'
-    param_subtitle = "LIST OF RESOLUTIONS"
-    body_session = "A/72"
-    param_section = 'itpres'
-    param_name_file_output = param_section
-    #key = str(uuid.uuid4()) + '/' + param_name_file_output + '.docx'
-    key = '{}-{}.docx'.format(param_name_file_output, str(math.floor(datetime.utcnow().timestamp())))
-
-    if os.environ.get('ZAPPA') == "true":
-        response = get_document_async('generateWordDocITPRES', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
-        flash("The document is being generated and will be in the Downloads section shortly.")
-        return redirect(request.referrer)
-    else:
-        document = generateWordDocITPRES(param_title, param_subtitle, body_session, param_section, param_name_file_output)
+        if param_section=="itpitss":
+            document = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+       
         file_stream = io.BytesIO()
         document.save(file_stream)
         file_stream.seek(0)
@@ -1482,6 +1539,38 @@ def newDownload(filename):
         abort(404)
 
     return send_file(s3_file['Body'], as_attachment=True, attachment_filename=filename)
+
+@app.route("/wordGeneration",methods=["POST","GET"])
+@login_required
+def wordGeneration():
+
+    # Setting some Variables
+
+    myMongoURI=Config.connect_string
+    myClient = MongoClient(myMongoURI)
+    myDatabase=myClient.undlFiles
+    myCollection=myDatabase['itp_sample_output_copy']
+    listOfBodySession=[]
+    listOfSection=[]
+
+    # Queries to fill some data
+
+    bodysessions=myCollection.find({}, {'bodysession': 1}).distinct('bodysession')
+    sections=myCollection.find({}, {'section': 1 }).distinct('section')
+    if request.method == "GET" :
+    
+
+        # Returning the view
+
+        return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
+
+    else :
+         # Calling the logic to generate the file        
+        generateWordFile(request.form.get('paramTitle'),request.form.get('paramSubTitle'),request.form.get('bodysession'),request.form.get('paramSection'))
+
+        # Returning the view
+
+        return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
 
 ####################################################
 # START APPLICATION
