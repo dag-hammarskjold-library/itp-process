@@ -1041,6 +1041,66 @@ def itpp_itpres(offset=0):
                            URL_PREFIX=URL_BY_DEFAULT
                            )
 
+@app.route('/itpp_itpsubj/<offset>',methods=["GET"])
+@login_required
+def itpp_itpsubj(offset=0):
+    
+    # delete old file in the server
+    if os.path.exists('itpsubj.docx'):
+        deleteFile('itpsubj.docx')
+    
+    # definition of the offset and the limit
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpsubj'}, {
+       'bodysession': 1,'_id': 1, 'section': 1, 'head': 1, 'subheading': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpsubj'}).count()
+
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpsubj'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpsubj',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpsubj',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpsubj',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpsubj',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpsubj',offset=offset)
+        
+    lastUrl=url_for('itpp_itpsubj',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpsubj.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
 ################## UPDATE ###########################################################
 
 @app.route('/itpp_updateRecord/<recordID>',methods=["POST"]) 
@@ -1206,6 +1266,35 @@ def itpp_updateRecorditpres(recordID):
     # Redirection
     return  redirect(url_for('itpp_itpres',offset=0))
 
+
+@app.route('/itpp_updateRecorditpsubj/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpsubj(recordID):
+    
+    # Retrieving the values from the form sent
+    mySection=request.form["section"]
+    myBodySession=request.form["bodysession"]
+    myHead=request.form["head"]
+    mySubHeading=request.form["subheading"]
+
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "section":mySection,          
+                "bodysession":myBodySession,
+                "head":myHead,
+                "subheading":mySubHeading,         
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection
+    return  redirect(url_for('itpp_itpsubj',offset=0))
+
 ################## DELETION ###########################################################
 
 @app.route('/itpp_deleteRecord/<recordID>',methods=["POST"])  
@@ -1268,6 +1357,18 @@ def itpres_deleteRecord(recordID):
 
     # Redirection to the main page about itpsor
     return redirect(url_for('itpp_itpres',offset=0))
+
+@app.route('/itpsubj_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpsubj_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpsubj',offset=0))
 
 ################## DOWNLOAD ###########################################################
 
