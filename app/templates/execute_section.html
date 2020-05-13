@@ -1,0 +1,38 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+    .customize {
+        height: 550px;
+        width: 800px;
+    }
+</style>
+<style type="text/css">
+    .customize1 {
+        width: 1000px;
+    }
+</style>
+<style>
+    div#loading {
+        position: fixed;
+        width: 1000px;
+        height: 10000px;
+        display: none;
+        margin-left: auto;
+        margin-right: auto;
+        opacity: 0.5;
+    }
+</style>
+<script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+<div id="loading">
+    <img src="{{ url_for('static', filename='img/ajax-loader.gif') }}">
+</div>
+<div id="content">
+    <div class="container customize shadow">
+        <div class="container mt-4 mb-4">
+            <h1>Word generation tool</h1>
+            
+
+        </div>
+
+    </div>
+{% endblock %}

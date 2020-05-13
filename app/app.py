@@ -6,7 +6,7 @@ import boto3, re, os, pymongo
 from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
-#from app.aggregations import Aggregation
+from app.aggregations import process_section
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
@@ -565,7 +565,8 @@ def get_or_update_section(itp_id):
         flash("Not found")
         return redirect(url_for('list_itpp_itps'))
 
-@app.route("/itpp_itps/<itp_id>/sections/<section_id>/execute")
+
+""" @app.route("/itpp_itps/<itp_id>/sections/<section_id>/execute")
 @login_required
 def execute_section(itp_id, section_id):
     itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
@@ -596,7 +597,7 @@ def execute_section(itp_id, section_id):
             'parameters': r.parameters
         })
     return_data['rules'] = this_rules
-    return jsonify(return_data)
+    return jsonify(return_data) """
 
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/delete")
 @login_required
@@ -1578,9 +1579,25 @@ def newDownload(filename):
 @login_required
 def executeSection():
 
-
-
-    return render_template('executedsection.html')
+    try:
+        
+        results = process_section("A/72", "itpsubj") 
+        #print(type(results))
+        #print(results)
+        response_object = {
+            "summary": results
+        }
+        return jsonify(response_object), 200
+        #return str("ok")
+    except Exception as e:
+        response_object = {
+            "error": str(e)
+        }
+        return jsonify(response_object), 400
+    
+    #('wordgeneration.html',sections=sections,bodysessions=bodysessions)
+    #return render_template('execute_section.html', )
+    return jen
     
 @app.route("/wordGeneration",methods=["POST","GET"])
 @login_required
