@@ -1580,55 +1580,29 @@ def newDownload(filename):
 def selectSection():
     sections= lookup_code("section")
     bodysessions = lookup_snapshots()
+    
 
-    """ if request.method == "GET" :
+    if request.method == "GET" :
     
         # Returning the view
-
-        render_template('select_section.html',sections=sections,bodysessions=bodysessions)
+        results = section_summary()
+        
+        return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
 
     else :
-         # Calling the logic to generate the file        
-       # process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
-        print(request.form.get('bodysession'))
-        print(request.form.get('paramSection'))
-        # Returning the view
-
-        render_template('select_section.html',sections=sections,bodysessions=bodysessions)
- """
-    results = section_summary()
-    #print(results)
-    return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
-
-@app.route('/itp/executesection/',methods=["GET", "POST"])
-@login_required
-def executeSection():
-    print("In execute section at least")
-    print(request.form.get('bodysession'))
-    print(request.form.get('paramSection'))
-
-    return "request.form.get('paramSection')"
-"""
-    try:
+         # Calling the logic to generate the section       
+        process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
         
+        # Returning the view
+        results = section_summary()
+        return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
 
-         results = process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
-        #print(type(results))
-        print(results)
-        response_object = {
-            "summary": results
-        }
-        return jsonify(response_object), 200
-        #return str("ok")
-    except Exception as e:
-        response_object = {
-            "error": str(e)
-        }
-        return jsonify(response_object), 400
-    
-    #('wordgeneration.html',sections=sections,bodysessions=bodysessions)
-    #return render_template('execute_section.html', )
-    #return jen """
+        """
+            results = section_summary()
+            #print(results)
+            return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
+        """
+
     
 @app.route("/wordGeneration",methods=["POST","GET"])
 @login_required

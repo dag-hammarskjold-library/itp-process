@@ -2,6 +2,7 @@ from app.config import Config
 from pymongo import MongoClient
 import pprint
 import re
+from datetime import datetime
 
 ### connection
 myMongoURI=Config.connect_string
@@ -30,6 +31,7 @@ def itpitsc(bodysession):
 
     Builds the aggregation query and inserts the results into another collection.
     """ 
+    outputCollection.delete_many({ "section" : "itpitsc", "bodysession" : bodysession } )
 
     pipeline = []
 
@@ -144,6 +146,8 @@ def itpitsc(bodysession):
  
     inputCollection.aggregate(pipeline)
 
+    return "itpitsc completed successfully"
+
 # Index to Speeches - Speakers #   
 def itpitsp(bodysession):
     """
@@ -151,6 +155,7 @@ def itpitsp(bodysession):
 
     Builds the aggregation query and inserts the results into another collection.
     """ 
+    outputCollection.delete_many({ "section" : "itpitsp", "bodysession" : bodysession } )
 
     pipeline = []
 
@@ -263,6 +268,8 @@ def itpitsp(bodysession):
     pipeline.append(merge_stage)
  
     inputCollection.aggregate(pipeline)
+
+    return "itpitsp completed successfully"
   
 # Index to Speeches - Subjects # 
 def itpitss(bodysession):
@@ -271,6 +278,7 @@ def itpitss(bodysession):
 
     Builds the aggregation query and inserts the results into another collection.
     """ 
+    outputCollection.delete_many({ "section" : "itpitss", "bodysession" : bodysession } )
 
     pipeline = []
 
@@ -386,6 +394,8 @@ def itpitss(bodysession):
  
     inputCollection.aggregate(pipeline)
 
+    return "itpitss completed successfully"
+
 # Index to Speeches - Subjects #
 def itpres(bodysession):
     """
@@ -393,6 +403,7 @@ def itpres(bodysession):
 
     Builds the aggregation query and inserts the results into another collection.
     """ 
+    outputCollection.delete_many({ "section" : "itpres", "bodysession" : bodysession } )
 
     pipeline = []
 
@@ -569,6 +580,8 @@ def itpres(bodysession):
  
     inputCollection.aggregate(pipeline)
 
+    return "itpres completed successfully"
+
 # Subject Index #
 def itpsubj(bodysession):
     """
@@ -713,6 +726,7 @@ def itpsubj(bodysession):
                 }
         }
 
+
         #transform['entry'] = {
         #    'entry'
         #}
@@ -737,26 +751,8 @@ def itpsubj(bodysession):
 
         inputCollection.aggregate(pipeline)
 
-        inputRecords = {
-            'Input Records': inputCollection.find({"bodysession": bodysession}).count()
-        }
-
-        outputRecords = {
-            'Output Records': outputCollection.find({"section": "itpsubj", "bodysession": bodysession}).count()
-        }
-
-        numHeadings = {
-            '# of Headings': copyCollection.find({"section": "itpsubj", "bodysession": bodysession}).count()
-        }
-
-        summary = []
-
-        summary.append(inputRecords)
-        summary.append(outputRecords)
-        summary.append(numHeadings)        
-
-
-        return summary
+ 
+        return "itpsubj completed successfully"
         
         ####works
         #return list(inputCollection.aggregate(pipeline))
@@ -783,8 +779,9 @@ def itpage(bodysession):
         transform = {}
         transform['_id'] = 0
         transform['record_id'] = 1
-        transform['section'] = "itpsubj"
+        transform['section'] = "itpage"
         transform['bodysession'] = 1
+
 
         transform_stage = {}
         transform_stage['$project'] = transform
@@ -824,7 +821,7 @@ def itpdsl(bodysession):
         transform = {}
         transform['_id'] = 0
         transform['record_id'] = 1
-        transform['section'] = "itpsubj"
+        transform['section'] = "itpdsl"
         transform['bodysession'] = 1
 
         transform_stage = {}
@@ -863,7 +860,7 @@ def itpmeet(bodysession):
         transform = {}
         transform['_id'] = 0
         transform['record_id'] = 1
-        transform['section'] = "itpsubj"
+        transform['section'] = "itpmeet"
         transform['bodysession'] = 1
 
         transform_stage = {}
@@ -902,7 +899,7 @@ def itpreps(bodysession):
         transform = {}
         transform['_id'] = 0
         transform['record_id'] = 1
-        transform['section'] = "itpsubj"
+        transform['section'] = "itpreps"
         transform['bodysession'] = 1
 
         transform_stage = {}
@@ -941,7 +938,7 @@ def itpvot(bodysession):
         transform = {}
         transform['_id'] = 0
         transform['record_id'] = 1
-        transform['section'] = "itpsubj"
+        transform['section'] = "itpvot"
         transform['bodysession'] = 1
 
         transform_stage = {}
@@ -969,6 +966,7 @@ def itpsor(bodysession):
     Builds the aggregation query and inserts the results into another collection.
     """ 
     try:
+        print("I made it in")
         return list(inputCollection.find({"bodysession": bodysession}, {"record_id": 1, "_id": 0}))
 
     except Exception as e:
@@ -982,21 +980,34 @@ def process_section(bodysession, section):
     Executes sections based on input.
 
     """ 
-    switch = {
-        "itpsubj" : itpsubj(bodysession), #subject index
-        "itpitsp" : itpitsp(bodysession), #speaker
-        "itpitsc" : itpitsc(bodysession), #country
-        "itpitss" : itpitss(bodysession), #subject speaker
-        "itpage" : itpage(bodysession), #agenda
-        "itpdsl" : itpdsl(bodysession), #doc symbol list
-        "itpmeet" : itpmeet(bodysession), #meeting
-        "itpres" : itpres(bodysession), #list of resolutions
-        "itpvot" : itpvot(bodysession), #vote
-        "itpsor" : itpsor(bodysession), #suppliments to official records
-        "itpreps": itpreps(bodysession) #reports
-    }
+    
 
-    return switch.get(section, "No Section Selected")
+    if section == "itpsubj" : 
+        s = itpsubj(bodysession) #subject index 
+    elif section == "itpitsp" : 
+        s = itpitsp(bodysession) #speaker
+    elif section == "itpitsc" : 
+        s = itpitsc(bodysession) #country
+    elif section == "itpitss" : 
+        s = itpitss(bodysession) #subject speaker
+    elif section == "itpage" : 
+        s = itpage(bodysession) #agenda
+    elif section == "itpdsl" : 
+        s = itpdsl(bodysession) #doc symbol list
+    elif section == "itpmeet" : 
+        s = itpmeet(bodysession) #meeting
+    elif section == "itpres" : 
+        s = itpres(bodysession) #list of resolutions
+    elif section == "itpvot" : 
+        s = itpvot(bodysession) #vote
+    elif section == "itpsor" : 
+        s = itpsor(bodysession) #suppliments to official records
+    elif section == "itpreps": 
+        s = itpreps(bodysession) #reports
+    else: 
+        s = "No Section Selected"
+
+    return s
 
 ## END main function / switch #
 
@@ -1138,12 +1149,13 @@ def section_summary():
             }, 
             'count': {
                 '$sum': 1
-            }
+            },
+            'time': {'$max':{'$toDate': "$_id"}}
         }
     }
     sort_stage = {
         '$sort': {
-            '_id': 1
+            'time': -1
         }
     } 
     project_stage = {
@@ -1151,7 +1163,14 @@ def section_summary():
             '_id': 0, 
             'bodysession': '$_id.b', 
             'section': '$_id.s', 
-            'count': 1
+            'count': 1,
+            'ts': {
+                '$dateToString': {
+                    'format': '%Y-%m-%d %H:%M', 
+                    'date': '$time', 
+                    'timezone': 'America/New_York'
+                }
+            }
         }
     }
 
