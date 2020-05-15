@@ -12,11 +12,13 @@ myDatabase=myClient.undlFiles
 snapshot = "itpp_snapshot_test3"
 editorOutput = "itp_sample_output"
 wordOutput = "itp_sample_output_copy"
+lookup = "itp_codes"
 
 ## establish connections to collections
 inputCollection=myDatabase[snapshot]
 outputCollection=myDatabase[editorOutput]
 copyCollection=myDatabase[wordOutput]
+lookupCollection=myDatabase[lookup]
 
 
 #### Data transformations for each section ####
@@ -575,6 +577,10 @@ def itpsubj(bodysession):
     Builds the aggregation query and inserts the results into another collection.
     """ 
     try: 
+
+        #clear the previous records if they exist
+        outputCollection.delete_many({ "section" : "itpsubj", "bodysession" : bodysession } )
+
         pipeline = []
 
         bs = bodysession.split("/")
@@ -1109,3 +1115,48 @@ def clear_section(section, bodysession):
 
     print(deleted.deleted_count, "documents deleted.")
 
+def lookup_code(lookup_field):
+    """
+    Returns code from lookup table
+    """
+    return lookupCollection.find({'lookup_field': lookup_field}, {'_id': 0, 'code': 1})
+
+def lookup_snapshots():
+    """
+    Returns list of available snapshots
+    """
+    return inputCollection.find({}, {'bodysession': 1}).distinct('bodysession')
+
+def section_summary():
+    pipeline = []
+
+    group_stage = {
+        '$group': {
+            '_id': {
+                'b': '$bodysession', 
+                's': '$section'
+            }, 
+            'count': {
+                '$sum': 1
+            }
+        }
+    }
+    sort_stage = {
+        '$sort': {
+            '_id': 1
+        }
+    } 
+    project_stage = {
+        '$project': {
+            '_id': 0, 
+            'bodysession': '$_id.b', 
+            'section': '$_id.s', 
+            'count': 1
+        }
+    }
+
+    pipeline.append(group_stage)
+    pipeline.append(sort_stage)
+    pipeline.append(project_stage)   
+
+    return list(outputCollection.aggregate(pipeline))

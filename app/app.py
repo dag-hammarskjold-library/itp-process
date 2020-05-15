@@ -6,7 +6,7 @@ import boto3, re, os, pymongo
 from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
-from app.aggregations import process_section
+from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
@@ -1575,15 +1575,46 @@ def newDownload(filename):
 
     return send_file(s3_file['Body'], as_attachment=True, attachment_filename=filename)
 
-@app.route('/itp/executesection/',methods=["GET"])
+@app.route('/itp/selectSection/',methods=["GET", "POST"])
+@login_required
+def selectSection():
+    sections= lookup_code("section")
+    bodysessions = lookup_snapshots()
+
+    """ if request.method == "GET" :
+    
+        # Returning the view
+
+        render_template('select_section.html',sections=sections,bodysessions=bodysessions)
+
+    else :
+         # Calling the logic to generate the file        
+       # process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
+        print(request.form.get('bodysession'))
+        print(request.form.get('paramSection'))
+        # Returning the view
+
+        render_template('select_section.html',sections=sections,bodysessions=bodysessions)
+ """
+    results = section_summary()
+    #print(results)
+    return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
+
+@app.route('/itp/executesection/',methods=["GET", "POST"])
 @login_required
 def executeSection():
+    print("In execute section at least")
+    print(request.form.get('bodysession'))
+    print(request.form.get('paramSection'))
 
+    return "request.form.get('paramSection')"
+"""
     try:
         
-        results = process_section("A/72", "itpsubj") 
+
+         results = process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
         #print(type(results))
-        #print(results)
+        print(results)
         response_object = {
             "summary": results
         }
@@ -1597,7 +1628,7 @@ def executeSection():
     
     #('wordgeneration.html',sections=sections,bodysessions=bodysessions)
     #return render_template('execute_section.html', )
-    return jen
+    #return jen """
     
 @app.route("/wordGeneration",methods=["POST","GET"])
 @login_required
