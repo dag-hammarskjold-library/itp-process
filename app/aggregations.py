@@ -614,6 +614,246 @@ def itpsubj(bodysession):
             }
         }
 
+        add_1 = {}
+
+        #body == A
+        add_1['title_case1'] = {
+            '$cond': { 
+                'if': {'$and': [
+                    {'$gt': [{ '$indexOfCP': ['$245.b', 'report of the' ]}, -1]}, 
+                    {'$and': [
+                        { '$gt': [{'$indexOfCP': ['$245.b', 'Committee']}, -1 ]}, 
+                        { '$gt': [{'$indexOfCP': ['$245.b', 'General']}, -1 ]}]}, 
+                        {'$or': [
+                            { '$eq': ['$191.9', 'G11' ]}, 
+                            { '$eq': ['$191.9', 'G22' ]}, 
+                            { '$eq': ['$191.9', 'G33' ]}, 
+                            { '$eq': ['$191.9', 'G14' ]}, 
+                            { '$eq': ['$191.9', 'G55' ]}, 
+                            { '$eq': ['$191.9', 'G66' ]}, 
+                            { '$eq': ['$191.9', 'G1A' ]}]}] }, 
+                'then': {'$concat': [{'$toUpper': {'$substr': [ '$245.b', 0, 1]}}, {'$substr': ['$245.b', 1, { '$add': [{'$indexOfCP': ['$245.b', 'Committee']}, 8 ]}]}, '.'] }, 
+                'else': ''}
+        }
+
+        #body == A
+        add_1['title_case2'] = {
+            '$cond': { 
+                'if': {'$eq': ['$191.9', 'G99'] }, 
+                'then': {'$concat': [
+                    {'$substrCP': ['$245.a', 0, { '$indexOfCP': ['$245.a', ' :' ]}]}, 
+                    '.'] }, 
+                'else': ''}
+        }
+
+        #body == A, E, S
+        add_1['title_case3'] = {
+            '$cond': { 
+                'if': {'$and': [
+                    {'$or': [
+                        { '$eq': ['$191.9', 'C10' ]}, 
+                        { '$eq': ['$191.9', 'G10' ]}, 
+                        { '$eq': ['$191.9', 'X10' ]}]}, 
+                        {'$gt': [{ '$indexOfCP': ['$191.a', '/Add.' ]}, -1]}] }, 
+                'then': {'$concat': ['$245.a', ' ', {'$trim': {'input': '$245.b','chars': '/ '}}, '. '] }, 
+                'else': ''}
+        }
+                
+        add_1['title_default'] = {
+            '$concat': [ 
+                '$245.a', 
+                ' ', 
+                '$245.b', 
+                {'$cond': {
+                    'if': '$245.c',
+                    'then': {'$concat': [' ', '$245.c']},
+                    'else': ''} }, 
+                    '.']
+        }
+
+        #body == S
+        add_1['unique_case1'] = {
+            '$cond': { 
+                'if': {'$eq': ['$191.9', 'X99'] }, 
+                'then': {'$let': {
+                    'vars': {
+                        'a': {'$indexOfCP': [ '$239.a', '[']},
+                        'b': {'$indexOfCP': [ '$239.a', ']']}},
+                        'in': {'$concat': [
+                            '[', 
+                            { '$toUpper': {'$substrCP': ['$239.a', {'$add': ['$$a', 4]}, 1] }}, 
+                            { '$substrCP': ['$239.a', {'$add': ['$$a', 5]}, '$$b' ]}, 
+                            '.']}} }, 
+                'else': ''}
+        }
+
+        #body == A, E, S
+        add_1['unique_case2'] = {
+            '$cond': { 
+                'if': {'$and': [
+                    {'$or': [
+                        { '$eq': ['$191.9', 'C10' ]}, 
+                        { '$eq': ['$191.9', 'G10' ]}, 
+                        { '$eq': ['$191.9', 'X10' ]}]}, 
+                        {'$gt': [{ '$indexOfCP': ['$191.a', '/Add.' ]}, -1]}] }, 
+                'then': '$239.a', 
+                'else': ''}
+        }
+
+        
+        add_1['unique_default'] = {
+            '$cond': { 
+                'if': '$239.a', 
+                'then': {'$concat': [
+                    '$239.a', 
+                    ' / ', 
+                    {'$cond': {
+                        'if': '$245.c',
+                        'then': '$245.c',
+                        'else': ''}}, 
+                    '.'] }, 
+                'else': ''}
+        }
+
+        add_stage1 = {}
+        add_stage1['$addFields'] = add_1
+
+        add_2 =  {}
+        
+        add_2['publicationdate'] = { 
+            '$let': {'vars': {
+                'testMonth': {'$arrayElemAt': [{'$split': ['$269.a', '-']}, 1]},
+                'testDate': {'$arrayElemAt': [{'$split': ['$269.a', '-']}, 2]},
+                'testYear': {'$arrayElemAt': [{'$split': ['$269.a', '-']}, 0]}},
+                'in': {
+                    '$switch': {
+                        'branches': [
+                            {'case': {'$eq': ['$$testMonth', '01']},'then': {'$concat': ['$$testDate', ' ', 'Jan.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '02']},'then': {'$concat': ['$$testDate', ' ', 'Feb.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '03']},'then': {'$concat': ['$$testDate', ' ', 'Mar.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '04']},'then': {'$concat': ['$$testDate', ' ', 'Apr.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '05']},'then': {'$concat': ['$$testDate', ' ', 'May', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '06']},'then': {'$concat': ['$$testDate', ' ', 'June', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '07']},'then': {'$concat': ['$$testDate', ' ', 'July', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '08']},'then': {'$concat': ['$$testDate', ' ', 'Aug.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '09']},'then': {'$concat': ['$$testDate', ' ', 'Sept.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}],
+                            'default': 'Did not match'}
+                    } 
+                } 
+        }
+                            
+        add_2['votenote'] = { 
+            '$cond': {
+                'if': '$996.a',
+                'then': '$996.a',
+                'else': '' } 
+        }
+        
+        add_2['numberingnote'] = { 
+            '$cond': {
+                'if': '$515.a',
+                'then': '$515.a',
+                'else': '' } 
+        } 
+
+        add_2['summarynote'] = {
+            '$cond': {
+                'if': '$520.a',
+                'then': '$520.a',
+                'else': '' } 
+        }
+
+        add_2['votedate'] = {
+            '$let': {
+                'vars': {
+                    'testMonth': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 1]},
+                    'testDate': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 2]},
+                    'testYear': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 0]}},
+                'in': {
+                    '$switch': {
+                        'branches': [
+                            {'case': {'$eq': ['$$testMonth', '01']},'then': {'$concat': ['$$testDate', ' ', 'Jan.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '02']},'then': {'$concat': ['$$testDate', ' ', 'Feb.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '03']},'then': {'$concat': ['$$testDate', ' ', 'Mar.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '04']},'then': {'$concat': ['$$testDate', ' ', 'Apr.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '05']},'then': {'$concat': ['$$testDate', ' ', 'May', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '06']},'then': {'$concat': ['$$testDate', ' ', 'June', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '07']},'then': {'$concat': ['$$testDate', ' ', 'July', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '08']},'then': {'$concat': ['$$testDate', ' ', 'Aug.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '09']},'then': {'$concat': ['$$testDate', ' ', 'Sept.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
+                            {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}],
+                            'default': 'Did not match'}
+                } 
+            } 
+        }
+
+        add_2['recorddesignator'] = {
+            '$cond': {
+                'if': '$495.a',
+                'then': {'$concat': [' (', '$495.a', ') ']},
+                'else': '' } 
+        }
+
+        #body == E
+        add_2['ECOSOCdesignator'] = {
+            '$cond': {
+                'if': '$599.a',
+                'then': {'$concat': [' (', '$599.a', ') ']},
+                'else': '' } 
+        } 
+
+        add_2['letter'] = {
+            '$cond': {
+                'if': {'$and': [
+                    {'$ne': ['$249', '']}, 
+                    {'$gt': [{'$add': [{'$indexOfCP': ['$249.a', 'Letter']}, {'$indexOfCP': ['$249.a', 'Identical letters']}, {'$indexOfCP': ['$249.a', 'Note verbale']}, {'$indexOfCP': ['$249.a', 'Notes verbales']}]}, -4]}]},
+                'then': {'$concat': ['$249.a', '.', ' ', '$520.a']},
+                'else': '' }
+        } 
+
+        add_2['uniquetitle'] = {
+            '$switch': {
+                'branches': [
+                    {'case': {'$ne': ['$unique_case1', '']},'then': '$unique_case1'}, 
+                    {'case': {'$ne': ['$unique_case2', '']},'then': '$unique_case2'}],
+                    'default': '$unique_default' }
+        }
+
+        add_2['titlestatement'] = {
+            '$switch': {
+                'branches': [
+                    {'case': {'$ne': ['$title_case1', '']},'then': '$title_case1'}, 
+                    {'case': {'$ne': ['$title_case2', '']},'then': '$title_case2'}, 
+                    {'case': {'$ne': ['$title_case3', '']},'then': '$title_case3'}],
+                    'default': '$title_default' }
+        } 
+
+        add_2['agendanote'] = {
+            '$cond': {
+                'if': '$991.e',
+                'then': {'$concat': ['$991.e', '.']},
+                'else': '' }
+        } 
+
+        add_2['docsymbol'] = {
+            '$cond': {
+                'if': {'$isArray': '$191'},
+                'then': {'$concat': [
+                    {'$arrayElemAt': ['$191.a', 0]}, 
+                    ' (', 
+                    {'$arrayElemAt': ['$191.a', 1]}, 
+                    ')']},
+                'else': '$191.a' } 
+        }
+         
+        add_stage2 = {}
+        add_stage2['$addFields'] = add_2
+
         transform = {}
         transform['_id'] = 0
         transform['record_id'] = 1
@@ -656,7 +896,7 @@ def itpsubj(bodysession):
                             'default': 'Not found'} 
                     } 
 	            } 
-}
+        }
             
         
         if body == "A":
@@ -679,7 +919,7 @@ def itpsubj(bodysession):
 							{'case': {'$eq': ['$$code', 'G08']},'then': 'Statements in general debate (Right of reply)'}, 
 							{'case': {'$eq': ['$$code', 'G09']},'then': 'Discussion in the Credentials Committee'}, 
 							{'case': {'$eq': ['$$code', 'G1A']},'then': 'Discussion in the General Committee'}, 
-							{'case': {'$eq': ['$$code', 'G10']},'then': 'Draft resolutions/decisions'}, 
+							{'case': {'$eq': ['$$code', 'G10']},'then': "Draft resolutions/decisions"}, 
 							{'case': {'$eq': ['$$code', 'G11']},'then': 'Discussion in the International Security Committee (1st Committee)'}, 
 							{'case': {'$eq': ['$$code', 'G14']},'then': 'Discussion in the Special Political and Decolonization Committee (4th Committee)'}, 
 							{'case': {'$eq': ['$$code', 'G17']},'then': 'Discussion in the Special Political Committee'}, 
@@ -718,23 +958,84 @@ def itpsubj(bodysession):
             } 
         }
             
-        transform['docsymbol'] = {
+        transform['docsymbol'] = 1
+
+        transform['entry'] = {
             '$cond': {
-                'if': {'$isArray': '$191'}, 
-                'then': {'$concat': [{'$arrayElemAt': ['$191.a', 0]}, ' (', {'$arrayElemAt': ['$191.a', 1]}, ')']}, 
-                'else': '$191.a'
+                'if': {'$or': [
+                        {'$gt': [{'$indexOfCP': ['$docsymbol', '/PV.']}, -1]}, 
+                        {'$gt': [{'$indexOfCP': ['$docsymbol', '/SR.']}, -1]}]
+                    }, 
+                'then': {'$concat': [
+                        '(', 
+                        '$votedate', 
+                        ').'
+                        ]}, 
+                'else': {'$concat': [
+                            '$recorddesignator', 
+                            '$ECOSOCdesignator', 
+                            {'$switch': {
+                                'branches': [
+                                    {'case': {'$ne': ['$letter', '']}, 
+                                        'then': '$letter'}, 
+                                    {'case': {'$ne': ['$uniquetitle', '']}, 
+                                        'then': '$uniquetitle'}
+                                    ], 
+                                    'default': '$titlestatement'
+                                }
+                            }, 
+                            {'$cond': {
+                                'if': {'$eq': ['$191.9', 'X27']}, 
+                                'then': '$agendanote', 
+                                'else': ''
+                            }}
+                        ]
                 }
+            }
         }
 
 
-        #transform['entry'] = {
-        #    'entry'
-        #}
-
-
-        #transform['note'] = {
-        #    "note"
-        #} """
+        transform['note'] = {
+            '$switch': {
+                'branches': [
+                    {'case': {'$and': [{'$or': [{'$eq': ['$191.9', 'C00']}, {'$eq': ['$191.9', 'G00']}, {'$eq': ['$191.9', 'X00']}]}, 
+                                {'$eq': ['$letter', '']}]}, 
+                        'then': {'$concat': [
+                                    'Issued: ', 
+                                    '$publicationdate', {
+                                        '$cond': {
+                                            'if': {'$ne': ['$summarynote', '']}, 
+                                            'then': {
+                                                '$concat': [
+                                                    '. – ', 
+                                                    '$summarynote'
+                                                ]}, 
+                                            'else': '.'
+                                        }
+                                    }
+                                ]
+                            }
+                        }, 
+                    {'case': {'$ne': ['$votenote', '']}, 
+                        'then': {'$concat': [
+                                '(', 
+                                '$votenote', 
+                                ', ', 
+                                '$votedate', 
+                                ')'
+                            ]}}, 
+                    {'case': {'$ne': ['$numberingnote', '']}, 
+                        'then': {'$concat': [
+                                ' – ', 
+                                '$numberingnote'
+                                ]}}, 
+                    {'case': {'$ne': ['$191.9', 'X27']}, 
+                        'then': '$agendanote'}
+                    ], 
+                    'default': ''
+                }
+            
+        } 
 
         transform_stage = {}
         transform_stage['$project'] = transform
@@ -746,9 +1047,12 @@ def itpsubj(bodysession):
         pipeline.append(match_stage)
         pipeline.append(unwind_stage)
         pipeline.append(match_stage2)
+        pipeline.append(add_stage1)
+        pipeline.append(add_stage2)
         pipeline.append(transform_stage)
         pipeline.append(merge_stage)
 
+        #print(pipeline)
         inputCollection.aggregate(pipeline)
 
  
