@@ -599,6 +599,8 @@ def itpsubj(bodysession):
         bs = bodysession.split("/")
         body = bs[0]
 
+        empty_string = ''
+
         match_stage = {
             '$match': {
                 'bodysession': bodysession, 
@@ -617,7 +619,8 @@ def itpsubj(bodysession):
         add_1 = {}
 
         #body == A
-        add_1['title_case1'] = {
+        if body == "A":
+            add_1['title_case1'] = {
             '$cond': { 
                 'if': {'$and': [
                     {'$gt': [{ '$indexOfCP': ['$245.b', 'report of the' ]}, -1]}, 
@@ -634,17 +637,22 @@ def itpsubj(bodysession):
                             { '$eq': ['$191.9', 'G1A' ]}]}] }, 
                 'then': {'$concat': [{'$toUpper': {'$substr': [ '$245.b', 0, 1]}}, {'$substr': ['$245.b', 1, { '$add': [{'$indexOfCP': ['$245.b', 'Committee']}, 8 ]}]}, '.'] }, 
                 'else': ''}
-        }
+            }
 
-        #body == A
-        add_1['title_case2'] = {
-            '$cond': { 
-                'if': {'$eq': ['$191.9', 'G99'] }, 
-                'then': {'$concat': [
-                    {'$substrCP': ['$245.a', 0, { '$indexOfCP': ['$245.a', ' :' ]}]}, 
-                    '.'] }, 
-                'else': ''}
-        }
+            #body == A
+            add_1['title_case2'] = {
+                '$cond': { 
+                    'if': {'$eq': ['$191.9', 'G99'] }, 
+                    'then': {'$concat': [
+                        { '$trim': { 'input': '$245.a',  'chars': ' :' } },
+                        '.'] }, 
+                    'else': ''}
+            }
+        else:
+            add_1['title_case1'] = empty_string
+            add_1['title_case2'] = empty_string
+
+        
 
         #body == A, E, S
         add_1['title_case3'] = {
@@ -662,8 +670,10 @@ def itpsubj(bodysession):
         add_1['title_default'] = {
             '$concat': [ 
                 '$245.a', 
-                ' ', 
-                '$245.b', 
+                { '$cond': {                 
+                    'if': '$245.b', 
+                    'then': {'$concat': [' ','$245.b']}, 
+                    'else': '' } }, 
                 {'$cond': {
                     'if': '$245.c',
                     'then': {'$concat': [' ', '$245.c']},
@@ -753,10 +763,19 @@ def itpsubj(bodysession):
         }
         
         add_2['numberingnote'] = { 
-            '$cond': {
+            '$cond':{
                 'if': '$515.a',
-                'then': '$515.a',
-                'else': '' } 
+                'then': { 
+                    '$cond': { 
+                        'if': {'$isArray': '$515.a'}, 
+                        'then': {
+                            '$concat': [
+                                {'$arrayElemAt': ['$515.a', 0]},
+                                ' - ',
+                                {'$arrayElemAt': ['$515.a', 1]},]}, 
+                        'else': '$515.a' } },
+                'else': ""
+            }
         } 
 
         add_2['summarynote'] = {
@@ -1053,7 +1072,8 @@ def itpsubj(bodysession):
         pipeline.append(merge_stage)
 
         #print(pipeline)
-        inputCollection.aggregate(pipeline)
+        #allow = {'allowDiskUse': 'True'}
+        inputCollection.aggregate(pipeline, allowDiskUse=True)
 
  
         return "itpsubj completed successfully"
