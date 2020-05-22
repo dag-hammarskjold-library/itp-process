@@ -38,7 +38,7 @@
                     <td>{{ data[1] }}</td>
                     <td>{{ data[2] }}</td>
                     <td>
-                        <i class="fas fa-edit"><a href="{{url_for('newDownload', filename=data[0])}}"> Download </a></i> 
+                        <i class="fas fa-download"><a href="{{url_for('newDownload', filename=data[0])}}"> Download </a></i> 
                     </td>
                 </tr>
                 {% endfor %}

@@ -38,7 +38,6 @@ class Snapshot(object):
 
     def fields_to_extract(self):
         itp_bib_fields=[]
-        i=0
         #1. get the list of fields for the ITP
         itp_bib_fields=[]
         for itp in Itpp_itp.objects:
@@ -70,10 +69,7 @@ class Snapshot(object):
         for k in set_itp_flds:
             proj_dict[k]=True
 
-        
-        sbflds=[]
         itpp_bib_fields=[]
-
         f=''
         for itp_field in set_itp_bib_fields:
             if itp_field !="001":
@@ -84,7 +80,7 @@ class Snapshot(object):
                 else:
                     temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
                 f=itp_field.split("$")[0]
-                s_f=itp_field.split("$")[1]
+                #s_f=itp_field.split("$")[1]
                 #print(f"proj_dict: {proj_dict}") 
                 #print(f"itpp_bib_fields: {itpp_bib_fields}")    
         return proj_dict,itpp_bib_fields
@@ -153,6 +149,9 @@ class Snapshot(object):
 
             bib_dict["record_id"]=bib.id
             bib_dict["bodysession"]=self.body+'/'+self.session
+            named_tuple = time.localtime() # get struct_time
+            time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
+            bib_dict["snapshottime"]=time_string
 
             for itpp_field_subfields in itpp_bib_fields:
                 sbflds=[]
@@ -199,8 +198,14 @@ class Snapshot(object):
     def list(self):
         snapshots=snapshot_coll.distinct("bodysession")
         for sh in snapshots:
-            self.snapshots_list.append((sh,snapshot_coll.find_one({'bodysession':sh},sort=[( '_id', pymongo.DESCENDING )])['_id'].generation_time.strftime("%Y-%m-%d %H:%M:%S")))
+            #self.snapshots_list.append((sh,snapshot_coll.find_one({'bodysession':sh},sort=[( '_id', pymongo.DESCENDING )])['_id'].generation_time.strftime("%Y-%m-%d %H:%M:%S")))
+            try:
+                self.snapshots_list.append((sh, snapshot_coll.find_one({'bodysession':sh},sort=[('snapshottime', -1)])['snapshottime']))
+            except:
+                self.snapshots_list.append((sh,snapshot_coll.find_one({'bodysession':sh},sort=[( '_id', pymongo.DESCENDING )])['_id'].generation_time.strftime("%Y-%m-%d %H:%M:%S")))
+
         return sorted(self.snapshots_list,key=lambda x: x[1], reverse = True)
+        #return sorted(self.snapshots_list, reverse = True)
 
 
 
