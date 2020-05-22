@@ -738,18 +738,18 @@ def itpsubj(bodysession):
                 'in': {
                     '$switch': {
                         'branches': [
-                            {'case': {'$eq': ['$$testMonth', '01']},'then': {'$concat': ['$$testDate', ' ', 'Jan.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '02']},'then': {'$concat': ['$$testDate', ' ', 'Feb.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '03']},'then': {'$concat': ['$$testDate', ' ', 'Mar.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '04']},'then': {'$concat': ['$$testDate', ' ', 'Apr.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '05']},'then': {'$concat': ['$$testDate', ' ', 'May', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '06']},'then': {'$concat': ['$$testDate', ' ', 'June', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '07']},'then': {'$concat': ['$$testDate', ' ', 'July', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '08']},'then': {'$concat': ['$$testDate', ' ', 'Aug.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '09']},'then': {'$concat': ['$$testDate', ' ', 'Sept.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}],
+                            {'case': {'$eq': ['$$testMonth', '01']},'then': {'$concat': ['$$testDate', ' ', 'Jan.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '02']},'then': {'$concat': ['$$testDate', ' ', 'Feb.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '03']},'then': {'$concat': ['$$testDate', ' ', 'Mar.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '04']},'then': {'$concat': ['$$testDate', ' ', 'Apr.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '05']},'then': {'$concat': ['$$testDate', ' ', 'May', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '06']},'then': {'$concat': ['$$testDate', ' ', 'June', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '07']},'then': {'$concat': ['$$testDate', ' ', 'July', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '08']},'then': {'$concat': ['$$testDate', ' ', 'Aug.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '09']},'then': {'$concat': ['$$testDate', ' ', 'Sept.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', '$$testYear']}}],
                             'default': 'Did not match'}
                     } 
                 } 
@@ -794,18 +794,18 @@ def itpsubj(bodysession):
                 'in': {
                     '$switch': {
                         'branches': [
-                            {'case': {'$eq': ['$$testMonth', '01']},'then': {'$concat': ['$$testDate', ' ', 'Jan.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '02']},'then': {'$concat': ['$$testDate', ' ', 'Feb.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '03']},'then': {'$concat': ['$$testDate', ' ', 'Mar.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '04']},'then': {'$concat': ['$$testDate', ' ', 'Apr.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '05']},'then': {'$concat': ['$$testDate', ' ', 'May', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '06']},'then': {'$concat': ['$$testDate', ' ', 'June', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '07']},'then': {'$concat': ['$$testDate', ' ', 'July', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '08']},'then': {'$concat': ['$$testDate', ' ', 'Aug.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '09']},'then': {'$concat': ['$$testDate', ' ', 'Sept.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}, 
-                            {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', {'$substrCP': ['$$testYear', 2, 2]}]}}],
+                            {'case': {'$eq': ['$$testMonth', '01']},'then': {'$concat': ['$$testDate', ' ', 'Jan.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '02']},'then': {'$concat': ['$$testDate', ' ', 'Feb.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '03']},'then': {'$concat': ['$$testDate', ' ', 'Mar.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '04']},'then': {'$concat': ['$$testDate', ' ', 'Apr.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '05']},'then': {'$concat': ['$$testDate', ' ', 'May', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '06']},'then': {'$concat': ['$$testDate', ' ', 'June', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '07']},'then': {'$concat': ['$$testDate', ' ', 'July', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '08']},'then': {'$concat': ['$$testDate', ' ', 'Aug.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '09']},'then': {'$concat': ['$$testDate', ' ', 'Sept.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', '$$testYear']}}, 
+                            {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', '$$testYear']}}],
                             'default': 'Did not match'}
                 } 
             } 
@@ -885,7 +885,9 @@ def itpsubj(bodysession):
                 {'$cond': {
                         'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
                         'then': '$991.b', 
-                        'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+                        'else': {'$toString': 
+                            {'$substrCP': ['$991.b', 1, 
+                            { '$subtract': [ { '$indexOfCP': ['$991.b', ']']}, 1 ] }]}}
                         }
                 }, 
                 ')'
@@ -1075,6 +1077,8 @@ def itpsubj(bodysession):
         #allow = {'allowDiskUse': 'True'}
         inputCollection.aggregate(pipeline, allowDiskUse=True)
 
+        ##new
+        group_itpsubj("itpsubj", bodysession)
  
         return "itpsubj completed successfully"
         
@@ -1433,6 +1437,92 @@ def group_speeches(section, bodysession):
     pipeline.append(merge_stage)
 
     outputCollection.aggregate(pipeline)
+
+
+def group_itpsubj(section, bodysession):
+
+    clear_section(section, bodysession)
+
+    pipeline = []
+
+    match_stage = {
+        '$match': {
+            'bodysession': bodysession, 
+            'section': section
+        }
+    }
+        
+    group_stage1 = {
+        '$group': {
+            '_id': {
+                'itp_head': '$head', 
+                'itp_subhead': '$subhead', 
+                'docsymbol': '$docsymbol',
+                'entry': '$entry',
+                'note': "$note"
+            }
+        }
+    }
+    
+    group_stage2 = {
+        '$group': {
+            '_id': {
+                'itp_head': '$_id.itp_head',
+                'itp_subhead': '$_id.itp_subhead'},
+            'entries': {
+                '$push': {
+                    'docsymbol': '$_id.docsymbol',
+                    'entry': '$_id.entry',
+                    'note': '$_id.note'}
+            }
+        } 
+    }
+    
+    group_stage3 = {
+        '$group': {
+            '_id': {
+                'itp_head': '$_id.itp_head'},
+            'subheading': {
+                '$push': {
+                    'subhead': '$_id.itp_subhead',
+                    'entries': '$entries'}
+            }
+        } 
+    }     
+ 
+    sort_stage = {
+        '$sort': {
+            '_id': 1
+        }
+    }
+
+    project_stage = {
+        '$project': {
+            '_id': 0,
+            'head': '$_id.itp_head',
+            'bodysession': bodysession, 
+            'section': section, 
+            'subheading': 1
+        }
+    }
+
+    merge_stage = {
+        '$merge': { 'into': "itp_sample_output_copy"}
+    }
+
+    pipeline.append(match_stage)
+    pipeline.append(group_stage1)
+    pipeline.append(group_stage2)
+    pipeline.append(group_stage3)
+    pipeline.append(sort_stage)
+    pipeline.append(project_stage)
+    pipeline.append(merge_stage)
+
+    #print(pipeline)
+
+    outputCollection.aggregate(pipeline)
+
+
 
 def clear_section(section, bodysession):
     """
