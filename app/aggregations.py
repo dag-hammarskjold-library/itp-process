@@ -870,6 +870,14 @@ def itpsubj(bodysession):
                 'else': '$191.a' } 
         }
          
+        add_2['agendanum'] = {
+            '$cond': {
+                'if': {'$eq': [ {'$indexOfCP': [ '$991.b', '['] }, -1]},
+                'then': '$991.b',
+                'else': {'$substrCP': [ '$991.b', 0, {'$indexOfCP': [ '$991.b', '['] }]}  
+                }
+        }
+
         add_stage2 = {}
         add_stage2['$addFields'] = add_2
 
@@ -878,23 +886,11 @@ def itpsubj(bodysession):
         transform['record_id'] = 1
         transform['section'] = "itpsubj"
         transform['bodysession'] = 1
-        transform['head'] = {
-            '$concat': [
-                '$991.d', 
-                ' (Agenda item ', 
-                {'$cond': {
-                        'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
-                        'then': '$991.b', 
-                        'else': {'$toString': 
-                            {'$substrCP': ['$991.b', 1, 
-                            { '$subtract': [ { '$indexOfCP': ['$991.b', ']']}, 1 ] }]}}
-                        }
-                }, 
-                ')'
-            ]
-        }
 
         if body == "S":
+            
+            transform['head'] = '$991.d'
+
             transform['subhead'] = { 
                 '$let': {
                 'vars': {'code': {'$cond': {'if': {'$isArray': '$191'},'then': {'$arrayElemAt': ['$191.9', 0]},'else': '$191.9'}} }, 
@@ -917,10 +913,20 @@ def itpsubj(bodysession):
                             'default': 'Not found'} 
                     } 
 	            } 
-        }
+            }
             
         
         if body == "A":
+            transform['head'] = {
+                '$concat': [
+                    '$991.d', 
+                    ' (Agenda item ', 
+                    '$agendanum',  
+                    ')'
+                ]
+            }
+
+
             transform['subhead'] = {
             	'$let': {
 					'vars': {
@@ -955,29 +961,39 @@ def itpsubj(bodysession):
 							{'case': {'$eq': ['$$code', 'G99']},'then': 'Resolutions'}],
                             'default': 'Not found'}} 
                 } 
-        }
+            }
         
         if body == "E": 
+            transform['head'] = {
+                '$concat': [
+                    '$991.d', 
+                    ' (Agenda item ', 
+                    '$agendanum',  
+                    ')'
+                ]
+            }
+
+
             transform['subhead'] = {
-            '$let': { 
-                'vars': {
-	                'code': {'$cond': {'if': {'$isArray': '$191'},'then': {'$arrayElemAt': ['$191.9', 0]},'else': '$191.9'}} }, 
-            'in': {
-	            '$switch': {
-		            'branches': [
-		                {'case': {'$eq': ['$$code', 'C0A']},'then': 'Authority for agenda item'}, 
-		                {'case': {'$eq': ['$$code', 'C00']},'then': 'Reports'}, 
-		                {'case': {'$eq': ['$$code', 'C01']},'then': 'General documents'}, 
-		                {'case': {'$eq': ['$$code', 'C02']},'then': 'Documents from previous sessions'}, 
-		                {'case': {'$eq': ['$$code', 'C10']},'then': 'Draft resolutions/decisions'}, 
-		                {'case': {'$eq': ['$$code', 'C11']},'then': 'Discussion in Economic Committee'}, 
-		                {'case': {'$eq': ['$$code', 'C22']},'then': 'Discussion in Social Committee'}, 
-		                {'case': {'$eq': ['$$code', 'C33']},'then': 'Discussion in Third (Programme and Coordination) Committee'}, 
-		                {'case': {'$eq': ['$$code', 'C44']},'then': 'Discussion in Committee on Economic, Social and Cultural Rights'}, 
-		                {'case': {'$eq': ['$$code', 'C88']},'then': 'Discussion in plenary'}, {'case': {'$eq': ['$$code', 'C99']},'then': 'Resolutions'}],
-		                'default': 'Not found'} } 
-            } 
-        }
+                '$let': { 
+                    'vars': {
+                        'code': {'$cond': {'if': {'$isArray': '$191'},'then': {'$arrayElemAt': ['$191.9', 0]},'else': '$191.9'}} }, 
+                'in': {
+                    '$switch': {
+                        'branches': [
+                            {'case': {'$eq': ['$$code', 'C0A']},'then': 'Authority for agenda item'}, 
+                            {'case': {'$eq': ['$$code', 'C00']},'then': 'Reports'}, 
+                            {'case': {'$eq': ['$$code', 'C01']},'then': 'General documents'}, 
+                            {'case': {'$eq': ['$$code', 'C02']},'then': 'Documents from previous sessions'}, 
+                            {'case': {'$eq': ['$$code', 'C10']},'then': 'Draft resolutions/decisions'}, 
+                            {'case': {'$eq': ['$$code', 'C11']},'then': 'Discussion in Economic Committee'}, 
+                            {'case': {'$eq': ['$$code', 'C22']},'then': 'Discussion in Social Committee'}, 
+                            {'case': {'$eq': ['$$code', 'C33']},'then': 'Discussion in Third (Programme and Coordination) Committee'}, 
+                            {'case': {'$eq': ['$$code', 'C44']},'then': 'Discussion in Committee on Economic, Social and Cultural Rights'}, 
+                            {'case': {'$eq': ['$$code', 'C88']},'then': 'Discussion in plenary'}, {'case': {'$eq': ['$$code', 'C99']},'then': 'Resolutions'}],
+                            'default': 'Not found'} } 
+                } 
+            }
             
         transform['docsymbol'] = 1
 
