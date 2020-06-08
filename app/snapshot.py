@@ -57,7 +57,7 @@ class Snapshot(object):
                         for fld in itpp_rule.parameters[0].split(";"):
                             itp_bib_fields.append(fld.strip()) 
         else:
-            itp_bib_fields=['001', '035$a', '591$a','700$a', '700$g', '710$a', '711$a', '791$a','791$b','791$c','793$a' '930$a', '949$a','991$b', '991$d','001', '035$a', '089$b', '191$9', '191$a', '191$b', '191$c','191$d', '191$z', '239$a', '245$a', '245$b', '245$c', '248$a', '249$a', '269$a', '495$a', '515$a', '520$a', '580$a', '591$a', '592$a', '598$a', '599$a', '791$b', '791$c', '930$a', '949$a', '991$a', '991$b', '991$c', '991$d', '991$e', '991$m', '991$s', '991$z', '992$a', '995$a', '996$a']
+            itp_bib_fields=['001', '035$a', '591$a','700$a', '700$g', '710$a', '711$a', '791$a','791$b','791$c','793$a', '930$a', '949$a','991$b', '991$d','001', '035$a', '089$b', '191$9', '191$a', '191$b', '191$c','191$d', '191$z', '239$a', '245$a', '245$b', '245$c', '248$a', '249$a', '269$a', '495$a', '515$a', '520$a', '580$a', '591$a', '592$a', '598$a', '599$a', '791$b', '791$c', '930$a', '949$a', '991$a', '991$b', '991$c', '991$d', '991$e', '991$m', '991$s', '991$z', '992$a', '995$a', '996$a']
         set_itp_bib_fields=sorted(set(itp_bib_fields))
         print(f"fields are: {set_itp_bib_fields}")   
             
@@ -139,6 +139,7 @@ class Snapshot(object):
             end_rec=(chunk_no)*chunk_size
 
         for bib in lbibs[(chunk_no-1)*chunk_size:end_rec]:
+            #print(f"bib id is {bib.id}")
             bib_dict={}
             if "ITS" in bib.get_values('930','a'):
                 bib_dict["record_type"]="ITS"
@@ -149,6 +150,7 @@ class Snapshot(object):
 
             bib_dict["record_id"]=bib.id
             bib_dict["bodysession"]=self.body+'/'+self.session
+            bib_dict["snapshot_id"]=str(bib.id)+self.body+self.session
             named_tuple = time.localtime() # get struct_time
             time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
             bib_dict["snapshottime"]=time_string
@@ -167,7 +169,8 @@ class Snapshot(object):
                 else:
                     bib_dict[field]=""
             #snapshot_list_bibs.append(bib_dict)
-            query={"record_id":bib_dict["record_id"]}
+            #query={"record_id":bib_dict["record_id"]}
+            query={"snapshot_id":bib_dict["snapshot_id"]}
             self.replace_list_recs.append(ReplaceOne(query, bib_dict, upsert=True))
         return len(self.replace_list_recs)
     ''' writing data into snapshot collection'''    
@@ -177,7 +180,7 @@ class Snapshot(object):
             snapshot_coll.bulk_write(self.replace_list_recs)
         except:
                 warning="something went wrong with insert into MDb"    
-    '''asycnh fuinction'''
+    '''asycnh function'''
     def transform_write(self):
         proj_dict,itpp_bib_fields=self.fields_to_extract()
         #lbibs,l_temp=self.fetch_data(proj_dict)
