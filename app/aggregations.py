@@ -598,6 +598,8 @@ def itpsubj(bodysession):
 
         bs = bodysession.split("/")
         body = bs[0]
+        fullbody = body + "/"
+        session = bs[1]
 
         empty_string = ''
 
@@ -705,24 +707,36 @@ def itpsubj(bodysession):
                         { '$eq': ['$191.9', 'C10' ]}, 
                         { '$eq': ['$191.9', 'G10' ]}, 
                         { '$eq': ['$191.9', 'X10' ]}]}, 
-                        {'$gt': [{ '$indexOfCP': ['$191.a', '/Add.' ]}, -1]}] }, 
+                        {'$gt': [{ '$indexOfCP': ['$191.a', '/Add.' ]}, -1]},
+                        {'$ne': ['$239', ""]}
+                        ] }, 
                 'then': '$239.a', 
                 'else': ''}
         }
 
         
         add_1['unique_default'] = {
-            '$cond': { 
+            '$cond': {
                 'if': '$239.a', 
-                'then': {'$concat': [
-                    '$239.a', 
-                    ' / ', 
-                    {'$cond': {
-                        'if': '$245.c',
-                        'then': '$245.c',
-                        'else': ''}}, 
-                    '.'] }, 
-                'else': ''}
+                'then': {
+                    '$concat': [
+                        '$239.a', 
+                        {'$cond': {
+                            'if': '$245.c', 
+                            'then': {'$concat': [' / ', '$245.c']}, 
+                            'else': ''}}, 
+                        '.'
+                        ]
+                    }, 
+                'else': ''
+            }
+        }
+
+        add_1['summarynote'] = {
+            '$cond': {
+                'if': '$520.a',
+                'then': '$520.a',
+                'else': '' } 
         }
 
         add_stage1 = {}
@@ -750,7 +764,7 @@ def itpsubj(bodysession):
                             {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', '$$testYear']}}, 
                             {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', '$$testYear']}}, 
                             {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', '$$testYear']}}],
-                            'default': 'Did not match'}
+                            'default': '$269.a'}
                     } 
                 } 
         }
@@ -778,12 +792,6 @@ def itpsubj(bodysession):
             }
         } 
 
-        add_2['summarynote'] = {
-            '$cond': {
-                'if': '$520.a',
-                'then': '$520.a',
-                'else': '' } 
-        }
 
         add_2['votedate'] = {
             '$let': {
@@ -806,7 +814,7 @@ def itpsubj(bodysession):
                             {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', '$$testYear']}}, 
                             {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', '$$testYear']}}, 
                             {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', '$$testYear']}}],
-                            'default': 'Did not match'}
+                            'default': '$992.a'}
                 } 
             } 
         }
@@ -831,7 +839,7 @@ def itpsubj(bodysession):
                 'if': {'$and': [
                     {'$ne': ['$249', '']}, 
                     {'$gt': [{'$add': [{'$indexOfCP': ['$249.a', 'Letter']}, {'$indexOfCP': ['$249.a', 'Identical letters']}, {'$indexOfCP': ['$249.a', 'Note verbale']}, {'$indexOfCP': ['$249.a', 'Notes verbales']}]}, -4]}]},
-                'then': {'$concat': ['$249.a', '.', ' ', '$520.a']},
+                'then': {'$concat': ['$249.a', '.', ' ', '$summarynote']},
                 'else': '' }
         } 
 
@@ -860,16 +868,80 @@ def itpsubj(bodysession):
         } 
 
         add_2['docsymbol'] = {
+            '$cond': { 
+                'if': {'$isArray': '$191' }, 
+                'then': {
+                    '$let': {  
+                        'vars': {
+                            'a': {'$arrayElemAt': [ '$191.b', 0]},
+                            'b': {'$arrayElemAt': [ '$191.c', 0]},
+                            'x': {'$arrayElemAt': [ '$191.b', 1]},
+                            'y': {'$arrayElemAt': [ '$191.c', 1]},
+                            'first': {'$arrayElemAt': [ '$191.a', 0]},
+                            'second': {'$arrayElemAt': [ '$191.a', 1]}  },  
+                    'in': {
+                        '$cond': {
+                            'if': { 
+                                '$and': [
+                                    {  '$eq': ['$$a', fullbody  ]}, 
+                                    {  '$eq': ['$$b', session  ]}, 
+                                    '$$second' ]},
+                            'then': { 
+                                '$concat': [
+                                    '$$first', 
+                                    ' (', 
+                                    '$$second', 
+                                    ')' ]},
+                            'else': {
+                                '$cond': {
+                                    'if': {
+                                        '$and': [
+                                            {'$eq': ['$$x', fullbody]}, 
+                                            {'$eq': ['$$y', session]}, 
+                                            '$$second']
+                                    }, 
+                                    'then': {
+                                        '$concat': [
+                                            '$$second', 
+                                            ' (', 
+                                            '$$first', ')'
+                                        ]
+                                    }, 
+                                    'else': '$$first'
+                                }
+                            }
+                        }  
+                    }
+                } 
+            }, 
+                'else': '$191.a'}}
+         
+        add_2['agendanum'] = {
+            '$cond': {
+                'if': {'$eq': [ {'$indexOfCP': [ '$991.b', '['] }, -1]},
+                'then': '$991.b',
+                'else': {'$substrCP': [ '$991.b', 0, {'$indexOfCP': [ '$991.b', '['] }]}  
+                }
+        }
+
+        add_2['code'] = {
             '$cond': {
                 'if': {'$isArray': '$191'},
-                'then': {'$concat': [
-                    {'$arrayElemAt': ['$191.a', 0]}, 
-                    ' (', 
-                    {'$arrayElemAt': ['$191.a', 1]}, 
-                    ')']},
-                'else': '$191.a' } 
+                'then': {
+                    '$let': {
+                        'vars': {
+                            'a': {'$arrayElemAt': ['$191.b', 0]},
+                            'b': {'$arrayElemAt': ['$191.c', 0]},
+                            'first': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 0]},'chars': ' '}},
+                            'second': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 1]},'chars': ' '}}},
+                        'in': {'$cond': {
+                            'if': {'$and': [
+                                {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
+                                {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
+                            'then': '$$first','else': '$$second'}}}},
+                'else': {'$trim': {'input': '$191.9','chars': ' '}}} 
         }
-         
+
         add_stage2 = {}
         add_stage2['$addFields'] = add_2
 
@@ -878,106 +950,102 @@ def itpsubj(bodysession):
         transform['record_id'] = 1
         transform['section'] = "itpsubj"
         transform['bodysession'] = 1
-        transform['head'] = {
-            '$concat': [
-                '$991.d', 
-                ' (Agenda item ', 
-                {'$cond': {
-                        'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
-                        'then': '$991.b', 
-                        'else': {'$toString': 
-                            {'$substrCP': ['$991.b', 1, 
-                            { '$subtract': [ { '$indexOfCP': ['$991.b', ']']}, 1 ] }]}}
-                        }
-                }, 
-                ')'
-            ]
-        }
 
         if body == "S":
-            transform['subhead'] = { 
-                '$let': {
-                'vars': {'code': {'$cond': {'if': {'$isArray': '$191'},'then': {'$arrayElemAt': ['$191.9', 0]},'else': '$191.9'}} }, 
-                'in': {
-	                '$switch': {
-		                'branches': [
-                            {'case': {'$eq': ['$$code', 'X00']},'then': 'Reports'}, 
-                            {'case': {'$eq': ['$$code', 'X01']},'then': 'General documents'}, 
-                            {'case': {'$eq': ['$$code', 'X02']},'then': 'Documents from previous sessions'}, 
-                            {'case': {'$eq': ['$$code', 'X03']},'then': 'Decisions of the UN Compensation Commission'}, 
-                            {'case': {'$eq': ['$$code', 'X10']},'then': 'Draft resolutions'}, 
-                            {'case': {'$eq': ['$$code', 'X15']},'then': 'Statements by the President of the Security Council'}, 
-                            {'case': {'$eq': ['$$code', 'X27']},'then': 'Participation by non-Council members (without the right to vote)'}, 
-                            {'case': {'$eq': ['$$code', 'X30']},'then': 'Discussion in Committee on the Admission of New Members'}, 
-                            {'case': {'$eq': ['$$code', 'X32']},'then': 'Discussion in Committee Established by Resolution 661 (1990)'}, 
-                            {'case': {'$eq': ['$$code', 'X33']},'then': 'Discussion in Committee Established by Resolution 421 (1977)'}, 
-                            {'case': {'$eq': ['$$code', 'X44']},'then': 'Discussion in Committee of Experts'}, 
-                            {'case': {'$eq': ['$$code', 'X88']},'then': 'Discussion in plenary'}, 
-                            {'case': {'$eq': ['$$code', 'X99']},'then': 'Resolutions'}],
-                            'default': 'Not found'} 
-                    } 
-	            } 
-        }
+            
+            transform['head'] = '$991.d'
+
+            transform['subhead'] = {
+	            '$switch': {
+		            'branches': [
+                        {'case': {'$eq': ['$code', 'X00']},'then': 'Reports'}, 
+                        {'case': {'$eq': ['$code', 'X01']},'then': 'General documents'}, 
+                        {'case': {'$eq': ['$code', 'X02']},'then': 'Documents from previous sessions'}, 
+                        {'case': {'$eq': ['$code', 'X03']},'then': 'Decisions of the UN Compensation Commission'}, 
+                        {'case': {'$eq': ['$code', 'X10']},'then': 'Draft resolutions'}, 
+                        {'case': {'$eq': ['$code', 'X15']},'then': 'Statements by the President of the Security Council'}, 
+                        {'case': {'$eq': ['$code', 'X27']},'then': 'Participation by non-Council members (without the right to vote)'}, 
+                        {'case': {'$eq': ['$code', 'X30']},'then': 'Discussion in Committee on the Admission of New Members'}, 
+                        {'case': {'$eq': ['$code', 'X32']},'then': 'Discussion in Committee Established by Resolution 661 (1990)'}, 
+                        {'case': {'$eq': ['$code', 'X33']},'then': 'Discussion in Committee Established by Resolution 421 (1977)'}, 
+                        {'case': {'$eq': ['$code', 'X44']},'then': 'Discussion in Committee of Experts'}, 
+                        {'case': {'$eq': ['$code', 'X88']},'then': 'Discussion in plenary'}, 
+                        {'case': {'$eq': ['$code', 'X99']},'then': 'Resolutions'}],
+                        'default': 'Not found'} 
+            } 
+
             
         
         if body == "A":
+            transform['head'] = {
+                '$concat': [
+                    '$991.d', 
+                    ' (Agenda item ', 
+                    '$agendanum',  
+                    ')'
+                ]
+            }
+
+
             transform['subhead'] = {
-            	'$let': {
-					'vars': {
-						'code': {'$cond': {'if': {'$isArray': '$191'},'then': {'$arrayElemAt': ['$191.9', 0]},'else': '$191.9'}}},
-					'in': {
-						'$switch': {
-							'branches': [
-							{'case': {'$eq': ['$$code', 'G0A']},'then': 'Authority for agenda item'}, 
-							{'case': {'$eq': ['$$code', 'G00']},'then': 'Reports'}, 
-							{'case': {'$eq': ['$$code', 'G01']},'then': 'General documents'}, 
-							{'case': {'$eq': ['$$code', 'G02']},'then': 'Documents from previous sessions'}, 
-							{'case': {'$eq': ['$$code', 'G03']},'then': 'Hearings requested'}, 
-							{'case': {'$eq': ['$$code', 'G04']},'then': 'Hearings granted'}, 
-							{'case': {'$eq': ['$$code', 'G05']},'then': 'Petitioners heard'}, 
-							{'case': {'$eq': ['$$code', 'G06']},'then': 'Statements in general debate (Heads of State/Government)'}, 
-							{'case': {'$eq': ['$$code', 'G07']},'then': 'Statements in general debate (Countries)'}, 
-							{'case': {'$eq': ['$$code', 'G08']},'then': 'Statements in general debate (Right of reply)'}, 
-							{'case': {'$eq': ['$$code', 'G09']},'then': 'Discussion in the Credentials Committee'}, 
-							{'case': {'$eq': ['$$code', 'G1A']},'then': 'Discussion in the General Committee'}, 
-							{'case': {'$eq': ['$$code', 'G10']},'then': "Draft resolutions/decisions"}, 
-							{'case': {'$eq': ['$$code', 'G11']},'then': 'Discussion in the International Security Committee (1st Committee)'}, 
-							{'case': {'$eq': ['$$code', 'G14']},'then': 'Discussion in the Special Political and Decolonization Committee (4th Committee)'}, 
-							{'case': {'$eq': ['$$code', 'G17']},'then': 'Discussion in the Special Political Committee'}, 
-							{'case': {'$eq': ['$$code', 'G22']},'then': 'Discussion in the Economic and Financial Committee (2nd Committee)'}, 
-							{'case': {'$eq': ['$$code', 'G33']},'then': 'Discussion in the Social, Humanitarian and Cultural Committee (3rd Committee)'}, 
-							{'case': {'$eq': ['$$code', 'G44']},'then': 'Discussion in the 4th Committee'}, 
-							{'case': {'$eq': ['$$code', 'G55']},'then': 'Discussion in the Administrative and Budgetary Committee (5th Committee)'}, 
-							{'case': {'$eq': ['$$code', 'G66']},'then': 'Discussion in the Legal Committee (6th Committee)'}, 
-							{'case': {'$eq': ['$$code', 'G67']},'then': 'Discussion in the Ad Hoc Committee of the Whole'}, 
-							{'case': {'$eq': ['$$code', 'G68']},'then': 'Discussion in Committee (Right of reply)'}, 
-							{'case': {'$eq': ['$$code', 'G88']},'then': 'Discussion in plenary'}, 
-							{'case': {'$eq': ['$$code', 'G99']},'then': 'Resolutions'}],
-                            'default': 'Not found'}} 
-                } 
-        }
+				'$switch': {
+					'branches': [
+						{'case': {'$eq': ['$code', 'G0A']},'then': 'Authority for agenda item'}, 
+						{'case': {'$eq': ['$code', 'G00']},'then': 'Reports'}, 
+						{'case': {'$eq': ['$code', 'G01']},'then': 'General documents'}, 
+						{'case': {'$eq': ['$code', 'G02']},'then': 'Documents from previous sessions'}, 
+						{'case': {'$eq': ['$code', 'G03']},'then': 'Hearings requested'}, 
+						{'case': {'$eq': ['$code', 'G04']},'then': 'Hearings granted'}, 
+						{'case': {'$eq': ['$code', 'G05']},'then': 'Petitioners heard'}, 
+						{'case': {'$eq': ['$code', 'G06']},'then': 'Statements in general debate (Heads of State/Government)'}, 
+						{'case': {'$eq': ['$code', 'G07']},'then': 'Statements in general debate (Countries)'}, 
+						{'case': {'$eq': ['$code', 'G08']},'then': 'Statements in general debate (Right of reply)'}, 
+						{'case': {'$eq': ['$code', 'G09']},'then': 'Discussion in the Credentials Committee'}, 
+						{'case': {'$eq': ['$code', 'G1A']},'then': 'Discussion in the General Committee'}, 
+						{'case': {'$eq': ['$code', 'G10']},'then': "Draft resolutions/decisions"}, 
+						{'case': {'$eq': ['$code', 'G11']},'then': 'Discussion in the International Security Committee (1st Committee)'}, 
+						{'case': {'$eq': ['$code', 'G14']},'then': 'Discussion in the Special Political and Decolonization Committee (4th Committee)'}, 
+						{'case': {'$eq': ['$code', 'G17']},'then': 'Discussion in the Special Political Committee'}, 
+						{'case': {'$eq': ['$code', 'G22']},'then': 'Discussion in the Economic and Financial Committee (2nd Committee)'}, 
+						{'case': {'$eq': ['$code', 'G33']},'then': 'Discussion in the Social, Humanitarian and Cultural Committee (3rd Committee)'}, 
+						{'case': {'$eq': ['$code', 'G44']},'then': 'Discussion in the 4th Committee'}, 
+						{'case': {'$eq': ['$code', 'G55']},'then': 'Discussion in the Administrative and Budgetary Committee (5th Committee)'}, 
+						{'case': {'$eq': ['$code', 'G66']},'then': 'Discussion in the Legal Committee (6th Committee)'}, 
+						{'case': {'$eq': ['$code', 'G67']},'then': 'Discussion in the Ad Hoc Committee of the Whole'}, 
+						{'case': {'$eq': ['$code', 'G68']},'then': 'Discussion in Committee (Right of reply)'}, 
+						{'case': {'$eq': ['$code', 'G88']},'then': 'Discussion in plenary'}, 
+						{'case': {'$eq': ['$code', 'G99']},'then': 'Resolutions'}],
+                        'default': 'Not found'}
+            } 
+
         
         if body == "E": 
+            transform['head'] = {
+                '$concat': [
+                    '$991.d', 
+                    ' (Agenda item ', 
+                    '$agendanum',  
+                    ')'
+                ]
+            }
+
+
             transform['subhead'] = {
-            '$let': { 
-                'vars': {
-	                'code': {'$cond': {'if': {'$isArray': '$191'},'then': {'$arrayElemAt': ['$191.9', 0]},'else': '$191.9'}} }, 
-            'in': {
-	            '$switch': {
-		            'branches': [
-		                {'case': {'$eq': ['$$code', 'C0A']},'then': 'Authority for agenda item'}, 
-		                {'case': {'$eq': ['$$code', 'C00']},'then': 'Reports'}, 
-		                {'case': {'$eq': ['$$code', 'C01']},'then': 'General documents'}, 
-		                {'case': {'$eq': ['$$code', 'C02']},'then': 'Documents from previous sessions'}, 
-		                {'case': {'$eq': ['$$code', 'C10']},'then': 'Draft resolutions/decisions'}, 
-		                {'case': {'$eq': ['$$code', 'C11']},'then': 'Discussion in Economic Committee'}, 
-		                {'case': {'$eq': ['$$code', 'C22']},'then': 'Discussion in Social Committee'}, 
-		                {'case': {'$eq': ['$$code', 'C33']},'then': 'Discussion in Third (Programme and Coordination) Committee'}, 
-		                {'case': {'$eq': ['$$code', 'C44']},'then': 'Discussion in Committee on Economic, Social and Cultural Rights'}, 
-		                {'case': {'$eq': ['$$code', 'C88']},'then': 'Discussion in plenary'}, {'case': {'$eq': ['$$code', 'C99']},'then': 'Resolutions'}],
-		                'default': 'Not found'} } 
+                '$switch': {
+                    'branches': [
+                        {'case': {'$eq': ['$code', 'C0A']},'then': 'Authority for agenda item'}, 
+                        {'case': {'$eq': ['$code', 'C00']},'then': 'Reports'}, 
+                        {'case': {'$eq': ['$code', 'C01']},'then': 'General documents'}, 
+                        {'case': {'$eq': ['$code', 'C02']},'then': 'Documents from previous sessions'}, 
+                        {'case': {'$eq': ['$code', 'C10']},'then': 'Draft resolutions/decisions'}, 
+                        {'case': {'$eq': ['$code', 'C11']},'then': 'Discussion in Economic Committee'}, 
+                        {'case': {'$eq': ['$code', 'C22']},'then': 'Discussion in Social Committee'}, 
+                        {'case': {'$eq': ['$code', 'C33']},'then': 'Discussion in Third (Programme and Coordination) Committee'}, 
+                        {'case': {'$eq': ['$code', 'C44']},'then': 'Discussion in Committee on Economic, Social and Cultural Rights'}, 
+                        {'case': {'$eq': ['$code', 'C88']},'then': 'Discussion in plenary'}, {'case': {'$eq': ['$code', 'C99']},'then': 'Resolutions'}],
+                        'default': 'Not found'} 
             } 
-        }
+
             
         transform['docsymbol'] = 1
 
@@ -1046,10 +1114,13 @@ def itpsubj(bodysession):
                                 ')'
                             ]}}, 
                     {'case': {'$ne': ['$numberingnote', '']}, 
-                        'then': {'$concat': [
-                                ' – ', 
-                                '$numberingnote'
-                                ]}}, 
+                        'then': '$numberingnote'
+                        }, 
+                    {'case': {'$and': [
+                                {'$ne': ['$summarynote','']},
+                                {'$eq': ['$letter','']}]},
+                        'then': '$summarynote'
+                    },
                     {'case': {'$ne': ['$191.9', 'X27']}, 
                         'then': '$agendanote'}
                     ], 
