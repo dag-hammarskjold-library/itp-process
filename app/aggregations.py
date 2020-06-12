@@ -31,122 +31,126 @@ def itpitsc(bodysession):
 
     Builds the aggregation query and inserts the results into another collection.
     """ 
-    outputCollection.delete_many({ "section" : "itpitsc", "bodysession" : bodysession } )
+    try:
+        outputCollection.delete_many({ "section" : "itpitsc", "bodysession" : bodysession } )
 
-    pipeline = []
+        pipeline = []
 
-    bs = bodysession.split("/")
-    body = bs[0]
+        bs = bodysession.split("/")
+        body = bs[0]
 
-    match_stage = {
-        '$match': {
-            'bodysession': bodysession, 
-            #'035.a': {'$regex': re.compile(r"Q*")}, 
-            'record_type': "ITS",
-            '$or': [
-                {'710.a': {'$ne': ''}, 
-                '711.a': {'$ne': ''}}], 
-            '700.a': {'$ne': ''}, 
-            '791.a': {'$ne': ''}, 
-            '991.d': {'$ne': ''}
-        }
-    }
-
-    project_stage = {
-        '$project': {
-            '700': 1, 
-            '710': 1, 
-            '711': 1, 
-            '791': {
-                '$cond': {
-                    'if': {'$isArray': '$791'}, 
-                    'then': {
-                        '$filter': {
-                            'input': '$791', 
-                            'as': 'item', 
-                            'cond': {'$gt': [{'$indexOfCP': ['$$item.a', body]}, -1]}
-                        }
-                    }, 
-                    'else': '$791'
-                }
-            }, 
-            '991': {
-                '$cond': {
-                    'if': {'$isArray': '$991'}, 
-                    'then': {
-                        '$filter': {
-                            'input': '$991', 
-                            'as': 'item', 
-                            'cond': {'$gt': [{'$indexOfCP': ['$$item.a', body]}, -1]}
-                        }
-                    }, 
-                    'else': '$991'
-                }
-            }, 
-            'bodysession': 1,
-            'record_id': 1
-        }
-    }
-
-    unwind_stage1 = {'$unwind': '$991'}
-    unwind_stage2 = {'$unwind': '$791'}
-
-    transform = {}
-    transform['_id'] = 0
-    transform['record_id'] = 1
-    transform['section'] = "itpitsc"
-    transform['bodysession'] = 1
-    transform['itshead'] = {
-                '$cond': {
-                    'if': {'$ne': ['$710', '']}, 
-                    'then': '$710.a', 
-                    'else': '$711.a'
-                }
+        match_stage = {
+            '$match': {
+                'bodysession': bodysession, 
+                #'035.a': {'$regex': re.compile(r"Q*")}, 
+                'record_type': "ITS",
+                '$or': [
+                    {'710.a': {'$ne': ''}, 
+                    '711.a': {'$ne': ''}}], 
+                '700.a': {'$ne': ''}, 
+                '791.a': {'$ne': ''}, 
+                '991.d': {'$ne': ''}
             }
+        }
+
+        project_stage = {
+            '$project': {
+                '700': 1, 
+                '710': 1, 
+                '711': 1, 
+                '791': {
+                    '$cond': {
+                        'if': {'$isArray': '$791'}, 
+                        'then': {
+                            '$filter': {
+                                'input': '$791', 
+                                'as': 'item', 
+                                'cond': {'$gt': [{'$indexOfCP': ['$$item.a', body]}, -1]}
+                            }
+                        }, 
+                        'else': '$791'
+                    }
+                }, 
+                '991': {
+                    '$cond': {
+                        'if': {'$isArray': '$991'}, 
+                        'then': {
+                            '$filter': {
+                                'input': '$991', 
+                                'as': 'item', 
+                                'cond': {'$gt': [{'$indexOfCP': ['$$item.a', body]}, -1]}
+                            }
+                        }, 
+                        'else': '$991'
+                    }
+                }, 
+                'bodysession': 1,
+                'record_id': 1
+            }
+        }
+
+        unwind_stage1 = {'$unwind': '$991'}
+        unwind_stage2 = {'$unwind': '$791'}
+
+        transform = {}
+        transform['_id'] = 0
+        transform['record_id'] = 1
+        transform['section'] = "itpitsc"
+        transform['bodysession'] = 1
+        transform['itshead'] = {
+                    '$cond': {
+                        'if': {'$ne': ['$710', '']}, 
+                        'then': '$710.a', 
+                        'else': '$711.a'
+                    }
+                }
+        
+        if body == "S":
+            transform['itssubhead'] = '$991.d'
+        else:
+            transform['itssubhead'] = {
+                        '$concat': [
+                            '$991.d', 
+                            ' (Agenda item ', 
+                            {'$cond': {
+                                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
+                                'then':'$991.b', 
+                                'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}}
+                            },
+                            ')'
+                        ]
+                    }
+
+        transform['itsentry'] = {
+                    '$cond': {
+                        'if': '$700.g', 
+                        'then': {'$concat': ['$700.a', ' ', '$700.g']}, 
+                        'else': '$700.a'
+                    }
+                }
+
+        transform['docsymbol'] = '$791.a'
+
+        transform_stage = {}
+        transform_stage['$project'] = transform
+
+        merge_stage = {
+            '$merge': { 'into': "itp_sample_output"}
+        }
+
+        pipeline.append(match_stage)
+        pipeline.append(project_stage)
+        pipeline.append(unwind_stage1)
+        pipeline.append(unwind_stage2)
+        pipeline.append(transform_stage)
+        pipeline.append(merge_stage)
     
-    if body == "S":
-        transform['itssubhead'] = '$991.d'
-    else:
-        transform['itssubhead'] = {
-                    '$concat': [
-                        '$991.d', 
-                        ' (Agenda item ', 
-                        {'$cond': {
-                            'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
-                            'then':'$991.b', 
-                            'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}}
-                        },
-                        ')'
-                    ]
-                }
+        inputCollection.aggregate(pipeline)
 
-    transform['itsentry'] = {
-                '$cond': {
-                    'if': '$700.g', 
-                    'then': {'$concat': ['$700.a', ' ', '$700.g']}, 
-                    'else': '$700.a'
-                }
-            }
-
-    transform['docsymbol'] = '$791.a'
-
-    transform_stage = {}
-    transform_stage['$project'] = transform
-
-    merge_stage = {
-        '$merge': { 'into': "itp_sample_output"}
-    }
-
-    pipeline.append(match_stage)
-    pipeline.append(project_stage)
-    pipeline.append(unwind_stage1)
-    pipeline.append(unwind_stage2)
-    pipeline.append(transform_stage)
-    pipeline.append(merge_stage)
- 
-    inputCollection.aggregate(pipeline)
-
-    return "itpitsc completed successfully"
+        return "itpitsc completed successfully"
+    
+    except Exception as e:
+        return e
 
 # Index to Speeches - Speakers #   
 def itpitsp(bodysession):
@@ -592,7 +596,7 @@ def itpsubj(bodysession):
     try: 
 
         #clear the previous records if they exist
-        outputCollection.delete_many({ "section" : "itpsubj", "bodysession" : bodysession } )
+#        outputCollection.delete_many({ "section" : "itpsubj", "bodysession" : bodysession } )
 
         pipeline = []
 
@@ -653,9 +657,7 @@ def itpsubj(bodysession):
         else:
             add_1['title_case1'] = empty_string
             add_1['title_case2'] = empty_string
-
         
-
         #body == A, E, S
         add_1['title_case3'] = {
             '$cond': { 
@@ -713,7 +715,6 @@ def itpsubj(bodysession):
                 'then': '$239.a', 
                 'else': ''}
         }
-
         
         add_1['unique_default'] = {
             '$cond': {
@@ -738,12 +739,12 @@ def itpsubj(bodysession):
                 'then': '$520.a',
                 'else': '' } 
         }
-
+        
         add_stage1 = {}
         add_stage1['$addFields'] = add_1
 
-        add_2 =  {}
-        
+        add_2 = {}
+
         add_2['publicationdate'] = { 
             '$let': {'vars': {
                 'testMonth': {'$arrayElemAt': [{'$split': ['$269.a', '-']}, 1]},
@@ -946,10 +947,8 @@ def itpsubj(bodysession):
         add_stage2['$addFields'] = add_2
 
         transform = {}
-        transform['_id'] = 0
-        transform['record_id'] = 1
+
         transform['section'] = "itpsubj"
-        transform['bodysession'] = 1
 
         if body == "S":
             
@@ -973,8 +972,6 @@ def itpsubj(bodysession):
                         {'case': {'$eq': ['$code', 'X99']},'then': 'Resolutions'}],
                         'default': 'Not found'} 
             } 
-
-            
         
         if body == "A":
             transform['head'] = {
@@ -985,7 +982,6 @@ def itpsubj(bodysession):
                     ')'
                 ]
             }
-
 
             transform['subhead'] = {
 				'$switch': {
@@ -1017,7 +1013,6 @@ def itpsubj(bodysession):
 						{'case': {'$eq': ['$code', 'G99']},'then': 'Resolutions'}],
                         'default': 'Not found'}
             } 
-
         
         if body == "E": 
             transform['head'] = {
@@ -1028,7 +1023,6 @@ def itpsubj(bodysession):
                     ')'
                 ]
             }
-
 
             transform['subhead'] = {
                 '$switch': {
@@ -1045,10 +1039,7 @@ def itpsubj(bodysession):
                         {'case': {'$eq': ['$code', 'C88']},'then': 'Discussion in plenary'}, {'case': {'$eq': ['$code', 'C99']},'then': 'Resolutions'}],
                         'default': 'Not found'} 
             } 
-
             
-        transform['docsymbol'] = 1
-
         transform['entry'] = {
             '$cond': {
                 'if': {'$or': [
@@ -1082,7 +1073,6 @@ def itpsubj(bodysession):
                 }
             }
         }
-
 
         transform['note'] = {
             '$switch': {
@@ -1130,7 +1120,29 @@ def itpsubj(bodysession):
         } 
 
         transform_stage = {}
-        transform_stage['$project'] = transform
+        transform_stage['$addFields'] = transform
+
+        project_stage = {
+            '$project': {
+                '_id': 0, 
+                'record_id': 1, 
+                'section': 1, 
+                'bodysession': 1, 
+                'head': 1, 
+                'subhead': 1,
+                'docsymbol': 1, 
+                'entry': 1, 
+                'note': 1, 
+                'sortkey': {
+                    '$concat': [
+                        '$head', 
+                        '$code', 
+                        '$docsymbol'
+                    ]
+                }
+            }
+        }
+            
 
         merge_stage = {
             '$merge': { 'into': editorOutput}
@@ -1142,20 +1154,17 @@ def itpsubj(bodysession):
         pipeline.append(add_stage1)
         pipeline.append(add_stage2)
         pipeline.append(transform_stage)
+        pipeline.append(project_stage)
         pipeline.append(merge_stage)
 
-        #print(pipeline)
-        #allow = {'allowDiskUse': 'True'}
-        inputCollection.aggregate(pipeline, allowDiskUse=True)
+        print(pipeline)
+        
+#        inputCollection.aggregate(pipeline, allowDiskUse=True)
 
-        ##new
-        group_itpsubj("itpsubj", bodysession)
+#        group_itpsubj("itpsubj", bodysession)
  
         return "itpsubj completed successfully"
-        
-        ####works
-        #return list(inputCollection.aggregate(pipeline))
-        
+               
     except Exception as e:
         return e
 
@@ -1615,7 +1624,7 @@ def lookup_code(lookup_field):
     """
     Returns code from lookup table
     """
-    return lookupCollection.find({'lookup_field': lookup_field}, {'_id': 0, 'code': 1})
+    return lookupCollection.find({'lookup_field': lookup_field, 'implemented': "Y"}, {'_id': 0, 'code': 1})
 
 def lookup_snapshots():
     """
