@@ -596,7 +596,7 @@ def itpsubj(bodysession):
     try: 
 
         #clear the previous records if they exist
-#        outputCollection.delete_many({ "section" : "itpsubj", "bodysession" : bodysession } )
+        outputCollection.delete_many({ "section" : "itpsubj", "bodysession" : bodysession } )
 
         pipeline = []
 
@@ -607,6 +607,12 @@ def itpsubj(bodysession):
 
         empty_string = ''
 
+
+        collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
+
         match_stage = {
             '$match': {
                 'bodysession': bodysession, 
@@ -616,11 +622,29 @@ def itpsubj(bodysession):
 
         unwind_stage = {'$unwind': '$991'}
         
-        match_stage2 = {
-            '$match': {
-                '991.z': "I"
+        if body == "S":
+            match_stage2 = {
+                '$match': {
+                    '991.z': "I",
+                    '991.a' : {'$regex': "^S"}
+                }
             }
-        }
+
+        if body == "A":
+            match_stage2 = {
+                '$match': {
+                    '991.z': "I",
+                    '991.a' : {'$regex': "^A"}
+                }
+            }
+
+        if body == "E":
+            match_stage2 = {
+                '$match': {
+                    '991.z': "I",
+                    '991.a' : {'$regex': "^E"}
+                }
+            }
 
         add_1 = {}
 
@@ -676,7 +700,7 @@ def itpsubj(bodysession):
                 '$245.a', 
                 { '$cond': {                 
                     'if': '$245.b', 
-                    'then': {'$concat': [' ','$245.b']}, 
+                    'then': {'$concat': [' ',{ '$trim': { 'input': '$245.b',  'chars': " " } }]}, 
                     'else': '' } }, 
                 {'$cond': {
                     'if': '$245.c',
@@ -919,10 +943,10 @@ def itpsubj(bodysession):
          
         add_2['agendanum'] = {
             '$cond': {
-                'if': {'$eq': [ {'$indexOfCP': [ '$991.b', '['] }, -1]},
-                'then': '$991.b',
+                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
+                'then':'$991.b', 
                 'else': {'$substrCP': [ '$991.b', 0, {'$indexOfCP': [ '$991.b', '['] }]}  
-                }
+            }
         }
 
         add_2['code'] = {
@@ -975,12 +999,17 @@ def itpsubj(bodysession):
         
         if body == "A":
             transform['head'] = {
-                '$concat': [
-                    '$991.d', 
-                    ' (Agenda item ', 
-                    '$agendanum',  
-                    ')'
-                ]
+                '$cond': { 
+                    'if': {'$eq': ['$agendanum', ""]}, 
+                    'then':  '$991.d', 
+                    'else': {
+                        '$concat': [
+                        '$991.d',
+                        ' (Agenda item ',
+                        '$agendanum',
+                        ')']
+                    } 
+                } 
             }
 
             transform['subhead'] = {
@@ -1016,12 +1045,17 @@ def itpsubj(bodysession):
         
         if body == "E": 
             transform['head'] = {
-                '$concat': [
-                    '$991.d', 
-                    ' (Agenda item ', 
-                    '$agendanum',  
-                    ')'
-                ]
+                '$cond': { 
+                    'if': {'$eq': ['$agendanum', ""]}, 
+                    'then':  '$991.d', 
+                    'else': {
+                        '$concat': [
+                        '$991.d',
+                        ' (Agenda item ',
+                        '$agendanum',
+                        ')']
+                    } 
+                } 
             }
 
             transform['subhead'] = {
@@ -1133,16 +1167,19 @@ def itpsubj(bodysession):
                 'docsymbol': 1, 
                 'entry': 1, 
                 'note': 1, 
-                'sortkey': {
-                    '$concat': [
-                        '$head', 
-                        '$code', 
-                        '$docsymbol'
-                    ]
-                }
+                'sortkey1': '$head',
+                'sortkey2': '$code',
+                'sortkey3': '$docsymbol'
             }
         }
             
+        sort_stage = {
+            '$sort': {
+                'sortkey1': 1, 
+                'sortkey2': 1, 
+                'sortkey3': 1
+            }
+        }
 
         merge_stage = {
             '$merge': { 'into': editorOutput}
@@ -1155,13 +1192,14 @@ def itpsubj(bodysession):
         pipeline.append(add_stage2)
         pipeline.append(transform_stage)
         pipeline.append(project_stage)
+        pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-        print(pipeline)
+#        print(pipeline)
         
-#        inputCollection.aggregate(pipeline, allowDiskUse=True)
+        inputCollection.aggregate(pipeline, collation=collation)
 
-#        group_itpsubj("itpsubj", bodysession)
+        group_itpsubj("itpsubj", bodysession)
  
         return "itpsubj completed successfully"
                
@@ -1531,46 +1569,55 @@ def group_itpsubj(section, bodysession):
             'section': section
         }
     }
-        
+
+    sort_stage1 = {
+        '$sort': {
+            'sortkey1': 1, 
+            'sortkey2': 1, 
+            'sortkey3': 1
+        }
+    }
+
     group_stage1 = {
         '$group': {
             '_id': {
                 'itp_head': '$head', 
                 'itp_subhead': '$subhead', 
-                'docsymbol': '$docsymbol',
-                'entry': '$entry',
-                'note': "$note"
+                'sortkey1': '$sortkey1', 
+                'sortkey2': '$sortkey2'
+            }, 
+            'entries': {
+                '$push': {
+                    'docsymbol': '$docsymbol', 
+                    'entry': '$entry', 
+                    'note': '$note'
+                }
             }
         }
     }
     
+    sort_stage2 = {
+        '$sort': {
+            '_id.sortkey1': 1, 
+            '_id.sortkey2': 1
+        }
+    }
+
     group_stage2 = {
         '$group': {
             '_id': {
-                'itp_head': '$_id.itp_head',
-                'itp_subhead': '$_id.itp_subhead'},
-            'entries': {
-                '$push': {
-                    'docsymbol': '$_id.docsymbol',
-                    'entry': '$_id.entry',
-                    'note': '$_id.note'}
-            }
-        } 
-    }
-    
-    group_stage3 = {
-        '$group': {
-            '_id': {
-                'itp_head': '$_id.itp_head'},
+                'itp_head': '$_id.itp_head'
+            }, 
             'subheading': {
                 '$push': {
-                    'subhead': '$_id.itp_subhead',
-                    'entries': '$entries'}
+                    'subhead': '$_id.itp_subhead', 
+                    'entries': '$entries'
+                }
             }
-        } 
-    }     
+        }
+    }  
  
-    sort_stage = {
+    sort_stage3 = {
         '$sort': {
             '_id': 1
         }
@@ -1591,16 +1638,21 @@ def group_itpsubj(section, bodysession):
     }
 
     pipeline.append(match_stage)
+    pipeline.append(sort_stage1)
     pipeline.append(group_stage1)
+    pipeline.append(sort_stage2)
     pipeline.append(group_stage2)
-    pipeline.append(group_stage3)
-    pipeline.append(sort_stage)
+    #pipeline.append(group_stage3)
+    pipeline.append(sort_stage3)
     pipeline.append(project_stage)
     pipeline.append(merge_stage)
 
     #print(pipeline)
 
-    outputCollection.aggregate(pipeline)
+    outputCollection.aggregate(pipeline, collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        })
 
 
 
