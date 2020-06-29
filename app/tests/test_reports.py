@@ -44,7 +44,7 @@ class Reports(TestCase):
         report = ReportList.get_by_name('agenda_list')
         
         args = {}
-        args['authority'] = 1
+        args['authority'] = 'A/SESSION_1'
         
         results = report.execute(args)
         self.assertEqual(len(results), 1)
@@ -491,7 +491,7 @@ class Reports(TestCase):
                 ('791','b',1),
                 ('791','c',1),
                 ('930','a','ITS'),
-                (tag,'a','x', {'auth_control': False})
+                (tag,'a',9, {'auth_control': False})
             ).commit()
             
             Bib({'_id': 2}).set_values(
@@ -641,7 +641,7 @@ class Reports(TestCase):
                 ('791', 'b', 1),
                 ('791', 'c', 1),
                 ('930', 'a', 'VOT'),
-                (tag, 'a', 'x', {'auth_control': False})
+                (tag, 'a', 9, {'auth_control': False})
             ).commit()
             
             Bib({'_id': 2}).set_values(
