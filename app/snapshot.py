@@ -38,7 +38,6 @@ class Snapshot(object):
 
     def fields_to_extract(self):
         itp_bib_fields=[]
-        i=0
         #1. get the list of fields for the ITP
         itp_bib_fields=[]
         for itp in Itpp_itp.objects:
@@ -58,7 +57,7 @@ class Snapshot(object):
                         for fld in itpp_rule.parameters[0].split(";"):
                             itp_bib_fields.append(fld.strip()) 
         else:
-            itp_bib_fields=['001', '035$a', '591$a','700$a', '700$g', '710$a', '711$a', '791$a','791$b','791$c','793$a' '930$a', '949$a','991$b', '991$d','001', '035$a', '089$b', '191$9', '191$a', '191$b', '191$c','191$d', '191$z', '239$a', '245$a', '245$b', '245$c', '248$a', '249$a', '269$a', '495$a', '515$a', '520$a', '580$a', '591$a', '592$a', '598$a', '599$a', '791$b', '791$c', '930$a', '949$a', '991$a', '991$b', '991$c', '991$d', '991$e', '991$m', '991$s', '991$z', '992$a', '995$a', '996$a']
+            itp_bib_fields=['001', '035$a', '591$a','700$a', '700$g', '710$a', '711$a', '791$a','791$b','791$c','793$a', '930$a', '949$a','991$b', '991$d','001', '035$a', '089$b', '191$9', '191$a', '191$b', '191$c','191$d', '191$z', '239$a', '245$a', '245$b', '245$c', '248$a', '249$a', '269$a', '495$a', '515$a', '520$a', '580$a', '591$a', '592$a', '598$a', '599$a', '791$b', '791$c', '930$a', '949$a', '991$a', '991$b', '991$c', '991$d', '991$e', '991$m', '991$s', '991$z', '992$a', '995$a', '996$a']
         set_itp_bib_fields=sorted(set(itp_bib_fields))
         print(f"fields are: {set_itp_bib_fields}")   
             
@@ -70,10 +69,7 @@ class Snapshot(object):
         for k in set_itp_flds:
             proj_dict[k]=True
 
-        
-        sbflds=[]
         itpp_bib_fields=[]
-
         f=''
         for itp_field in set_itp_bib_fields:
             if itp_field !="001":
@@ -84,7 +80,7 @@ class Snapshot(object):
                 else:
                     temp_f.append((itp_field.split("$")[0],itp_field.split("$")[1]))
                 f=itp_field.split("$")[0]
-                s_f=itp_field.split("$")[1]
+                #s_f=itp_field.split("$")[1]
                 #print(f"proj_dict: {proj_dict}") 
                 #print(f"itpp_bib_fields: {itpp_bib_fields}")    
         return proj_dict,itpp_bib_fields
@@ -143,6 +139,7 @@ class Snapshot(object):
             end_rec=(chunk_no)*chunk_size
 
         for bib in lbibs[(chunk_no-1)*chunk_size:end_rec]:
+            #print(f"bib id is {bib.id}")
             bib_dict={}
             if "ITS" in bib.get_values('930','a'):
                 bib_dict["record_type"]="ITS"
@@ -153,6 +150,10 @@ class Snapshot(object):
 
             bib_dict["record_id"]=bib.id
             bib_dict["bodysession"]=self.body+'/'+self.session
+            bib_dict["snapshot_id"]=str(bib.id)+self.body+self.session
+            named_tuple = time.localtime() # get struct_time
+            time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
+            bib_dict["snapshottime"]=time_string
 
             for itpp_field_subfields in itpp_bib_fields:
                 sbflds=[]
@@ -168,7 +169,8 @@ class Snapshot(object):
                 else:
                     bib_dict[field]=""
             #snapshot_list_bibs.append(bib_dict)
-            query={"record_id":bib_dict["record_id"]}
+            #query={"record_id":bib_dict["record_id"]}
+            query={"snapshot_id":bib_dict["snapshot_id"]}
             self.replace_list_recs.append(ReplaceOne(query, bib_dict, upsert=True))
         return len(self.replace_list_recs)
     ''' writing data into snapshot collection'''    
@@ -178,7 +180,7 @@ class Snapshot(object):
             snapshot_coll.bulk_write(self.replace_list_recs)
         except:
                 warning="something went wrong with insert into MDb"    
-    '''asycnh fuinction'''
+    '''asycnh function'''
     def transform_write(self):
         proj_dict,itpp_bib_fields=self.fields_to_extract()
         #lbibs,l_temp=self.fetch_data(proj_dict)
@@ -199,8 +201,14 @@ class Snapshot(object):
     def list(self):
         snapshots=snapshot_coll.distinct("bodysession")
         for sh in snapshots:
-            self.snapshots_list.append((sh,snapshot_coll.find_one({'bodysession':sh},sort=[( '_id', pymongo.DESCENDING )])['_id'].generation_time.strftime("%Y-%m-%d %H:%M:%S")))
+            #self.snapshots_list.append((sh,snapshot_coll.find_one({'bodysession':sh},sort=[( '_id', pymongo.DESCENDING )])['_id'].generation_time.strftime("%Y-%m-%d %H:%M:%S")))
+            try:
+                self.snapshots_list.append((sh, snapshot_coll.find_one({'bodysession':sh},sort=[('snapshottime', -1)])['snapshottime']))
+            except:
+                self.snapshots_list.append((sh,snapshot_coll.find_one({'bodysession':sh},sort=[( '_id', pymongo.DESCENDING )])['_id'].generation_time.strftime("%Y-%m-%d %H:%M:%S")))
+
         return sorted(self.snapshots_list,key=lambda x: x[1], reverse = True)
+        #return sorted(self.snapshots_list, reverse = True)
 
 
 

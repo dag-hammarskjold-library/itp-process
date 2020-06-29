@@ -6,6 +6,7 @@ import boto3, re, os, pymongo
 from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
+from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
@@ -563,6 +564,40 @@ def get_or_update_section(itp_id):
     else:
         flash("Not found")
         return redirect(url_for('list_itpp_itps'))
+
+
+""" @app.route("/itpp_itps/<itp_id>/sections/<section_id>/execute")
+@login_required
+def execute_section(itp_id, section_id):
+    itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
+    '''
+    This is how you would load an aggregation class and execute it.
+    this_agg = Aggregation(bodysession='foo')
+    
+    this_agg.exec()
+    '''
+    return_data = {
+        'itp_id': itp_id,
+        'itp_name': itp.name,
+        'itp_body': itp.body,
+        'itp_session': itp.itp_session,
+        'itp_body_session_auth': itp.body_session_auth,
+        'section_id': section_id,
+        'section_name': itp.sections[0].name,
+        'section_order': itp.sections[0].section_order,
+        'section_data_source': itp.sections[0].data_source
+    }
+    this_rules = []
+    for r in itp.sections[0].rules:
+        this_rules.append({
+            'rule_id': str(r.id),
+            'rule_name': r.name,
+            'rule_type': r.rule_type,
+            'process_order': r.process_order,
+            'parameters': r.parameters
+        })
+    return_data['rules'] = this_rules
+    return jsonify(return_data) """
 
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/delete")
 @login_required
@@ -1523,6 +1558,35 @@ def newDownload(filename):
 
     return send_file(s3_file['Body'], as_attachment=True, attachment_filename=filename)
 
+@app.route('/itp/selectSection/',methods=["GET", "POST"])
+@login_required
+def selectSection():
+    sections= lookup_code("section")
+    bodysessions = lookup_snapshots()
+    
+
+    if request.method == "GET" :
+    
+        # Returning the view
+        results = section_summary()
+        
+        return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
+
+    else :
+         # Calling the logic to generate the section       
+        process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
+        
+        # Returning the view
+        results = section_summary()
+        return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
+
+        """
+            results = section_summary()
+            #print(results)
+            return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
+        """
+
+    
 @app.route("/wordGeneration",methods=["POST","GET"])
 @login_required
 def wordGeneration():
