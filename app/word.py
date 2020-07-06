@@ -19,6 +19,7 @@ from docx.enum.dml import MSO_THEME_COLOR_INDEX
 from zappa.asynchronous import task
 from flask import send_file, jsonify
 from docx.enum.table import WD_ALIGN_VERTICAL
+from pymongo.collation import Collation
 
 s3_client = boto3.client('s3')
 
@@ -1106,8 +1107,9 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle1=paramSubTitle
-    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sortkey1",1)
-
+    #setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sortkey1",1)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sortkey1",1).collation(Collation(locale='en',numericOrdering=True))
+    
     # Creation of the word document
     document = Document()
     
@@ -1271,12 +1273,16 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValue[0]+"."+firstlineValue[1])
             row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
             row_cells[3].text=record["ainumber"]
+            ############################################
+            
             row_cells[4].text=record["vote"]
+            row_cells[4].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
 
 
         # Definition of the size of the column
 
-        widths = (Inches(0.73), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
+        #widths = (Inches(0.73), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
+        widths = (Inches(0.73), Inches(3.30), Inches(1.05), Inches(0.61), Inches(1.10))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
@@ -1287,7 +1293,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
         baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/"
         firstlineValue= (myRecords[0]["meeting"].split("."))[0].split("/")
 
-        baseUrl2="("+firstlineValue[0]+"/"+ firstlineValue[2] +".-)"
+        baseUrl2="  ("+firstlineValue[0]+"/"+ firstlineValue[2] +".-)"
 
         run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
         run.underline=True

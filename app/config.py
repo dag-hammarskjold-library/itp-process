@@ -33,7 +33,8 @@ class ProductionConfig(object):
     dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
     collection_prefix = ''
     bucket_name = 'itpp-zappa-bucket'
-    url_prefix="https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/"
+    #url_prefix="https://9inpseo1ah.execute-api.us-east-1.amazonaws.com/prod/symbol/"
+    url_prefix="https://undocs.org/"
     RPP = 10
     
 class DevelopmentConfig(ProductionConfig):
