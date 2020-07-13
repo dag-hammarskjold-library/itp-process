@@ -1957,7 +1957,12 @@ def group_speeches(section, bodysession):
 
     #print(pipeline)
 
-    outputCollection.aggregate(pipeline)
+    outputCollection.aggregate(pipeline, collation={
+            'locale': 'en', 
+            'numericOrdering': True,
+            'strength': 1,
+            'alternate': 'shifted'
+        })
 
 
 def group_itpsubj(section, bodysession):
@@ -2054,7 +2059,8 @@ def group_itpsubj(section, bodysession):
 
     outputCollection.aggregate(pipeline, collation={
             'locale': 'en', 
-            'numericOrdering': True
+            'numericOrdering': True,
+            'strength': 1
         })
 
 
