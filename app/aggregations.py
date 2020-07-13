@@ -1960,8 +1960,8 @@ def group_speeches(section, bodysession):
     outputCollection.aggregate(pipeline, collation={
             'locale': 'en', 
             'numericOrdering': True,
-            'strength': 1,
-            'alternate': 'shifted'
+            'strength': 1, #ignore diacritics
+            'alternate': 'shifted' #ignore punctuation
         })
 
 
