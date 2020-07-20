@@ -20,6 +20,7 @@ from zappa.asynchronous import task
 from flask import send_file, jsonify
 from docx.enum.table import WD_ALIGN_VERTICAL
 from pymongo.collation import Collation
+from docx.enum.table import WD_TABLE_ALIGNMENT
 
 s3_client = boto3.client('s3')
 
@@ -547,7 +548,7 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                 current=1
 
-                for docsymbol in sorted(docsymbols):
+                for docsymbol in docsymbols:
 
                     add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
                     
@@ -1156,6 +1157,16 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     font.italic=True
     font.color.rgb = RGBColor(0, 0, 0)
     
+    ################## SPECIAL ###############################################
+    
+    special = styles.add_style('special', WD_STYLE_TYPE.PARAGRAPH)
+    pf = special.paragraph_format
+    pf.left_indent = Inches(0.40)
+    # Font settings
+    font = special.font
+    font.underline=True
+    
+    
     ################## TABLE CONTENT ###############################################
     
     tableContent_style = styles.add_style('tableContent', WD_STYLE_TYPE.PARAGRAPH)
@@ -1171,8 +1182,9 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Hanging indent    
 
     pf = tableContent_style.paragraph_format
-    pf.first_line_indent = Inches(-0.07)
-    #pf.first_line_indent = Inches(10)
+    #pf.first_line_indent = Inches(-0.02)
+    
+    pf.first_line_indent = Inches(-0.06)
 
     ################## TABLE CONTENT 1 ###############################################
     
@@ -1226,14 +1238,14 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     # creation of the table
 
     table = document.add_table(rows=1, cols=5)
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+    # table.allow_autofit=True
 
     # set the header visible
     set_repeat_table_header(table.rows[0])
 
     # Retrieve the first line
     hdr_cells = table.rows[0].cells
-
-
 
     # Definition of the column names
     myRecords=setOfData
@@ -1244,18 +1256,30 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
         baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/" + firstTitle[2] + "/" 
         firstlineValue= myRecords[0]["meeting"].split(".")
         baseUrl2="("+firstlineValue[0]+".-)"
-
-
+        
         run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
         run.underline=True
-        run = hdr_cells[1].paragraphs[0].add_run('Title')
+      
+        #hdr_cells[1].paragraphs[0].paragraph_format.alignment=WD_ALIGN_PARAGRAPH.LEFT
+        # hdr_cells[1].text='Title'
+        table.rows[0].cells[1].text='Title'
+        table.rows[0].cells[1].alignment=WD_ALIGN_PARAGRAPH.LEFT
+        # run=hdr_cells[1].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.LEFT
+        # run=hdr_cells[1].text.strip()
+        # run.underline=True
+        
+        hdr_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
+        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date' +  "               " + baseUrl2)
         run.underline=True
-        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date' +  "            " + baseUrl2)
-        run.underline=True
+        
+        hdr_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[3].paragraphs[0].add_run('A.I. No.')
         run.underline=True
+        
+        hdr_cells[4].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[4].paragraphs[0].add_run('Vote')
         run.underline=True
+        
 
         # writing the others lines
 
@@ -1271,8 +1295,13 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             row_cells[1].text=record["title"]
             row_cells[1].paragraphs[0].style="tableContent"   
             add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValue[0]+"."+firstlineValue[1])
+            
             row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
+            row_cells[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            ############################################
+            
             row_cells[3].text=record["ainumber"]
+            row_cells[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             ############################################
             
             row_cells[4].text=record["vote"]
@@ -1281,8 +1310,9 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         # Definition of the size of the column
 
-        #widths = (Inches(0.73), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
-        widths = (Inches(0.73), Inches(3.30), Inches(1.05), Inches(0.61), Inches(1.10))
+        #widths = (Inches(0.73), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8)) first version
+        #widths = (Inches(0.73), Inches(3.30), Inches(1.05), Inches(0.61), Inches(1.10)) second version
+        widths = (Inches(0.43), Inches(5.00), Inches(1.25), Inches(0.61), Inches(1.10))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
@@ -1297,10 +1327,12 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
         run.underline=True
+        hdr_cells[1].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[1].paragraphs[0].add_run('Subject')
         run.underline=True
         run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date' +  "            " + baseUrl2)
         run.underline=True
+        hdr_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[3].paragraphs[0].add_run('Vote')
         run.underline=True
 
@@ -1326,7 +1358,8 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         # Definition of the size of the column
 
-        widths = (Inches(1.4), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
+        #widths = (Inches(1.4), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
+        widths = (Inches(0.43), Inches(5.00), Inches(1.25), Inches(0.61), Inches(1.10))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
@@ -1341,11 +1374,9 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
                 for run in paragraph.runs:
                     font = run.font
                     font.name="Arial"
-                    font.size= Pt(8)
+                    font.size= Pt(7.5)
 
     # Save the document
-    
- 
     return document  
 
 def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
