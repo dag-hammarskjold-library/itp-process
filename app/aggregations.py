@@ -550,8 +550,10 @@ def itpres(bodysession):
         match_stage2 = {
             '$match': {
                 '191.b': body + "/",
-                '191.c': session}
-                }
+                '191.c': session, 
+                '991.z': "I"
+            }
+        }
 
         addfields_stage = {
             '$addFields': {
@@ -564,12 +566,6 @@ def itpres(bodysession):
         transform['section'] = "itpres"
         transform['bodysession'] = 1
         transform['docsymbol'] = '$191.a'
-        transform['ainumber'] = { 
-            '$cond': {
-                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
-                'then': '$991.b',
-                'else': {'$substrCP': ['$991.b', 1, {'$subtract': [{'$indexOfCP': ['$991.b', ']']}, 1]}]}}
-        }
         transform['vote'] = {
             '$let': {
                 'vars': {   
@@ -594,6 +590,14 @@ def itpres(bodysession):
                 
 
         if body == "S":
+            transform['ainumber'] = {
+                '$cond': {
+                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                    'then': '$991.b', 
+                    'else': {'$substrCP': ['$991.b', 1, {'$subtract': [{'$indexOfCP': ['$991.b', ']']}, 1]}]}
+                }
+            }
+
             transform['subject'] = {
             '$cond': {
                 'if': {'$eq': ['$991.z', 'I']},
@@ -621,7 +625,7 @@ def itpres(bodysession):
                 '$let': {
                     'vars': {
                         'testMonth': {'$arrayElemAt': ['$votedate', 1]},   
-                        'testDate': {'$arrayElemAt': ['$votedate', 2]}
+                        'testDate': { '$ltrim': { 'input': {'$arrayElemAt': ['$votedate', 2]},  'chars': '0' } }
                         },
                     'in': {   
                         '$switch': {   
@@ -642,25 +646,49 @@ def itpres(bodysession):
             }
             
             transform['meeting'] = {
-                '$concat': ['$191.b', 
-                            '$191.c', 
-                            '/PV.', 
-                            {'$substr': [{'$arrayElemAt': [{'$split': ['$996.a', ' '] }, 2]}, 0, {'$subtract': [{'$strLenCP': {'$arrayElemAt': [{'$split': ['$996.a', ' ']}, 2]} }, 2]}]}]   
-            }   
-            
+                '$concat': [
+                    '$191.b', 
+                    {'$substrCP': ['$191.c', 0, 4]}, 
+                    '/PV.', 
+                    {'$let': {
+                        'vars': {
+                            'e': {'$arrayElemAt': [
+                                {'$split': ['$996.a', ' ']}, 
+                                {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'meeting']}, 1]}]}
+                        }, 
+                        'in': {
+                            '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
+                        }}
+                    }
+                ]
+            }
                     
         else:
-            transform['title'] = {
+            transform['ainumber'] = {
                 '$cond': {
-                    'if': {'$eq': [{'$indexOfCP': ['$245.a', ' :']}, -1]},
-                    'then': '',
-                    'else': {'$substrCP': ['$245.a', 0, {'$indexOfCP': ['$245.a', ' :']}]}}}
+                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
+                    'then':'$991.b', 
+                    'else': {'$substrCP': [ '$991.b', 0, {'$indexOfCP': [ '$991.b', '['] }]}  
+                }
+            }
+
+            transform['title'] = { 
+                '$cond': { 
+                    'if': '$245.a', 
+                    'then': {
+                        '$cond': {
+                            'if': {'$eq': [{'$indexOfCP': ['$245.a', ' :']}, -1]},
+                            'then': '$245.a',
+                            'else': {'$substrCP': ['$245.a', 0, {'$indexOfCP': ['$245.a', ' :']}]}}}, 
+                    'else': '' 
+                } 
+            }
                             
             transform['votedate'] = {    
                 '$let': {
                     'vars': {   
                         'testMonth': {'$arrayElemAt': ['$votedate', 1 ] },   
-                        'testDate': {'$arrayElemAt': ['$votedate', 2 ] },   
+                        'testDate': { '$ltrim': { 'input': {'$arrayElemAt': ['$votedate', 2]},  'chars': '0' } },   
                         'testYear': {'$arrayElemAt': ['$votedate', 0 ] }},
                     'in': {   
                         '$switch': {   
@@ -681,12 +709,22 @@ def itpres(bodysession):
                 }
             }
     
-            transform['meeting'] = { 
-                '$switch': {
-                    'branches': [   
-                        {'case': {'$eq': ['$191.b', 'E/']}, 'then': {'$concat': ['$191.b', {'$substrCP': ['$191.c', 0, 4]}, '/PV.', {'$substr': [ { '$arrayElemAt': [ {'$split': ['$996.a', ' '] }, 3 ] }, 0, { '$subtract': [ {'$strLenCP': {'$arrayElemAt': [{'$split': ['$996.a', ' ']}, 3]} }, 2 ] }]}]}}, 
-                        {'case': {'$eq': ['$191.b', 'A/']}, 'then': {'$concat': ['$191.b', '$191.c', '/PV.', {'$substr': [ { '$arrayElemAt': [ {'$split': ['$996.a', ' '] }, 3 ] }, 0, { '$subtract': [ {'$strLenCP': {'$arrayElemAt': [{'$split': ['$996.a', ' ']}, 3]} }, 2 ] }]}]}}]
-                }
+            transform['meeting'] = {
+                '$concat': [
+                    '$191.b', 
+                    {'$substrCP': ['$191.c', 0, 4]}, 
+                    '/PV.', 
+                    {'$let': {
+                        'vars': {
+                            'e': {'$arrayElemAt': [
+                                {'$split': ['$996.a', ' ']}, 
+                                {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'plenary']}, 1]}]}
+                        }, 
+                        'in': {
+                            '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
+                        }}
+                    }
+                ]
             }
 
         transform['sortkey1'] = '$191.a'
@@ -705,7 +743,9 @@ def itpres(bodysession):
         pipeline.append(addfields_stage)
         pipeline.append(transform_stage)
         pipeline.append(merge_stage)
-    
+
+        #print(pipeline)
+
         inputCollection.aggregate(pipeline, collation=collation)
 
         copyPipeline = []
@@ -1917,7 +1957,12 @@ def group_speeches(section, bodysession):
 
     #print(pipeline)
 
-    outputCollection.aggregate(pipeline)
+    outputCollection.aggregate(pipeline, collation={
+            'locale': 'en', 
+            'numericOrdering': True,
+            'strength': 1, #ignore diacritics
+            'alternate': 'shifted' #ignore punctuation
+        })
 
 
 def group_itpsubj(section, bodysession):
@@ -2014,7 +2059,9 @@ def group_itpsubj(section, bodysession):
 
     outputCollection.aggregate(pipeline, collation={
             'locale': 'en', 
-            'numericOrdering': True
+            'numericOrdering': True,
+            'strength': 1, #ignore diacritics
+            'alternate': 'shifted' #ignore punctuation
         })
 
 
