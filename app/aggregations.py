@@ -2060,7 +2060,8 @@ def group_itpsubj(section, bodysession):
     outputCollection.aggregate(pipeline, collation={
             'locale': 'en', 
             'numericOrdering': True,
-            'strength': 1
+            'strength': 1, #ignore diacritics
+            'alternate': 'shifted' #ignore punctuation
         })
 
 
