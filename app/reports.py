@@ -637,17 +637,17 @@ class SpeechDuplicateRecord(SpeechReport):
         
         return results
 
-class SpeechIncompleteAuthority(SpeechReport):
+class SpeechIncompleteAuthMother(SpeechReport):
     def __init__(self):
         SpeechReport.__init__(self)
         self.name = 'speech_incomplete_authority'
-        self.title = "Incomplete authorities"
-        self.description = "Authority records referenced from speech record fields 700, 710, or 711 that are missing 905 or 915"
+        self.title = "Incomplete authorities - mother record"
+        self.description = "Authority records referenced from speech record fields 700, 710, or 711 that have a subfield $g in the heading field, and are missing 905 or 915"
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
 
-        self.field_names = ['Authory ID', 'Heading', '905$a', '915$a']
+        self.field_names = ['Authority ID', 'Heading', 'Heading $g', '905$a', '915$a']
     
     def execute(self, args):
         self.validate_args(args)
@@ -667,11 +667,51 @@ class SpeechIncompleteAuthority(SpeechReport):
         results = []
         
         for auth in AuthSet.from_query(query, projection={'100': 1, '110': 1, '111': 1, '905': 1, '915': 1}):
+            if not auth.heading_field.get_value('g'):
+                continue
+            
             if not auth.get_field('905') or not auth.get_field('915'):
-                results.append([auth.id, auth.heading_value('a'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
+                results.append([auth.id, auth.heading_value('a'), auth.heading_value('g'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
             
         return results
 
+class SpeechIncompleteAuthSubfieldG(SpeechReport):
+    def __init__(self):
+        SpeechReport.__init__(self)
+        self.name = 'speech_incomplete_subfield_g'
+        self.title = "Incomplete authorities - subfield g"
+        self.description = "Authority records referenced from speech record fields 700, 710, or 711 that do not have a subfield $g in the heading field, and are missing 905 or 915"
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+
+        self.field_names = ['Authority ID', 'Heading', 'Heading $g', '905$a', '915$a']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition('791', {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^ITS')})
+        )
+        
+        auth_ids = []
+        
+        for bib in BibSet.from_query(query, projection={'700': 1, '710': 1, '711': 1}):
+            auth_ids += bib.get_xrefs('700') + bib.get_xrefs('710') + bib.get_xrefs('711')
+            
+        query = {'_id': {'$in': auth_ids}}
+        results = []
+        
+        for auth in AuthSet.from_query(query, projection={'100': 1, '110': 1, '111': 1, '905': 1, '915': 1}):
+            if not auth.heading_field.get_value('g'):
+                if not auth.get_field('905') or not auth.get_field('915'):
+                    results.append([auth.id, auth.heading_value('a'), auth.heading_value('g'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
+                    
+            
+        return results
+    
 class SpeechMismatch(SpeechReport, Mismatch269_992):
     def __init__(self):
         SpeechReport.__init__(self)
@@ -865,8 +905,14 @@ class ReportList(object):
         # Field mismatch - 269 & 992
         SpeechMismatch(),
         
-        # Incomplete authorities
-        SpeechIncompleteAuthority(),
+        # Incomplete authorities # *** split into two reports below as per VW
+        # SpeechIncompleteAuthority(),
+        
+        # Incomplete authorities - mother record
+        SpeechIncompleteAuthMother(),
+        # Incomplete authorities - subfield g
+        SpeechIncompleteAuthSubfieldG(),
+        
         # Incorrect field - 991
         SpeechIncorrect991(),
         # Incorrect field - 992
