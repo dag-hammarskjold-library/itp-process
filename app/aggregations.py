@@ -177,7 +177,7 @@ def itpitsc(bodysession):
     
         pipeline.append(merge_stage)
 
-
+        #print(pipeline)
     
         inputCollection.aggregate(pipeline, collation=collation)
 
@@ -545,7 +545,7 @@ def itpres(bodysession):
                 }
 
         unwind_stage1 = {'$unwind': '$191'}
-        unwind_stage2 = {'$unwind': '$991'}
+        #unwind_stage2 = {'$unwind': '$991'}
 
         match_stage2 = {
             '$match': {
@@ -555,10 +555,32 @@ def itpres(bodysession):
             }
         }
 
-        addfields_stage = {
-            '$addFields': {
-                'decision': '$996.a',
-                'votedate': {'$split': ['$992.a', '-']}}}
+        add_1 = {}
+
+        add_1['decision'] = '$996.a'
+
+        add_1['votedate'] = {'$split': ['$992.a', '-']}
+
+        add_1['agendas'] = {
+            '$cond': {
+                'if': {'$isArray': ['$991']}, 
+                'then': {
+                    '$filter': {
+                        'input': '$991', 
+                        'as': 'fields', 
+                        'cond': {'$eq': ['$$fields.z', 'I']}
+                    }
+                }, 
+                'else': {
+                    '$cond': {
+                        'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                        'then': '$991.b', 
+                        'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}}}
+            }
+        }
+
+        add_stage1 = {}
+        add_stage1['$addFields'] = add_1
 
         transform = {}
         transform['_id'] = 0
@@ -590,13 +612,7 @@ def itpres(bodysession):
                 
 
         if body == "S":
-            transform['ainumber'] = {
-                '$cond': {
-                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
-                    'then': '$991.b', 
-                    'else': {'$substrCP': ['$991.b', 1, {'$subtract': [{'$indexOfCP': ['$991.b', ']']}, 1]}]}
-                }
-            }
+            transform['ainumber'] = ''
 
             transform['subject'] = {
             '$cond': {
@@ -665,12 +681,20 @@ def itpres(bodysession):
                     
         else:
             transform['ainumber'] = {
-                '$cond': {
-                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
-                    'then':'$991.b', 
-                    'else': {'$substrCP': [ '$991.b', 0, {'$indexOfCP': [ '$991.b', '['] }]}  
+                '$switch': {
+                    'branches': [
+                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$gt': [{'$size': '$agendas'}, 1]}] }, 
+                            'then': {'$concat': [{'$arrayElemAt': ['$agendas.b', 0]}, ' ', {'$arrayElemAt': ['$agendas.b', 1]}] }}, 
+                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$eq': [{'$size': '$agendas'}, 1]}] }, 
+                            'then': {'$cond': {
+                                'if': {'$eq': [{'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}, -1]},
+                                'then': {'$arrayElemAt': ['$agendas.b', 0]},
+                                'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 0]}, 0, {'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}]}} } }
+                    ], 
+                    'default': '$agendas'
                 }
             }
+               
 
             transform['title'] = { 
                 '$cond': { 
@@ -679,7 +703,7 @@ def itpres(bodysession):
                         '$cond': {
                             'if': {'$eq': [{'$indexOfCP': ['$245.a', ' :']}, -1]},
                             'then': '$245.a',
-                            'else': {'$substrCP': ['$245.a', 0, {'$indexOfCP': ['$245.a', ' :']}]}}}, 
+                            'else': { '$rtrim': { 'input': '$245.a',  'chars': " :" } }}}, 
                     'else': '' 
                 } 
             }
@@ -709,11 +733,31 @@ def itpres(bodysession):
                 }
             }
     
+        if body == "A":
             transform['meeting'] = {
                 '$concat': [
                     '$191.b', 
                     {'$substrCP': ['$191.c', 0, 4]}, 
                     '/PV.', 
+                    {'$let': {
+                        'vars': {
+                            'e': {'$arrayElemAt': [
+                                {'$split': ['$996.a', ' ']}, 
+                                {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'plenary']}, 1]}]}
+                        }, 
+                        'in': {
+                            '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
+                        }}
+                    }
+                ]
+            }    
+
+        if body == "E":
+            transform['meeting'] = {
+                '$concat': [
+                    '$191.b', 
+                    {'$substrCP': ['$191.c', 0, 4]}, 
+                    '/SR.', 
                     {'$let': {
                         'vars': {
                             'e': {'$arrayElemAt': [
@@ -738,9 +782,9 @@ def itpres(bodysession):
 
         pipeline.append(match_stage1)
         pipeline.append(unwind_stage1)
-        pipeline.append(unwind_stage2)
+        #pipeline.append(unwind_stage2)
         pipeline.append(match_stage2)
-        pipeline.append(addfields_stage)
+        pipeline.append(add_stage1)
         pipeline.append(transform_stage)
         pipeline.append(merge_stage)
 
@@ -1442,6 +1486,9 @@ def itpdsl(bodysession):
     Builds the aggregation query and inserts the results into another collection.
     """ 
     try: 
+        #clear the previous records if they exist
+        outputCollection.delete_many({ "section" : "itpdsl", "bodysession" : bodysession } )
+        
         pipeline = []
 
         bs = bodysession.split("/")
@@ -1646,27 +1693,13 @@ def itpdsl(bodysession):
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
+        #print(pipeline)
+
         inputCollection.aggregate(pipeline, collation=collation)
+        #inputCollection.aggregate(pipeline)
 
-        copyPipeline = []
+        group_itpdsl("itpdsl", bodysession)
 
-        copyMatch_stage = {
-            '$match': {
-                'bodysession': bodysession, 
-                'section': "itpdsl"
-            }
-        }
-
-        copyMerge_stage = {
-            '$merge': { 'into': wordOutput}
-        }
-        
-        clear_section("itpdsl", bodysession)
-
-        copyPipeline.append(copyMatch_stage)
-        copyPipeline.append(copyMerge_stage)
-
-        outputCollection.aggregate(copyPipeline)
 
     except Exception as e:
         return e
@@ -1684,7 +1717,36 @@ def itpmeet(bodysession):
         bs = bodysession.split("/")
         body = bs[0]
 
-        match_stage = {}
+        if body == "A":
+            match_stage = {
+                'bodysession': bodysession, 
+                '$or': [
+                    {'191.a': {'$regex': '/SR.'}}, 
+                    {'191.a': {'$regex': '/PV.'}}
+                ]
+            }
+        
+        if body == "E":
+             match_stage = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    '191.a': {
+                        '$regex': '/SR.'
+                    }
+                }
+            }
+        
+        if body == "S":
+             match_stage = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    '191.a': {
+                        '$regex': '/PV.'
+                    }
+                }
+            }
+        
+        #undwind and match are only for A and E
         unwind_stage = {}
         
         transform = {}
@@ -1692,6 +1754,93 @@ def itpmeet(bodysession):
         transform['record_id'] = 1
         transform['section'] = "itpmeet"
         transform['bodysession'] = 1
+
+        transform['docsymbol'] = '$191.a'
+
+        if body == "A":
+            transform['symbol'] = '' #fill in
+
+            transform['meetingnum'] = '' #fill in
+
+            transform['committee1'] = {
+                '$switch': {
+                    'branches': [
+                        {'case': {'$eq': ['$code', 'A']},'then': 'General Committee' }, 
+                        {'case': {'$eq': ['$code', '1']},'then': 'Disarmament and International Security Committee' }, 
+                        {'case': {'$eq': ['$code', '2']},'then': 'Economic and Financial Committee' }, 
+                        {'case': {'$eq': ['$code', '3']},'then': 'Social, Humanitarian and Cultural Committee' }, 
+                        {'case': {'$eq': ['$code', '4']},'then': 'Special Political and Decolonization Committee' }, 
+                        {'case': {'$eq': ['$code', '5']},'then': 'Administrative and Budgetary Committee' }, 
+                        {'case': {'$eq': ['$code', '6']},'then': 'Legal Committee' }, 
+                        {'case': {'$eq': ['$code', '8']},'then': 'Plenary' }, 
+                        {'case': {'$eq': ['$code', '9']},'then': 'Credentials Committee' }
+                    ], 
+                'default': ''
+                }
+            }
+
+            transform['committee2'] = {
+                '$switch': {
+                    'branches': [
+                        {'case': {'$eq': ['$code', '1'] }, 'then': '(First Committee)' }, 
+                        {'case': {'$eq': ['$code', '2'] }, 'then': '(Second Committee)' }, 
+                        {'case': {'$eq': ['$code', '3'] }, 'then': '(Third Committee)' }, 
+                        {'case': {'$eq': ['$code', '4'] }, 'then': '(Fourth Committee)' }, 
+                        {'case': {'$eq': ['$code', '5'] }, 'then': '(Fifth Committee)' }, 
+                        {'case': {'$eq': ['$code', '6'] }, 'then': '(Sixth Committee)' }
+                    ], 
+                    'default': ''
+                }
+            }
+
+        else:
+            transform['symbol'] = {
+                '$concat': [
+                    {'$arrayElemAt': [{'$split': ['$191.a', '.']}, 0]}, 
+                    '.-'
+                ]
+            }
+
+            transform['meetingnum'] = {
+                '$arrayElemAt': [{'$split': ['$191.a', '.']}, 1]
+            }
+
+            transform['committee1'] = ''
+
+            transform['committee2'] = ''
+
+
+        transform['meetingdate'] = {
+            '$let': {
+                'vars': {
+                    'testDate': {'$ltrim': {'input': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 2]}, 'chars': '0'}}, 
+                    'testMonth': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 1]}
+                }, 
+                'in': {
+                    '$switch': {
+                        'default': 'Did not match', 
+                        'branches': [
+                            {'case': {'$eq': ['$$testMonth', '01']}, 'then': {'$concat': ['$$testDate', ' ', 'Jan.']}}, 
+                            {'case': {'$eq': ['$$testMonth', '02']}, 'then': {'$concat': ['$$testDate', ' ', 'Feb.']}}, 
+                            {'case': {'$eq': ['$$testMonth', '03']}, 'then': {'$concat': ['$$testDate', ' ', 'Mar.']}}, 
+                            {'case': {'$eq': ['$$testMonth', '04']}, 'then': {'$concat': ['$$testDate', ' ', 'Apr.']}}, 
+                            {'case': {'$eq': ['$$testMonth', '05']}, 'then': {'$concat': ['$$testDate', ' ', 'May']}}, 
+                            {'case': {'$eq': ['$$testMonth', '06']}, 'then': {'$concat': ['$$testDate', ' ', 'June']}}, 
+                            {'case': {'$eq': ['$$testMonth', '07']}, 'then': {'$concat': ['$$testDate', ' ', 'July']}}, 
+                            {'case': {'$eq': ['$$testMonth', '08']}, 'then': {'$concat': ['$$testDate', ' ', 'Aug.']}}, 
+                            {'case': {'$eq': ['$$testMonth', '09']}, 'then': {'$concat': ['$$testDate', ' ', 'Sept.']}}, 
+                            {'case': {'$eq': ['$$testMonth', '10']}, 'then': {'$concat': ['$$testDate', ' ', 'Oct.']}}, 
+                            {'case': {'$eq': ['$$testMonth', '11']}, 'then': {'$concat': ['$$testDate', ' ', 'Nov.']}}, 
+                            {'case': {'$eq': ['$$testMonth', '12']}, 'then': {'$concat': ['$$testDate', ' ', 'Dec.']}}
+                        ]
+                    }
+                }
+            }
+        }
+
+        transform['meetingyear'] = {
+            '$arrayElemAt': [{'$split': ['$992.a', '-']}, 0]
+        }
 
         transform_stage = {}
         transform_stage['$project'] = transform
@@ -1836,6 +1985,8 @@ def process_section(bodysession, section):
         s = itpreps(bodysession) #reports
     else: 
         s = "No Section Selected"
+
+    print(section, ": " , s)
 
     return s
 
@@ -2064,6 +2215,96 @@ def group_itpsubj(section, bodysession):
             'alternate': 'shifted' #ignore punctuation
         })
 
+def group_itpdsl(section, bodysession):
+    
+    clear_section(section, bodysession)
+
+    pipeline = []
+
+    match_stage = {
+        '$match': {
+            'bodysession': bodysession, 
+            'section': section
+        }
+    }
+
+    sort_stage1 = {
+        '$sort': {
+            'sortkey1': 1, 
+            'sortkey2': 1, 
+            'sortkey3': 1
+        }
+    }
+
+    group_stage1 = {
+        '$group': {
+            '_id': {
+                'committee': '$committee', 
+                'series': '$series', 
+                'sortkey1': '$sortkey1', 
+                'sortkey2': '$sortkey2'
+            }, 
+            'docsymbols': {
+                '$push': '$docsymbol'
+            }
+        }
+    } 
+    
+    sort_stage2 = {
+        '$sort': {
+            '_id.sortkey1': 1, 
+            '_id.sortkey2': 1
+        }
+    }
+    
+    group_stage2 = {
+        '$group': {
+            '_id': {
+                'committee': '$_id.committee', 
+                'sortkey1': '$_id.sortkey1'
+            }, 
+            'series': {
+                '$push': {
+                    'series': '$_id.series', 
+                    'docsymbols': '$docsymbols'
+                }
+            }
+        }
+    } 
+    
+    sort_stage3 = {
+        '$sort': {
+            '_id.sortkey1': 1
+        }
+    } 
+    
+    project_stage = {
+        '$project': {
+            '_id': 0, 
+            'committee': '$_id.committee', 
+            'series': 1,
+            'bodysession': bodysession, 
+            'section': section,
+        }
+    }
+
+    merge_stage = {
+        '$merge': { 'into': wordOutput}
+    }
+
+    pipeline.append(match_stage)
+    pipeline.append(sort_stage1)
+    pipeline.append(group_stage1)
+    pipeline.append(sort_stage2)
+    pipeline.append(group_stage2)
+    pipeline.append(sort_stage3)
+    pipeline.append(project_stage)
+    pipeline.append(merge_stage)
+
+    outputCollection.aggregate(pipeline, collation={
+            'locale': 'en', 
+            'numericOrdering': True,
+        })
 
 
 def clear_section(section, bodysession):
