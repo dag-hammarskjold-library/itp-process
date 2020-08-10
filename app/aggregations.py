@@ -579,6 +579,25 @@ def itpres(bodysession):
             }
         }
 
+        add_1['subjects'] = {
+            '$cond': {
+                'if': {'$isArray': ['$991']}, 
+                'then': {
+                    '$filter': {
+                        'input': '$991', 
+                        'as': 'fields', 
+                        'cond': {
+                            '$eq': [
+                                '$$fields.z', 'I'
+                            ]
+                        }
+                    }
+                }, 
+                'else': '$991.d'
+            }
+        }
+
+
         add_stage1 = {}
         add_stage1['$addFields'] = add_1
 
@@ -615,10 +634,11 @@ def itpres(bodysession):
             transform['ainumber'] = ''
 
             transform['subject'] = {
-            '$cond': {
-                'if': {'$eq': ['$991.z', 'I']},
-                'then': '$991.d', 
-                'else': ''}
+                '$cond': {
+                    'if': {'$isArray': '$subjects'}, 
+                    'then': {'$arrayElemAt': ['$subjects.d', 0]}, 
+                    'else': '$subjects'
+                }
             }
         
             transform['subjectsubtitle'] = {
