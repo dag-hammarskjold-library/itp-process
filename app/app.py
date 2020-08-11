@@ -25,7 +25,7 @@ from time import sleep
 from zappa.asynchronous import task, get_async_response
 from pymongo import MongoClient
 from copy import deepcopy
-from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR,generateWordDocITPRES,generateWordDocITPSUBJ
+from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR,generateWordDocITPRES,generateWordDocITPSUBJ,generateWordDocITPDSL
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -565,40 +565,6 @@ def get_or_update_section(itp_id):
         flash("Not found")
         return redirect(url_for('list_itpp_itps'))
 
-
-""" @app.route("/itpp_itps/<itp_id>/sections/<section_id>/execute")
-@login_required
-def execute_section(itp_id, section_id):
-    itp = Itpp_itp.objects.get(id=itp_id, sections__id=section_id)
-    '''
-    This is how you would load an aggregation class and execute it.
-    this_agg = Aggregation(bodysession='foo')
-    
-    this_agg.exec()
-    '''
-    return_data = {
-        'itp_id': itp_id,
-        'itp_name': itp.name,
-        'itp_body': itp.body,
-        'itp_session': itp.itp_session,
-        'itp_body_session_auth': itp.body_session_auth,
-        'section_id': section_id,
-        'section_name': itp.sections[0].name,
-        'section_order': itp.sections[0].section_order,
-        'section_data_source': itp.sections[0].data_source
-    }
-    this_rules = []
-    for r in itp.sections[0].rules:
-        this_rules.append({
-            'rule_id': str(r.id),
-            'rule_name': r.name,
-            'rule_type': r.rule_type,
-            'process_order': r.process_order,
-            'parameters': r.parameters
-        })
-    return_data['rules'] = this_rules
-    return jsonify(return_data) """
-
 @app.route("/itpp_itps/<itp_id>/sections/<section_id>/delete")
 @login_required
 def delete_section(itp_id,section_id):
@@ -607,12 +573,6 @@ def delete_section(itp_id,section_id):
         itp.update(pull__sections__id=bson.ObjectId(section_id))
         return redirect(url_for('update_itpp_itp', id=itp_id, mode='sections'))
 
-        '''
-        return json.dumps({
-            "success":True, 
-            "redirect": url_for('update_itpp_itp', id=itp_id, mode='sections')
-        }), 200, {'ContentType':'application/json'}
-        '''
     except:
         raise
 
@@ -1136,6 +1096,67 @@ def itpp_itpsubj(offset=0):
                            URL_PREFIX=URL_BY_DEFAULT
                            )
 
+@app.route('/itpp_itpdsl/<offset>',methods=["GET"])
+def itpp_itpdsl(offset=0):
+    
+    # delete old file in the server
+    if os.path.exists('itpdsl.docx'):
+        deleteFile('itpdsl.docx')
+    
+    # definition of the offset and the limit
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpdsl'}, {
+       'bodysession': 1,'_id': 1, 'section': 1, 'committee': 1, 'series': 1 , 'docsymbol': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpdsl'}).count()
+
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpdsl'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpdsl',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpdsl',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpdsl',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpdsl',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpdsl',offset=offset)
+        
+    lastUrl=url_for('itpp_itpdsl',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpdsl.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
+
+
 ################## UPDATE ###########################################################
 
 @app.route('/itpp_updateRecord/<recordID>',methods=["POST"]) 
@@ -1330,6 +1351,35 @@ def itpp_updateRecorditpsubj(recordID):
     # Redirection
     return  redirect(url_for('itpp_itpsubj',offset=0))
 
+
+@app.route('/itpp_updateRecorditpdsl/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpdsl(recordID):
+    
+    # Retrieving the values from the form sent
+    mySection=request.form["section"]
+    myCommittee=request.form["committee"]
+    mySeries=request.form["series"]
+    myDocSymbol=request.form["docsymbol"]
+
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "section":mySection,          
+                "committee":myCommittee,
+                "series":mySeries,  
+                "docsymbol":myDocSymbol       
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection
+    return  redirect(url_for('itpp_itpdsl',offset=0))
+
 ################## DELETION ###########################################################
 
 @app.route('/itpp_deleteRecord/<recordID>',methods=["POST"])  
@@ -1405,6 +1455,19 @@ def itpsubj_deleteRecord(recordID):
     # Redirection to the main page about itpsor
     return redirect(url_for('itpp_itpsubj',offset=0))
 
+
+@app.route('/itpdsl_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpdsl_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpdsl',offset=0))
+
 ################## DOWNLOAD ###########################################################
 
 def deleteFile(filename):
@@ -1423,7 +1486,7 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
     param_name_file_output = param_section
     myTab=body_session.split("/")
     key = '{}-{}-{}.docx'.format(myTab[0]+myTab[1],param_name_file_output,str(math.floor(datetime.utcnow().timestamp())))
-
+ 
     if os.environ.get('ZAPPA') == "true":
         if param_section=="itpres":
             response = get_document_async('generateWordDocITPRES', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
@@ -1437,7 +1500,9 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
             response = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
         if param_section=="itpsubj":
             response = get_document_async('generateWordDocITPSUBJ', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
-        
+        if param_section=="itpdsl":
+            response = get_document_async('generateWordDocITPDSL', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+            
         flash("The document is being generated and will be in the Downloads section shortly.")
         return redirect(request.referrer)
 
@@ -1446,14 +1511,12 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
         if param_section=="itpres":
             document = get_document_async('generateWordDocITPRES', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
   
-
         if param_section=="itpsor":
             document = get_document_async('generateWordDocITPSOR', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
    
         if param_section=="itpitsc":
             document = get_document_async('generateWordDocITPITSC', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
      
-
         if param_section=="itpitsp":
             document = get_document_async('generateWordDocITPITSP', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
      
@@ -1462,6 +1525,10 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
 
         if param_section=="itpitss":
             document = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+
+        if param_section=="itpdsl":
+            print("ok")
+            document = get_document_async('generateWordDocITPDSL', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
 
         file_stream = io.BytesIO()
         document.save(file_stream)
