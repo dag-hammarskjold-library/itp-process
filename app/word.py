@@ -1317,7 +1317,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         # Definition of the size of the column
         #  #widths = (Inches(0.73), Inches(3.30), Inches(1.05), Inches(0.61), Inches(1.10)) second version
-        widths = (Inches(0.43), Inches(5.00), Inches(1.25), Inches(0.61), Inches(1.10))
+        widths = (Inches(0.43), Inches(5.00), Inches(1.25), Inches(1.0), Inches(1.10))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
@@ -1405,6 +1405,321 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
 def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
+    # # Setting some Variables
+
+    # myMongoURI=Config.connect_string
+    # myClient = MongoClient(myMongoURI)
+    # myDatabase=myClient.undlFiles
+    # myCollection=myDatabase['itp_sample_output_copy']
+    # myTitle=paramTitle
+    # mySubTitle=paramSubTitle
+    # setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+    # lCol=True
+    # rCol=False
+    # toTalLineNumber = 48
+    # currentLineNumber=1
+    # lColMaxHead=46
+    # rColMaxHead=40
+    # lColMax = 61
+    # rColMax = 57
+
+    # # Creation of the word document
+    # document = Document()
+
+    # # Two columns display
+    
+    # section = document.sections[0]
+    # sectPr = section._sectPr
+    # cols = sectPr.xpath('./w:cols')[0]
+    # cols.set(qn('w:num'),'2')
+    
+    # # Marging of the document
+
+    # section.top_margin = Cm(1.54)
+    # # section.bottom_margin = Cm(2.54)
+    # section.left_margin = Cm(2.54)
+    # section.right_margin = Cm(2.54)    
+    
+
+    
+    # ################## HEADER ###############################################
+    
+    # styles = document.styles
+    # new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
+    # new_heading_style.base_style = styles['Heading 1']
+    
+    # # Font settings
+    
+    # font = new_heading_style.font
+    # font.name = 'Arial'
+    # font.size = Pt(8)
+    # font.bold = False
+    # font.color.rgb = RGBColor(0, 0, 0)
+    
+    # # Adding the header to the document
+    
+    # header=document.sections[0].header
+
+    # pfnew_heading_style = new_heading_style.paragraph_format
+    # pfnew_heading_style.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+    # ################## SUBHEADER ###############################################
+    
+    # new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
+    # new_sub_heading_style.base_style = styles['Heading 1']
+    
+    # # Font settings
+    
+    # font = new_sub_heading_style.font
+    # font.name = 'Arial'
+    # font.size = Pt(8)
+    # font.bold = False
+    # font.color.rgb = RGBColor(0, 0, 0)
+    
+    # ################## itshead ###############################################
+    
+    # stlItsHead = document.styles.add_style('itshead', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # # Font name
+    
+    # stlItsHeadFont=stlItsHead.font
+    # stlItsHeadFont.name = 'Arial'
+    # stlItsHeadFont.size = Pt(9)
+    # stlItsHeadFont.bold = True
+    
+    # pfItsHead = stlItsHead.paragraph_format
+
+    # # Line spacing
+    
+    # pfItsHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+
+    
+    # ################## itssubhead ###############################################
+    
+    # stlItssubHead = document.styles.add_style('itssubhead', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # # Font name
+    
+    # stlItsSubHeadFont=stlItssubHead.font
+    # stlItsSubHeadFont.name = 'Arial'
+    # stlItsSubHeadFont.size = Pt(9)
+    # stlItsSubHeadFont.bold = True
+    # stlItsSubHeadFont.underline = True
+    
+    # pfItsSubHead = stlItssubHead.paragraph_format
+
+    # # Indentation
+    
+    # pfItsSubHead.left_indent = Inches(0)
+    
+    # # Line spacing
+    
+    # pfItsSubHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+    
+    # ################## itsentry ###############################################
+    
+    # stlitsentry= document.styles.add_style('itsentry', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # # Font name
+    
+    # stlitsentryFont=stlitsentry.font
+    # stlitsentryFont.name = 'Arial'
+    # stlitsentryFont.size = Pt(8)
+    # stlitsentryFont.bold = False
+    
+    
+    # pfstlitsentry = stlitsentry.paragraph_format
+
+    # # Indentation
+    
+    # pfstlitsentry.left_indent = Inches(0.15)
+    
+    # # Line spacing
+    
+    # pfstlitsentry.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+    # ################## note ###############################################
+    
+    # stlNote = document.styles.add_style('note', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # # Font name
+    
+    # stlNoteFont=stlNote.font
+    # stlNoteFont.name = 'Arial'
+    # stlNoteFont.size = Pt(8)
+    
+    # pfNote = stlNote.paragraph_format
+
+    # # Indentation
+    
+    # #pfNote.left_indent = Inches(0.40)
+    # pfNote.first_line_indent = Cm(0.90)
+    
+    # # Line spacing
+    
+    # pfNote.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+    # ################## WRITING THE DOCUMENT ###############################################
+    
+    # # Adding the Header to the document
+    
+    # p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    # p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # # Adding the sub Header to the document
+    
+    # p1=header.add_paragraph(mySubTitle.upper(), style='New sub Heading')
+    # p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # p1.add_run("\n")
+    # p1.add_run("\n")
+
+    # # Breaks management
+    # paragraph_format = p1.paragraph_format
+    # paragraph_format.space_before = Pt(0)
+    # paragraph_format.space_after = Pt(10)
+    # paragraph_format.keep_together = True
+    # paragraph_format.keep_with_next = True
+    
+    # myRecords=setOfData
+
+    # for record in myRecords:
+
+    #     try :
+    #         itshead= record['head']
+    #     except :
+    #         itshead=""
+        
+    #     # Adding itshead content
+    #     print(f"The length of the header is  : {len(itshead)} ")
+    #     myLastItsHead=itshead + " (continued)"
+        
+    #     # we are inside the first column
+    #     if (lCol==True and rCol==False):
+    #         numberLine=(round(len(itshead)/lColMaxHead)+1)
+    #         if (currentLineNumber+numberLine)<=toTalLineNumber:
+    #             currentLineNumber+=numberLine
+    #             print(myLastItsHead)
+    #             p=document.add_paragraph(itshead,style=stlItsHead)
+                
+    #         else: #  (currentLineNumber+numberLine)>toTalLineNumber
+                
+    #             # Assign the boolean values of the cols
+    #             lCol,rCol=(False,True)
+                
+    #             # Insertion of the break point
+                
+                
+    #             # Write the head title + continued
+                
+                
+            
+    #     # we are inside the second column        
+    #     if (lCol==False and rCol==True):
+    #          pass     
+                  
+                  
+                  
+                  
+
+        
+
+    #     # Breaks management
+    #     paragraph_format = p.paragraph_format
+    #     paragraph_format.space_after = Pt(5)
+    #     paragraph_format.space_before = Pt(0)
+    #     paragraph_format.keep_together = True
+    #     paragraph_format.keep_with_next = True
+        
+    #     subheading=record['subheading'] 
+
+    #     for mysubhead in subheading:
+
+    #         itssubhead=mysubhead["subhead"]
+    #         print(f"The length of the subheader is  : {len(itssubhead)} ")
+    #         print(f"In theory the number of the lines needed to display is : {round(len(itssubhead)/61) + 1} ")
+
+    #         # Adding itssubhead content
+    #         p1=document.add_paragraph(itssubhead,style=stlItssubHead)
+            
+    #         # Breaks management
+    #         paragraph_format = p1.paragraph_format
+    #         paragraph_format.space_after = Pt(6)
+    #         paragraph_format.space_before = Pt(0)
+    #         paragraph_format.keep_together = True
+    #         paragraph_format.keep_with_next = True
+        
+            
+    #         itsentries=mysubhead["entries"]
+            
+    #         for entry in itsentries:
+       
+    #             #Adding itssubhead content
+    #             p2=document.add_paragraph(" ",style=stlitsentry)
+    #             p2.paragraph_format.first_line_indent = Pt(-10)
+
+    #             # We have some separators between docsymbole
+    #             try:
+    #                 result=entry["docsymbol"].find(" ")
+    #                 if result > 0 :
+    #                     myEntry=entry["docsymbol"].split(" ")
+    #                     add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                        
+    #                     p2.add_run(" ")
+    #                     p2.add_run(myEntry[1])
+
+                    
+    #                 else :
+                        
+    #                     add_hyperlink1(p2,str(entry["docsymbol"]),Config.url_prefix+entry["docsymbol"])          
+                
+    #             except:
+    #                 pass
+
+    #             if entry["note"]!="":
+    #                 p2.add_run(" ")
+    #                 print(f"The length of the note is  : {len(entry['entry'])} ")
+    #                 print(f"In theory the number of the lines needed to display is : {round(len(entry['entry'])/61) + 1} ")
+    #                 p2.add_run(entry["entry"])
+                    
+    #                 #Breaks management
+    #                 paragraph_format = p2.paragraph_format
+    #                 paragraph_format.space_after = Pt(0)
+    #                 paragraph_format.space_before = Pt(0)
+    #                 # paragraph_format.keep_together = True
+    #                 # paragraph_format.keep_with_next = True
+                
+    #                 #Adding itssubhead content
+    #                 print(f"The length of the note is  : {len(entry['note'])} ")
+    #                 print(f"In theory the number of the lines needed to display is : {round(len(entry['note'])/61) + 1} ")
+    #                 p3=document.add_paragraph(entry["note"],style=stlNote)
+                    
+                    
+    #                 #Breaks management
+    #                 paragraph_format = p3.paragraph_format
+    #                 paragraph_format.space_after = Pt(3)
+    #                 paragraph_format.space_before = Pt(0)
+    #                 # paragraph_format.keep_together = True
+    #                 # paragraph_format.keep_with_next = True
+                
+    #             else:
+    #                 print(f"The length of the note is  : {len(entry['entry'])} ")
+    #                 print(f"In theory the number of the lines needed to display is : {round(len(entry['entry'])/61) + 1} ")
+    #                 p2.add_run(" ")
+    #                 p2.add_run(entry["entry"])
+                    
+    #                 #Breaks management
+    #                 paragraph_format = p2.paragraph_format
+    #                 #paragraph_format.space_after = Pt(5)
+    #                 paragraph_format.space_after = Pt(3)
+    #                 paragraph_format.space_before = Pt(0)
+    #                 paragraph_format.keep_together = True
+    #                 paragraph_format.keep_with_next = True
+
+    # return document    
+
+     
     # Setting some Variables
 
     myMongoURI=Config.connect_string
@@ -1413,15 +1728,8 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle=paramSubTitle
+    #setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
-    lCol=True
-    rCol=False
-    toTalLineNumber = 48
-    currentLineNumber=1
-    lColMaxHead=46
-    rColMaxHead=40
-    lColMax = 61
-    rColMax = 57
 
     # Creation of the word document
     document = Document()
@@ -1592,38 +1900,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
             itshead=""
         
         # Adding itshead content
-        print(f"The length of the header is  : {len(itshead)} ")
-        myLastItsHead=itshead + " (continued)"
-        
-        # we are inside the first column
-        if (lCol==True and rCol==False):
-            numberLine=(round(len(itshead)/lColMaxHead)+1)
-            if (currentLineNumber+numberLine)<=toTalLineNumber:
-                currentLineNumber+=numberLine
-                print(myLastItsHead)
-                p=document.add_paragraph(itshead,style=stlItsHead)
-                
-            else: #  (currentLineNumber+numberLine)>toTalLineNumber
-                
-                # Assign the boolean values of the cols
-                lCol,rCol=(False,True)
-                
-                # Insertion of the break point
-                
-                
-                # Write the head title + continued
-                
-                
-            
-        # we are inside the second column        
-        if (lCol==False and rCol==True):
-             pass     
-                  
-                  
-                  
-                  
-
-        
+        p=document.add_paragraph(itshead,style=stlItsHead)
 
         # Breaks management
         paragraph_format = p.paragraph_format
@@ -1637,8 +1914,6 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
         for mysubhead in subheading:
 
             itssubhead=mysubhead["subhead"]
-            print(f"The length of the subheader is  : {len(itssubhead)} ")
-            print(f"In theory the number of the lines needed to display is : {round(len(itssubhead)/61) + 1} ")
 
             # Adding itssubhead content
             p1=document.add_paragraph(itssubhead,style=stlItssubHead)
@@ -1676,11 +1951,12 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                 
                 except:
                     pass
+                
+
+
 
                 if entry["note"]!="":
                     p2.add_run(" ")
-                    print(f"The length of the note is  : {len(entry['entry'])} ")
-                    print(f"In theory the number of the lines needed to display is : {round(len(entry['entry'])/61) + 1} ")
                     p2.add_run(entry["entry"])
                     
                     #Breaks management
@@ -1691,10 +1967,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     # paragraph_format.keep_with_next = True
                 
                     #Adding itssubhead content
-                    print(f"The length of the note is  : {len(entry['note'])} ")
-                    print(f"In theory the number of the lines needed to display is : {round(len(entry['note'])/61) + 1} ")
                     p3=document.add_paragraph(entry["note"],style=stlNote)
-                    
                     
                     #Breaks management
                     paragraph_format = p3.paragraph_format
@@ -1704,8 +1977,6 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     # paragraph_format.keep_with_next = True
                 
                 else:
-                    print(f"The length of the note is  : {len(entry['entry'])} ")
-                    print(f"In theory the number of the lines needed to display is : {round(len(entry['entry'])/61) + 1} ")
                     p2.add_run(" ")
                     p2.add_run(entry["entry"])
                     
@@ -1718,6 +1989,8 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     paragraph_format.keep_with_next = True
 
     return document    
+
+
 
 def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     

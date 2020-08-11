@@ -9,6 +9,7 @@ from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_sessio
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
+from wtforms.validators import DataRequired
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
 from app.models import Itpp_log, Itpp_user, Itpp_section, Itpp_rule, Itpp_snapshot, Itpp_itp
 from app.forms import LoginForm, SectionForm
