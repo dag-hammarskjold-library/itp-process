@@ -341,19 +341,19 @@ def transform_and_write_snapshot(body, session):
         #return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(),form=form)    
 
 
-# @app.route("/executeSnapshot",methods=["POST"])
-# @login_required
-# def executeSnapshot():
-#     form = "Select Authority"
-#     number=0
-#     body,session=_get_body_session(request.form.get("authority"))
-#     body=body.split('/')[0]#_get_body_session returns A/ and 72 ; only temporary to ensure that rules are correctly read
-#     print(f"body and session are {body} and {session}")
-#     transform_and_write_snapshot(body, session)
-#     # the code of the execution should be here
-#     # don't forget to return the number of records created
-#     #flash(f'The snapshot execution process is in progress! Number of records is {snapshot.snapshot_len} ','message')    
-#     return redirect(url_for('main'))
+@app.route("/executeSnapshot",methods=["POST"])
+@login_required
+def executeSnapshot():
+    form = "Select Authority"
+    number=0
+    body,session=_get_body_session(request.form.get("authority"))
+    body=body.split('/')[0]#_get_body_session returns A/ and 72 ; only temporary to ensure that rules are correctly read
+    print(f"body and session are {body} and {session}")
+    transform_and_write_snapshot(body, session)
+    # the code of the execution should be here
+    # don't forget to return the number of records created
+    #flash(f'The snapshot execution process is in progress! Number of records is {snapshot.snapshot_len} ','message')    
+    return redirect(url_for('main'))
 
 
 ####################################################
