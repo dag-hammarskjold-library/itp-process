@@ -614,7 +614,7 @@ class BibMissingSubfieldValue(BibReport):
                     
                     results.append(row)
 
-        sorted_results = natsorted(results, key=lambda x: x[4])
+        sorted_results = natsorted(results, key=lambda x: x[1])
         
         return sorted_results
 
