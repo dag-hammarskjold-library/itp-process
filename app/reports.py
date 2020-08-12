@@ -724,17 +724,17 @@ class SpeechDuplicateRecord(SpeechReport):
         
         return results
 
-class SpeechIncompleteAuthMother(SpeechReport):
+class SpeechIncompleteAuthSubfieldG(SpeechReport):
     def __init__(self):
         SpeechReport.__init__(self)
-        self.name = 'speech_incomplete_authority'
-        self.title = "Incomplete authorities - mother record"
-        self.description = "Authority records referenced from speech record fields 700, 710, or 711 that have a subfield $g in the heading field, and are missing 905 or 915"
+        self.name = 'speech_incomplete_subfield_g'
+        self.title = "Incomplete authorities - subfield g"
+        self.description = "Child records referenced from speech record fields 700, 710, or 711 that do not have a mother record, or whose mother record is missing 905$a or 915$a"
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
 
-        self.field_names = ['Authority ID', 'Heading', 'Heading $g', '905$a', '915$a']
+        self.field_names = ['Child ID', 'Child heading $a', 'Child heading $g', 'Mother ID', 'Mother 905$a', 'Mother 915$a']
     
     def execute(self, args):
         self.validate_args(args)
@@ -754,20 +754,36 @@ class SpeechIncompleteAuthMother(SpeechReport):
         results = []
         
         for auth in AuthSet.from_query(query, projection={'100': 1, '110': 1, '111': 1, '905': 1, '915': 1}):
-            if not auth.heading_field.get_value('g'):
-                continue
-            
-            if not auth.get_field('905') or not auth.get_field('915'):
-                results.append([auth.id, auth.heading_value('a'), auth.heading_value('g'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
-            
+            if auth.heading_field.get_value('g'):
+                mother = Auth.find_one(
+                    QueryDocument(
+                        Condition(auth.heading_field.tag, {'a': auth.heading_value('a')}),
+                        Condition(auth.heading_field.tag, {'g': auth.heading_value('g')}, modifier='not')
+                    ).compile()
+                )
+                   
+                if mother is None:
+                    results.append([auth.id, auth.heading_value('a'), auth.heading_value('g'), '', 'N/A', 'N/A'])
+                elif not mother.get_field('905') or not mother.get_field('915'):
+                    results.append(
+                        [
+                            auth.id, 
+                            auth.heading_value('a'), 
+                            auth.heading_value('g'),
+                            mother.id,
+                            mother.get_value('905', 'a'), 
+                            mother.get_value('915', 'a')
+                        ]
+                    )
+                        
         return results
 
-class SpeechIncompleteAuthSubfieldG(SpeechReport):
+class SpeechIncompleteAuthMother(SpeechReport):
     def __init__(self):
         SpeechReport.__init__(self)
-        self.name = 'speech_incomplete_subfield_g'
-        self.title = "Incomplete authorities - subfield g"
-        self.description = "Authority records referenced from speech record fields 700, 710, or 711 that do not have a subfield $g in the heading field, and are missing 905 or 915"
+        self.name = 'speech_incomplete_mother'
+        self.title = "Incomplete authorities - mother record"
+        self.description = "Mother records referenced from speech record fields 700, 710, or 711 that are missing 905 or 915"
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -792,11 +808,12 @@ class SpeechIncompleteAuthSubfieldG(SpeechReport):
         results = []
         
         for auth in AuthSet.from_query(query, projection={'100': 1, '110': 1, '111': 1, '905': 1, '915': 1}):
-            if not auth.heading_field.get_value('g'):
-                if not auth.get_field('905') or not auth.get_field('915'):
-                    results.append([auth.id, auth.heading_value('a'), auth.heading_value('g'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
-                    
+            if auth.heading_field.get_value('g'):
+                continue
             
+            if not auth.get_field('905') or not auth.get_field('915'):
+                results.append([auth.id, auth.heading_value('a'), auth.get_value('g'), auth.get_value('905', 'a'), auth.get_value('915', 'a')])
+
         return results
     
 class SpeechMismatch(SpeechReport, Mismatch269_992):
