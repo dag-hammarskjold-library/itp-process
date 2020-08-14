@@ -20,6 +20,7 @@ from zappa.asynchronous import task
 from flask import send_file, jsonify
 from docx.enum.table import WD_ALIGN_VERTICAL
 from pymongo.collation import Collation
+from docx.enum.table import WD_TABLE_ALIGNMENT
 
 s3_client = boto3.client('s3')
 
@@ -50,7 +51,7 @@ def add_hyperlink1(paragraph,text, url):
     # Delete this if using a template that has the hyperlink style in it
     r.font.color.theme_color = MSO_THEME_COLOR_INDEX.HYPERLINK
     r.font.underline = True
-    r.font.bold=True
+    r.font.bold=True 
 
     return hyperlink
 
@@ -547,7 +548,7 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                 current=1
 
-                for docsymbol in sorted(docsymbols):
+                for docsymbol in docsymbols:
 
                     add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
                     
@@ -1086,8 +1087,6 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
 def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
-    
-    
     # Function to keep the header visible for the table
 
     def set_repeat_table_header(row):
@@ -1156,6 +1155,16 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     font.italic=True
     font.color.rgb = RGBColor(0, 0, 0)
     
+    ################## SPECIAL ###############################################
+    
+    special = styles.add_style('special', WD_STYLE_TYPE.PARAGRAPH)
+    pf = special.paragraph_format
+    pf.left_indent = Inches(0.40)
+    # Font settings
+    font = special.font
+    font.underline=True
+    
+    
     ################## TABLE CONTENT ###############################################
     
     tableContent_style = styles.add_style('tableContent', WD_STYLE_TYPE.PARAGRAPH)
@@ -1171,8 +1180,9 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Hanging indent    
 
     pf = tableContent_style.paragraph_format
-    pf.first_line_indent = Inches(-0.07)
-    #pf.first_line_indent = Inches(10)
+    #pf.first_line_indent = Inches(-0.02)
+    
+    pf.first_line_indent = Inches(-0.06)
 
     ################## TABLE CONTENT 1 ###############################################
     
@@ -1199,11 +1209,13 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Header Generation
     
     if (bodysession[0] in ["A","E"]):
-        p=header.add_paragraph(mySubTitle1.upper(),style='New Heading')
+        #p=header.add_paragraph(mySubTitle1.upper(),style='New Heading')
+        p=header.add_paragraph(myTitle.upper(),style='New Heading')
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     else : 
         p=header.add_paragraph(myTitle.upper(), style='New Heading')
+        #p=header.add_paragraph(myTitle, style='New Heading')
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
         # Adding the sub Header to the document
@@ -1223,39 +1235,58 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     paragraph_format = p.paragraph_format
     paragraph_format.left_indent=Inches(0.35)
 
-    # creation of the table
-
-    table = document.add_table(rows=1, cols=5)
-
-    # set the header visible
-    set_repeat_table_header(table.rows[0])
-
-    # Retrieve the first line
-    hdr_cells = table.rows[0].cells
-
-
-
     # Definition of the column names
     myRecords=setOfData
 
     if (bodysession[0] in ["A","E"]):
 
+        # creation of the table
+        table = document.add_table(rows=1, cols=5)
+
+        table.alignment = WD_TABLE_ALIGNMENT.LEFT
+        #table.allow_autofit=True
+
+        # set the header visible
+        set_repeat_table_header(table.rows[0])
+
+        # Retrieve the first line
+        hdr_cells = table.rows[0].cells
+
         firstTitle= myRecords[0]["docsymbol"].split("/")
         baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/" + firstTitle[2] + "/" 
         firstlineValue= myRecords[0]["meeting"].split(".")
         baseUrl2="("+firstlineValue[0]+".-)"
-
-
+        
         run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
         run.underline=True
+        
         run = hdr_cells[1].paragraphs[0].add_run('Title')
+        tc = hdr_cells[1]._tc
+        tcPr = tc.get_or_add_tcPr()
+        tcMar = OxmlElement('w:tcMar')
+        start = OxmlElement('w:start')
+        
+        tcMar.set(qn('w:w'), "0")
+        tcMar.set(qn('w:type'),"dxa")
+              
+        tcMar.append(start)
+        tcPr.append(tcMar)
+        run.underline=True     
+        
+        hdr_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
+        #run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date' +  "               " +baseUrl2)
+        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date')
         run.underline=True
-        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date' +  "            " + baseUrl2)
-        run.underline=True
+        run1=hdr_cells[2].paragraphs[0].add_run("               " +baseUrl2)
+        
+        hdr_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[3].paragraphs[0].add_run('A.I. No.')
         run.underline=True
+        
+        hdr_cells[4].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[4].paragraphs[0].add_run('Vote')
         run.underline=True
+        
 
         # writing the others lines
 
@@ -1271,8 +1302,13 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             row_cells[1].text=record["title"]
             row_cells[1].paragraphs[0].style="tableContent"   
             add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValue[0]+"."+firstlineValue[1])
+            
             row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
+            row_cells[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            ############################################
+            
             row_cells[3].text=record["ainumber"]
+            row_cells[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             ############################################
             
             row_cells[4].text=record["vote"]
@@ -1280,14 +1316,25 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
 
         # Definition of the size of the column
-
-        #widths = (Inches(0.73), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
-        widths = (Inches(0.73), Inches(3.30), Inches(1.05), Inches(0.61), Inches(1.10))
+        #  #widths = (Inches(0.73), Inches(3.30), Inches(1.05), Inches(0.61), Inches(1.10)) second version
+        widths = (Inches(0.43), Inches(5.00), Inches(1.25), Inches(1.0), Inches(1.10))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
 
     else :
+
+        # creation of the table
+        table = document.add_table(rows=1, cols=4)
+
+        table.alignment = WD_TABLE_ALIGNMENT.LEFT
+        #table.allow_autofit=True
+
+        # set the header visible
+        set_repeat_table_header(table.rows[0])
+
+        # Retrieve the first line
+        hdr_cells = table.rows[0].cells
 
         firstTitle= myRecords[0]["docsymbol"].split("/")
         baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/"
@@ -1295,14 +1342,33 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         baseUrl2="  ("+firstlineValue[0]+"/"+ firstlineValue[2] +".-)"
 
+        hdr_cells[0].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
         run.underline=True
+        
         run = hdr_cells[1].paragraphs[0].add_run('Subject')
+        tc2 = hdr_cells[1]._tc
+        tcPr2 = tc2.get_or_add_tcPr()
+        tcMar2 = OxmlElement('w:tcMar')
+        start2 = OxmlElement('w:start')
+        
+        tcMar2.set(qn('w:w'), "0")
+        tcMar2.set(qn('w:type'),"dxa")
+              
+        tcMar2.append(start2)
+        tcPr2.append(tcMar2)
         run.underline=True
-        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date' +  "            " + baseUrl2)
+
+
+        hdr_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
+        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date')
         run.underline=True
+        run1=hdr_cells[2].paragraphs[0].add_run(" "+baseUrl2)
+
+        hdr_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[3].paragraphs[0].add_run('Vote')
         run.underline=True
+       
 
         # writing the others lines
 
@@ -1315,18 +1381,41 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             row_cells = table.add_row().cells
 
             add_hyperlink(row_cells[0].paragraphs[0],firstTitle[2],Config.url_prefix+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]) 
+            row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             row_cells[1].paragraphs[0].text=record["subject"].upper()
+            
+            ########
+            tc2 = row_cells[1]._tc
+            tcPr2 = tc2.get_or_add_tcPr()
+            tcMar2 = OxmlElement('w:tcMar')
+            start2 = OxmlElement('w:start')
+            
+            tcMar2.set(qn('w:w'), "0")
+            tcMar2.set(qn('w:type'),"dxa")
+                
+            tcMar2.append(start2)
+            tcPr2.append(tcMar2)
+
+            ########
+            
             paragraph_format = row_cells[1].paragraphs[0].paragraph_format
             paragraph_format.space_before = Pt(0)
             paragraph_format.space_after = Pt(0)
             row_cells[1].add_paragraph(record["subjectsubtitle"],style="tableContent1")
+            
+            row_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
             add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValuePlus[0]+"/"+ firstlineValuePlus[2]+ "."+firstlineValue[1])
             row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
-            row_cells[3].text=record["vote"]
+
+            row_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
+            #row_cells[3].text=record["vote"]
+            row_cells[3].paragraphs[0].text=record["vote"]
 
         # Definition of the size of the column
 
-        widths = (Inches(1.4), Inches(3.62), Inches(1.05), Inches(0.61), Inches(0.8))
+        # widths = (Inches(1.20), Inches(4.06), Inches(1.2), Inches(1.10), Inches(0.8))
+        # widths = (Inches(1.20), Inches(5.06), Inches(1.2),Inches(0.8))
+        widths = (Inches(0.8), Inches(4.06), Inches(1.2),Inches(0.75))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
@@ -1341,15 +1430,328 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
                 for run in paragraph.runs:
                     font = run.font
                     font.name="Arial"
-                    font.size= Pt(8)
+                    font.size= Pt(7)
 
     # Save the document
-    
- 
     return document  
 
 def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
+    # # Setting some Variables
+
+    # myMongoURI=Config.connect_string
+    # myClient = MongoClient(myMongoURI)
+    # myDatabase=myClient.undlFiles
+    # myCollection=myDatabase['itp_sample_output_copy']
+    # myTitle=paramTitle
+    # mySubTitle=paramSubTitle
+    # setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+    # lCol=True
+    # rCol=False
+    # toTalLineNumber = 48
+    # currentLineNumber=1
+    # lColMaxHead=46
+    # rColMaxHead=40
+    # lColMax = 61
+    # rColMax = 57
+
+    # # Creation of the word document
+    # document = Document()
+
+    # # Two columns display
+    
+    # section = document.sections[0]
+    # sectPr = section._sectPr
+    # cols = sectPr.xpath('./w:cols')[0]
+    # cols.set(qn('w:num'),'2')
+    
+    # # Marging of the document
+
+    # section.top_margin = Cm(1.54)
+    # # section.bottom_margin = Cm(2.54)
+    # section.left_margin = Cm(2.54)
+    # section.right_margin = Cm(2.54)    
+    
+
+    
+    # ################## HEADER ###############################################
+    
+    # styles = document.styles
+    # new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
+    # new_heading_style.base_style = styles['Heading 1']
+    
+    # # Font settings
+    
+    # font = new_heading_style.font
+    # font.name = 'Arial'
+    # font.size = Pt(8)
+    # font.bold = False
+    # font.color.rgb = RGBColor(0, 0, 0)
+    
+    # # Adding the header to the document
+    
+    # header=document.sections[0].header
+
+    # pfnew_heading_style = new_heading_style.paragraph_format
+    # pfnew_heading_style.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+    # ################## SUBHEADER ###############################################
+    
+    # new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
+    # new_sub_heading_style.base_style = styles['Heading 1']
+    
+    # # Font settings
+    
+    # font = new_sub_heading_style.font
+    # font.name = 'Arial'
+    # font.size = Pt(8)
+    # font.bold = False
+    # font.color.rgb = RGBColor(0, 0, 0)
+    
+    # ################## itshead ###############################################
+    
+    # stlItsHead = document.styles.add_style('itshead', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # # Font name
+    
+    # stlItsHeadFont=stlItsHead.font
+    # stlItsHeadFont.name = 'Arial'
+    # stlItsHeadFont.size = Pt(9)
+    # stlItsHeadFont.bold = True
+    
+    # pfItsHead = stlItsHead.paragraph_format
+
+    # # Line spacing
+    
+    # pfItsHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+
+    
+    # ################## itssubhead ###############################################
+    
+    # stlItssubHead = document.styles.add_style('itssubhead', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # # Font name
+    
+    # stlItsSubHeadFont=stlItssubHead.font
+    # stlItsSubHeadFont.name = 'Arial'
+    # stlItsSubHeadFont.size = Pt(9)
+    # stlItsSubHeadFont.bold = True
+    # stlItsSubHeadFont.underline = True
+    
+    # pfItsSubHead = stlItssubHead.paragraph_format
+
+    # # Indentation
+    
+    # pfItsSubHead.left_indent = Inches(0)
+    
+    # # Line spacing
+    
+    # pfItsSubHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+    
+    # ################## itsentry ###############################################
+    
+    # stlitsentry= document.styles.add_style('itsentry', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # # Font name
+    
+    # stlitsentryFont=stlitsentry.font
+    # stlitsentryFont.name = 'Arial'
+    # stlitsentryFont.size = Pt(8)
+    # stlitsentryFont.bold = False
+    
+    
+    # pfstlitsentry = stlitsentry.paragraph_format
+
+    # # Indentation
+    
+    # pfstlitsentry.left_indent = Inches(0.15)
+    
+    # # Line spacing
+    
+    # pfstlitsentry.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+    # ################## note ###############################################
+    
+    # stlNote = document.styles.add_style('note', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # # Font name
+    
+    # stlNoteFont=stlNote.font
+    # stlNoteFont.name = 'Arial'
+    # stlNoteFont.size = Pt(8)
+    
+    # pfNote = stlNote.paragraph_format
+
+    # # Indentation
+    
+    # #pfNote.left_indent = Inches(0.40)
+    # pfNote.first_line_indent = Cm(0.90)
+    
+    # # Line spacing
+    
+    # pfNote.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    
+    # ################## WRITING THE DOCUMENT ###############################################
+    
+    # # Adding the Header to the document
+    
+    # p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    # p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # # Adding the sub Header to the document
+    
+    # p1=header.add_paragraph(mySubTitle.upper(), style='New sub Heading')
+    # p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # p1.add_run("\n")
+    # p1.add_run("\n")
+
+    # # Breaks management
+    # paragraph_format = p1.paragraph_format
+    # paragraph_format.space_before = Pt(0)
+    # paragraph_format.space_after = Pt(10)
+    # paragraph_format.keep_together = True
+    # paragraph_format.keep_with_next = True
+    
+    # myRecords=setOfData
+
+    # for record in myRecords:
+
+    #     try :
+    #         itshead= record['head']
+    #     except :
+    #         itshead=""
+        
+    #     # Adding itshead content
+    #     print(f"The length of the header is  : {len(itshead)} ")
+    #     myLastItsHead=itshead + " (continued)"
+        
+    #     # we are inside the first column
+    #     if (lCol==True and rCol==False):
+    #         numberLine=(round(len(itshead)/lColMaxHead)+1)
+    #         if (currentLineNumber+numberLine)<=toTalLineNumber:
+    #             currentLineNumber+=numberLine
+    #             print(myLastItsHead)
+    #             p=document.add_paragraph(itshead,style=stlItsHead)
+                
+    #         else: #  (currentLineNumber+numberLine)>toTalLineNumber
+                
+    #             # Assign the boolean values of the cols
+    #             lCol,rCol=(False,True)
+                
+    #             # Insertion of the break point
+                
+                
+    #             # Write the head title + continued
+                
+                
+            
+    #     # we are inside the second column        
+    #     if (lCol==False and rCol==True):
+    #          pass     
+                  
+                  
+                  
+                  
+
+        
+
+    #     # Breaks management
+    #     paragraph_format = p.paragraph_format
+    #     paragraph_format.space_after = Pt(5)
+    #     paragraph_format.space_before = Pt(0)
+    #     paragraph_format.keep_together = True
+    #     paragraph_format.keep_with_next = True
+        
+    #     subheading=record['subheading'] 
+
+    #     for mysubhead in subheading:
+
+    #         itssubhead=mysubhead["subhead"]
+    #         print(f"The length of the subheader is  : {len(itssubhead)} ")
+    #         print(f"In theory the number of the lines needed to display is : {round(len(itssubhead)/61) + 1} ")
+
+    #         # Adding itssubhead content
+    #         p1=document.add_paragraph(itssubhead,style=stlItssubHead)
+            
+    #         # Breaks management
+    #         paragraph_format = p1.paragraph_format
+    #         paragraph_format.space_after = Pt(6)
+    #         paragraph_format.space_before = Pt(0)
+    #         paragraph_format.keep_together = True
+    #         paragraph_format.keep_with_next = True
+        
+            
+    #         itsentries=mysubhead["entries"]
+            
+    #         for entry in itsentries:
+       
+    #             #Adding itssubhead content
+    #             p2=document.add_paragraph(" ",style=stlitsentry)
+    #             p2.paragraph_format.first_line_indent = Pt(-10)
+
+    #             # We have some separators between docsymbole
+    #             try:
+    #                 result=entry["docsymbol"].find(" ")
+    #                 if result > 0 :
+    #                     myEntry=entry["docsymbol"].split(" ")
+    #                     add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                        
+    #                     p2.add_run(" ")
+    #                     p2.add_run(myEntry[1])
+
+                    
+    #                 else :
+                        
+    #                     add_hyperlink1(p2,str(entry["docsymbol"]),Config.url_prefix+entry["docsymbol"])          
+                
+    #             except:
+    #                 pass
+
+    #             if entry["note"]!="":
+    #                 p2.add_run(" ")
+    #                 print(f"The length of the note is  : {len(entry['entry'])} ")
+    #                 print(f"In theory the number of the lines needed to display is : {round(len(entry['entry'])/61) + 1} ")
+    #                 p2.add_run(entry["entry"])
+                    
+    #                 #Breaks management
+    #                 paragraph_format = p2.paragraph_format
+    #                 paragraph_format.space_after = Pt(0)
+    #                 paragraph_format.space_before = Pt(0)
+    #                 # paragraph_format.keep_together = True
+    #                 # paragraph_format.keep_with_next = True
+                
+    #                 #Adding itssubhead content
+    #                 print(f"The length of the note is  : {len(entry['note'])} ")
+    #                 print(f"In theory the number of the lines needed to display is : {round(len(entry['note'])/61) + 1} ")
+    #                 p3=document.add_paragraph(entry["note"],style=stlNote)
+                    
+                    
+    #                 #Breaks management
+    #                 paragraph_format = p3.paragraph_format
+    #                 paragraph_format.space_after = Pt(3)
+    #                 paragraph_format.space_before = Pt(0)
+    #                 # paragraph_format.keep_together = True
+    #                 # paragraph_format.keep_with_next = True
+                
+    #             else:
+    #                 print(f"The length of the note is  : {len(entry['entry'])} ")
+    #                 print(f"In theory the number of the lines needed to display is : {round(len(entry['entry'])/61) + 1} ")
+    #                 p2.add_run(" ")
+    #                 p2.add_run(entry["entry"])
+                    
+    #                 #Breaks management
+    #                 paragraph_format = p2.paragraph_format
+    #                 #paragraph_format.space_after = Pt(5)
+    #                 paragraph_format.space_after = Pt(3)
+    #                 paragraph_format.space_before = Pt(0)
+    #                 paragraph_format.keep_together = True
+    #                 paragraph_format.keep_with_next = True
+
+    # return document    
+
+     
     # Setting some Variables
 
     myMongoURI=Config.connect_string
@@ -1619,3 +2021,141 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     paragraph_format.keep_with_next = True
 
     return document    
+
+
+
+def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
+    
+    # Setting some Variables
+
+    myMongoURI=Config.connect_string
+    myClient = MongoClient(myMongoURI)
+    myDatabase=myClient.undlFiles
+    myCollection=myDatabase['itp_sample_output_copy']
+    myTitle=paramTitle
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+
+    # Creation of the word document
+
+    document = Document()
+
+    # Implementing the "Two columns display" feature
+
+    section = document.sections[0]
+    sectPr = section._sectPr
+    cols = sectPr.xpath('./w:cols')[0]
+    cols.set(qn('w:num'),'2')
+
+    # Marging of the document
+
+    section.top_margin = Cm(2.54)
+    section.bottom_margin = Cm(2.54)
+    section.left_margin = Cm(2.54)
+    section.right_margin = Cm(2.54)
+   
+    ################## HEADER ###############################################
+    
+    styles = document.styles
+    new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
+    new_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    
+    font = new_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(12)
+    font.bold = True
+    font.color.rgb = RGBColor(0, 0, 0)
+    
+    # Adding the header to the document
+    
+    header=document.sections[0].header
+   
+   ################## SORENTRY ###############################################
+    
+    stlSorentry = document.styles.add_style('sorentry', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSorentryFont=stlSorentry.font
+    stlSorentryFont.name = 'Arial'
+    stlSorentryFont.size = Pt(8)
+    stlSorentryFont.bold = True
+    
+    pfSorentry = stlSorentry.paragraph_format
+
+    # Line spacing
+    
+    pfSorentry.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+        
+    ################## SORNORM ###############################################
+    
+    stlSornorm = document.styles.add_style('sornorm', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+   
+    stlSornormFont=stlSornorm.font
+    stlSornormFont.name = 'Arial'
+    stlSornormFont.size = Pt(8)
+    stlSornormFont.bold = True
+    
+    pfSornorm = stlSornorm.paragraph_format
+
+    # Line spacing
+    
+    pfSornorm.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+
+    ################## SORNOTE ###############################################
+    
+    stlSornote = document.styles.add_style('sornote', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSornoteFont=stlSornote.font
+    stlSornoteFont.name = 'Arial'
+    stlSornoteFont.size = Pt(8)    
+    
+    pfSornote = stlSornote.paragraph_format
+
+    # Line spacing
+    
+    pfSornote.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+     
+    ################## WRITING THE DOCUMENT ###############################################
+    
+    # Adding the Header to the document
+    
+    p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run("\n")
+    p.add_run("\n")
+ 
+    myRecords=setOfData
+
+    for record in myRecords:
+        
+        p1=document.add_paragraph(record["committee"],style="sorentry")       
+        
+        mySeries = record["series"]
+        
+        for serie in mySeries:
+        
+            p2=document.add_paragraph(serie["series"],style="sornorm")
+            
+            p2.add_run("\n")
+            
+            myDocSymbols=serie["docsymbols"]
+            
+            p3=document.add_paragraph(style="sornote")
+            
+            print(myDocSymbols)
+            
+            for doc in myDocSymbols:
+                
+                p3.add_run(doc)
+                p3.add_run("\n")
+                    
+
+    return document
+
+    
