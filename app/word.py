@@ -51,7 +51,7 @@ def add_hyperlink1(paragraph,text, url):
     # Delete this if using a template that has the hyperlink style in it
     r.font.color.theme_color = MSO_THEME_COLOR_INDEX.HYPERLINK
     r.font.underline = True
-    r.font.bold=True
+    r.font.bold=True 
 
     return hyperlink
 
@@ -1087,8 +1087,6 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
 def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
-    
-    
     # Function to keep the header visible for the table
 
     def set_repeat_table_header(row):
@@ -1211,11 +1209,13 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Header Generation
     
     if (bodysession[0] in ["A","E"]):
-        p=header.add_paragraph(mySubTitle1.upper(),style='New Heading')
+        #p=header.add_paragraph(mySubTitle1.upper(),style='New Heading')
+        p=header.add_paragraph(myTitle.upper(),style='New Heading')
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     else : 
         p=header.add_paragraph(myTitle.upper(), style='New Heading')
+        #p=header.add_paragraph(myTitle, style='New Heading')
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
         # Adding the sub Header to the document
@@ -1235,22 +1235,22 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     paragraph_format = p.paragraph_format
     paragraph_format.left_indent=Inches(0.35)
 
-    # creation of the table
-
-    table = document.add_table(rows=1, cols=5)
-    table.alignment = WD_TABLE_ALIGNMENT.LEFT
-    # table.allow_autofit=True
-
-    # set the header visible
-    set_repeat_table_header(table.rows[0])
-
-    # Retrieve the first line
-    hdr_cells = table.rows[0].cells
-
     # Definition of the column names
     myRecords=setOfData
 
     if (bodysession[0] in ["A","E"]):
+
+        # creation of the table
+        table = document.add_table(rows=1, cols=5)
+
+        table.alignment = WD_TABLE_ALIGNMENT.LEFT
+        #table.allow_autofit=True
+
+        # set the header visible
+        set_repeat_table_header(table.rows[0])
+
+        # Retrieve the first line
+        hdr_cells = table.rows[0].cells
 
         firstTitle= myRecords[0]["docsymbol"].split("/")
         baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/" + firstTitle[2] + "/" 
@@ -1324,6 +1324,18 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     else :
 
+        # creation of the table
+        table = document.add_table(rows=1, cols=4)
+
+        table.alignment = WD_TABLE_ALIGNMENT.LEFT
+        #table.allow_autofit=True
+
+        # set the header visible
+        set_repeat_table_header(table.rows[0])
+
+        # Retrieve the first line
+        hdr_cells = table.rows[0].cells
+
         firstTitle= myRecords[0]["docsymbol"].split("/")
         baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/"
         firstlineValue= (myRecords[0]["meeting"].split("."))[0].split("/")
@@ -1334,31 +1346,29 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
         run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
         run.underline=True
         
-        #hdr_cells[1].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.LEFT
         run = hdr_cells[1].paragraphs[0].add_run('Subject')
-        tc = hdr_cells[1]._tc
-        tcPr = tc.get_or_add_tcPr()
-        tcMar = OxmlElement('w:tcMar')
-        start = OxmlElement('w:start')
+        tc2 = hdr_cells[1]._tc
+        tcPr2 = tc2.get_or_add_tcPr()
+        tcMar2 = OxmlElement('w:tcMar')
+        start2 = OxmlElement('w:start')
         
-        tcMar.set(qn('w:w'), "0")
-        tcMar.set(qn('w:type'),"dxa")
+        tcMar2.set(qn('w:w'), "0")
+        tcMar2.set(qn('w:type'),"dxa")
               
-        tcMar.append(start)
-        tcPr.append(tcMar)
+        tcMar2.append(start2)
+        tcPr2.append(tcMar2)
         run.underline=True
-        #run = hdr_cells[1].paragraphs[0].add_run('Subject')
-        
-        
-        hdr_cells[1].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
+
+
+        hdr_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date')
         run.underline=True
-        run1=hdr_cells[2].paragraphs[0].add_run("                   " +baseUrl2)
-
+        run1=hdr_cells[2].paragraphs[0].add_run(" "+baseUrl2)
 
         hdr_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[3].paragraphs[0].add_run('Vote')
         run.underline=True
+       
 
         # writing the others lines
 
@@ -1373,17 +1383,39 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             add_hyperlink(row_cells[0].paragraphs[0],firstTitle[2],Config.url_prefix+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]) 
             row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             row_cells[1].paragraphs[0].text=record["subject"].upper()
+            
+            ########
+            tc2 = row_cells[1]._tc
+            tcPr2 = tc2.get_or_add_tcPr()
+            tcMar2 = OxmlElement('w:tcMar')
+            start2 = OxmlElement('w:start')
+            
+            tcMar2.set(qn('w:w'), "0")
+            tcMar2.set(qn('w:type'),"dxa")
+                
+            tcMar2.append(start2)
+            tcPr2.append(tcMar2)
+
+            ########
+            
             paragraph_format = row_cells[1].paragraphs[0].paragraph_format
             paragraph_format.space_before = Pt(0)
             paragraph_format.space_after = Pt(0)
             row_cells[1].add_paragraph(record["subjectsubtitle"],style="tableContent1")
+            
+            row_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
             add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValuePlus[0]+"/"+ firstlineValuePlus[2]+ "."+firstlineValue[1])
             row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
-            row_cells[3].text=record["vote"]
+
+            row_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
+            #row_cells[3].text=record["vote"]
+            row_cells[3].paragraphs[0].text=record["vote"]
 
         # Definition of the size of the column
 
-        widths = (Inches(1.20), Inches(4.06), Inches(1.2), Inches(1.10), Inches(0.8))
+        # widths = (Inches(1.20), Inches(4.06), Inches(1.2), Inches(1.10), Inches(0.8))
+        # widths = (Inches(1.20), Inches(5.06), Inches(1.2),Inches(0.8))
+        widths = (Inches(0.8), Inches(4.06), Inches(1.2),Inches(0.75))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
@@ -1398,7 +1430,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
                 for run in paragraph.runs:
                     font = run.font
                     font.name="Arial"
-                    font.size= Pt(7.5)
+                    font.size= Pt(7)
 
     # Save the document
     return document  
