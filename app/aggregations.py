@@ -1713,7 +1713,7 @@ def itpdsl(bodysession):
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-        #print(pipeline)
+        print(pipeline)
 
         inputCollection.aggregate(pipeline, collation=collation)
         #inputCollection.aggregate(pipeline)
@@ -1732,22 +1732,55 @@ def itpmeet(bodysession):
     Builds the aggregation query and inserts the results into another collection.
     """ 
     try: 
+
+        outputCollection.delete_many({ "section" : "itpmeet", "bodysession" : bodysession } )
+
         pipeline = []
 
         bs = bodysession.split("/")
         body = bs[0]
+        session = bs[1]
+
+        collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
+        
+        add_1 = {}
 
         if body == "A":
-            match_stage = {
-                'bodysession': bodysession, 
-                '$or': [
-                    {'191.a': {'$regex': '/SR.'}}, 
-                    {'191.a': {'$regex': '/PV.'}}
-                ]
+            match_stage1 = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    '$or': [
+                        {'191.a': {'$regex': '/SR.'}}, 
+                        {'191.a': {'$regex': '/PV.'}}
+                    ]
+                }
+            }
+
+            unwind_stage = {'$unwind': '$191'}
+
+            match_stage2 = {
+                '$match': {
+                    '191.b': body + "/",
+                    '191.c': session, 
+                }
             }
         
+            add_1['code'] = {'$substrCP': ['$191.9', 2, 1]}
+
+            add_1['meetingnum'] = {
+                '$substrCP': [
+                    '$191.a', 
+                    {'$add': [{'$indexOfCP': ['$191.a', '.', 5]}, 1]}, 
+                    {'$strLenCP': '$191.a'}
+                ]
+            }
+
+
         if body == "E":
-             match_stage = {
+            match_stage1 = {
                 '$match': {
                     'bodysession': bodysession, 
                     '191.a': {
@@ -1755,9 +1788,23 @@ def itpmeet(bodysession):
                     }
                 }
             }
+
+            unwind_stage = {'$unwind': '$191'}
+
+            match_stage2 = {
+                '$match': {
+                    '191.b': body + "/",
+                    '191.c': session, 
+                }
+            }
+
+            add_1['meetingnum'] = {
+                '$arrayElemAt': [{'$split': ['$191.a', '.']}, 1]
+            }
+
         
         if body == "S":
-             match_stage = {
+            match_stage1 = {
                 '$match': {
                     'bodysession': bodysession, 
                     '191.a': {
@@ -1765,9 +1812,21 @@ def itpmeet(bodysession):
                     }
                 }
             }
+
+            add_1['meetingnum'] = {
+                '$arrayElemAt': [{'$split': ['$191.a', '.']}, 1]
+            }
         
-        #undwind and match are only for A and E
-        unwind_stage = {}
+        
+        add_1['meetingyear'] = {
+            '$trim': {
+                'input': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 0]}, 
+                'chars': ' '
+            }
+        }
+
+        add_stage = {}
+        add_stage['$addFields'] = add_1
         
         transform = {}
         transform['_id'] = 0
@@ -1778,9 +1837,12 @@ def itpmeet(bodysession):
         transform['docsymbol'] = '$191.a'
 
         if body == "A":
-            transform['symbol'] = '' #fill in
-
-            transform['meetingnum'] = '' #fill in
+            transform['symbol'] = {
+                '$concat': [
+                    {'$substrCP': ['$191.a', 0, {'$indexOfCP': ['$191.a', '.', 5]}]}, 
+                    '.-'
+                ]
+            }
 
             transform['committee1'] = {
                 '$switch': {
@@ -1813,6 +1875,23 @@ def itpmeet(bodysession):
                 }
             }
 
+            transform['sortkey1'] = {
+                '$switch': {
+                    'branches': [
+                        {'case': {'$eq': ['$code', 'A']}, 'then': '03'}, 
+                        {'case': {'$eq': ['$code', '1']}, 'then': '04'}, 
+                        {'case': {'$eq': ['$code', '2']}, 'then': '06'}, 
+                        {'case': {'$eq': ['$code', '3']}, 'then': '07'}, 
+                        {'case': {'$eq': ['$code', '4']}, 'then': '05'}, 
+                        {'case': {'$eq': ['$code', '5']}, 'then': '08'}, 
+                        {'case': {'$eq': ['$code', '6']}, 'then': '09'}, 
+                        {'case': {'$eq': ['$code', '8']}, 'then': '01'}, 
+                        {'case': {'$eq': ['$code', '9']}, 'then': '02'}
+                    ], 
+                    'default': ''
+                }
+            }
+
         else:
             transform['symbol'] = {
                 '$concat': [
@@ -1821,14 +1900,13 @@ def itpmeet(bodysession):
                 ]
             }
 
-            transform['meetingnum'] = {
-                '$arrayElemAt': [{'$split': ['$191.a', '.']}, 1]
-            }
-
             transform['committee1'] = ''
 
             transform['committee2'] = ''
 
+            transform['sortkey1'] = 1
+
+        transform['meetingnum'] = 1
 
         transform['meetingdate'] = {
             '$let': {
@@ -1858,23 +1936,42 @@ def itpmeet(bodysession):
             }
         }
 
-        transform['meetingyear'] = {
-            '$arrayElemAt': [{'$split': ['$992.a', '-']}, 0]
-        }
+        transform['meetingyear'] = 1
+        transform['sortkey2'] = '$meetingyear'
+        transform['sortkey3'] = '$meetingnum'
 
         transform_stage = {}
         transform_stage['$project'] = transform
+
+        sort_stage = {
+            '$sort': {
+                'sortkey1': 1, 
+                'sortkey2': 1,
+                'sortkey3': 1
+            }
+        }
 
         merge_stage = {
             '$merge': { 'into': editorOutput}
         }
 
-        pipeline.append(match_stage)
-        pipeline.append(unwind_stage)
+        pipeline.append(match_stage1)
+
+        
+        if body != "S":
+            pipeline.append(unwind_stage)
+            pipeline.append(match_stage2)
+        
+        pipeline.append(add_stage)
         pipeline.append(transform_stage)
+        pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-        inputCollection.aggregate(pipeline)
+        #print(pipeline)
+        
+        inputCollection.aggregate(pipeline, collation=collation)
+
+        group_itpmeet("itpmeet", bodysession)
 
     except Exception as e:
         return e
@@ -2326,6 +2423,104 @@ def group_itpdsl(section, bodysession):
             'numericOrdering': True,
         })
 
+def group_itpmeet(section, bodysession):
+    
+    clear_section(section, bodysession)
+
+    pipeline = []
+
+    match_stage = {
+        '$match': {
+            'bodysession': bodysession, 
+            'section': section
+        }
+    }
+
+    sort_stage1 = {
+        '$sort': {
+            'sortkey1': 1, 
+            'sortkey2': 1, 
+            'sortkey3': 1
+        }
+    }
+
+    group_stage1 = {
+        '$group': {
+            '_id': {
+                'committee1': '$committee1', 
+                'committee2': '$committee2', 
+                'sortkey1': '$sortkey1', 
+                'year': '$meetingyear', 
+                'symbol': '$symbol'
+            }, 
+            'meetings': {
+                '$push': {
+                    'meetingnum': '$meetingnum', 
+                    'meetingdate': '$meetingdate'
+                }
+            }
+        }
+    }
+
+    sort_stage2 = {
+        '$sort': {
+            '_id.sortkey1': 1, 
+            '_id.year': 1
+        }
+    }
+
+    group_stage2 = {
+        '$group': {
+            '_id': {
+                'committee1': '$_id.committee1', 
+                'committee2': '$_id.committee2', 
+                'symbol': '$_id.symbol', 
+                'sortkey1': '$_id.sortkey1'
+            }, 
+            'years': {
+                '$push': {
+                    'year': '$_id.year', 
+                    'meetings': '$meetings'
+                }
+            }
+        }
+    }
+
+    sort_stage3 = {
+        '$sort': {
+            '_id.sortkey1': 1
+        }
+    }
+
+    project_stage = {
+        '$project': {
+            '_id': 0, 
+            'bodysession': bodysession, 
+            'section': section, 
+            'committee1': '$_id.committee1', 
+            'committee2': '$_id.committee2', 
+            'symbol': '$_id.symbol', 
+            'years': 1
+        }
+    }
+
+    merge_stage = {
+        '$merge': { 'into': wordOutput}
+    }
+    
+    pipeline.append(match_stage)
+    pipeline.append(sort_stage1)
+    pipeline.append(group_stage1)
+    pipeline.append(sort_stage2)
+    pipeline.append(group_stage2)
+    pipeline.append(sort_stage3)
+    pipeline.append(project_stage)
+    pipeline.append(merge_stage)
+
+    outputCollection.aggregate(pipeline, collation={
+            'locale': 'en', 
+            'numericOrdering': True,
+        })
 
 def clear_section(section, bodysession):
     """
