@@ -1653,7 +1653,8 @@ def selectSection():
         return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
 
     else :
-         # Calling the logic to generate the section       
+         # Calling the logic to generate the section      
+        
         process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
         
         # Returning the view
