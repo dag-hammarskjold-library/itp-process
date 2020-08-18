@@ -1361,7 +1361,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
 
         hdr_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
-        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date')
+        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date, '+myRecords[0]["voteyear"] )
         run.underline=True
         run1=hdr_cells[2].paragraphs[0].add_run(" "+baseUrl2)
 
@@ -1415,7 +1415,8 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         # widths = (Inches(1.20), Inches(4.06), Inches(1.2), Inches(1.10), Inches(0.8))
         # widths = (Inches(1.20), Inches(5.06), Inches(1.2),Inches(0.8))
-        widths = (Inches(0.8), Inches(4.06), Inches(1.2),Inches(0.75))
+        # widths = (Inches(0.8), Inches(4.06), Inches(1.2),Inches(0.75)
+        widths = (Inches(1.3), Inches(5.06), Inches(1.7),Inches(0.75))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
