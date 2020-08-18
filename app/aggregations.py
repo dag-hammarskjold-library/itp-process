@@ -698,6 +698,8 @@ def itpres(bodysession):
                     }
                 ]
             }
+
+            transform['voteyear'] = {'$arrayElemAt': ['$votedate', 0]}
                     
         else:
             transform['ainumber'] = {
@@ -1445,7 +1447,7 @@ def itpsubj(bodysession):
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-       #print(pipeline)
+        #print(pipeline)
         
         inputCollection.aggregate(pipeline, collation=collation)
 
