@@ -562,6 +562,39 @@ class BibIncorrectSubfield191_9(BibReport):
                     
         return results
         
+class BibMissing999_c_t(BibReport):
+    def __init__(self):
+        self.name = 'bib_missing_subfield_value_999_c_t'
+        self.title = 'Missing subfield value - 999$c t'
+        self.description = ''
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+       
+        self.field_names = ['Record ID', '191$a', '999$a', '999$b', '999$c']
+        
+        BibReport.__init__(self)
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        bibset = BibSet.from_query(
+            QueryDocument(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('930', {'a': Regex('^UND')})
+            ),
+            projection={'191': 1, '999': 1}
+        )
+        
+        results = []
+        
+        for bib in bibset:
+            if len(list(filter(lambda x: x == 't', bib.get_values('999', 'c')))) == 0:
+                results.append([bib.id, bib.get_value('191', 'a'), '; '.join(bib.get_values('999', 'a')), '; '.join(bib.get_values('999', 'b')), '; '.join(bib.get_values('999', 'c'))])
+            
+        return results
+
 class BibMissingSubfieldValue(BibReport):
     def __init__(self, tag, code, value):
         BibReport.__init__(self)
@@ -606,7 +639,11 @@ class BibMissingSubfieldValue(BibReport):
                 row = []
                 
                 if field.get_value(self.code) != self.value:
+                    
+                    
                     row = [bib.id, '; '.join(bib.get_values('191', 'a'))]
+                    
+                    
                     
                     if self.tag == '991':
                         for x in ('a', 'b', 'c', 'd', 'e', 'f', 'z'):
@@ -965,7 +1002,7 @@ class ReportList(object):
         # Missing subfield value - 991$z I
         BibMissingSubfieldValue('991', 'z', 'I'),
         # Missing subfield value - 999$c t
-        BibMissingSubfieldValue('999', 'c', 't'),
+        BibMissing999_c_t(),
         BibMissingField('930'),
         BibMissingAgendaIndicator(),
         BibDuplicateAgenda(),
