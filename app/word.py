@@ -21,6 +21,7 @@ from flask import send_file, jsonify
 from docx.enum.table import WD_ALIGN_VERTICAL
 from pymongo.collation import Collation
 from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.section import WD_SECTION
 
 s3_client = boto3.client('s3')
 
@@ -1361,7 +1362,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
 
         hdr_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
-        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date')
+        run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date, '+myRecords[0]["voteyear"] )
         run.underline=True
         run1=hdr_cells[2].paragraphs[0].add_run(" "+baseUrl2)
 
@@ -1415,7 +1416,8 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         # widths = (Inches(1.20), Inches(4.06), Inches(1.2), Inches(1.10), Inches(0.8))
         # widths = (Inches(1.20), Inches(5.06), Inches(1.2),Inches(0.8))
-        widths = (Inches(0.8), Inches(4.06), Inches(1.2),Inches(0.75))
+        # widths = (Inches(0.8), Inches(4.06), Inches(1.2),Inches(0.75)
+        widths = (Inches(1.3), Inches(5.06), Inches(1.7),Inches(0.75))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
@@ -2041,17 +2043,14 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     # Implementing the "Two columns display" feature
 
-    section = document.sections[0]
-    sectPr = section._sectPr
-    cols = sectPr.xpath('./w:cols')[0]
-    cols.set(qn('w:num'),'2')
 
-    # Marging of the document
 
-    section.top_margin = Cm(2.54)
-    section.bottom_margin = Cm(2.54)
-    section.left_margin = Cm(2.54)
-    section.right_margin = Cm(2.54)
+    # # Marging of the document
+
+    # section.top_margin = Cm(2.54)
+    # section.bottom_margin = Cm(2.54)
+    # section.left_margin = Cm(2.54)
+    # section.right_margin = Cm(2.54)
    
     ################## HEADER ###############################################
     
@@ -2079,7 +2078,7 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     stlSorentryFont=stlSorentry.font
     stlSorentryFont.name = 'Arial'
-    stlSorentryFont.size = Pt(8)
+    stlSorentryFont.size = Pt(10)
     stlSorentryFont.bold = True
     
     pfSorentry = stlSorentry.paragraph_format
@@ -2125,17 +2124,45 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     # Adding the Header to the document
     
+    myRecords=setOfData
+    x=0
+
     p=header.add_paragraph(myTitle.upper(), style='New Heading')
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.add_run("\n")
     p.add_run("\n")
- 
-    myRecords=setOfData
+
+    section = document.sections[0]
+    sectPr = section._sectPr
+    cols = sectPr.xpath('./w:cols')[0]
+    cols.set(qn('w:num'),'1')
+
+    if (bodysession[0]=="A"):
+        p=document.add_paragraph("NOTE :   Languages of corrigenda are indicated only when corrigenda are not issued in all six official languages.Documents issued as Supplements to the Official Records of the General Assembly, Seventy-second Session are so indicated. Information regarding documents bearing the double symbol A/  and S/  can be found in the Supplements to the Official Records of the Security Council. The information provided below is current as of the date this Index is submitted for publication.",style="sornote")
+    
+    if (bodysession[0]=="E"):
+        p=document.add_paragraph("NOTE: Languages of corrigenda are indicated only when corrigenda are not issued in all six languages. Documents issued as Supplements to the Official Records of the Economic and Social Council, 2018 are also indicated. The information provided below is current as of the date this Index is submitted for publication.",style="sornote")
+   
+    if (bodysession[0]=="S"):
+        p=document.add_paragraph("NOTE: Languages of corrigenda are indicated only when corrigenda are not issued in all six official languages. The information provided below is current as of the date this Index is submitted for publication.",style="sornote")
+    
+    p.add_run("\n")
+
+    p=document.add_paragraph(myRecords[0]["committee"],style="sorentry")
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    section = document.add_section(WD_SECTION.CONTINUOUS)
+    sectPr = section._sectPr
+    cols = sectPr.xpath('./w:cols')[0]
+    cols.set(qn('w:num'),'2')
 
     for record in myRecords:
         
-        p1=document.add_paragraph(record["committee"],style="sorentry")       
-        
+        if x>0:
+            p1=document.add_paragraph(record["committee"],style="sorentry")  
+            p1.alignment = WD_ALIGN_PARAGRAPH.CENTER    
+ 
+        x=x+1
         mySeries = record["series"]
         
         for serie in mySeries:
