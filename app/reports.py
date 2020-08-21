@@ -1,7 +1,7 @@
 import re
 from warnings import warn
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
-from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition
+from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition, Or
 from bson.regex import Regex
 from natsort import natsorted
 from collections import Counter
@@ -51,8 +51,6 @@ class MissingField(Report):
             Condition(self.tag, modifier='not_exists'),
         )
         
-        print(query.to_json())
-        
         if self.type == 'bib' and self.tag == '992':
             query.add_condition(Condition(self.symbol_field, ('a', Regex(r'(SR\.|PV\.)'))))
         
@@ -65,7 +63,6 @@ class MissingField(Report):
         
 class MissingFields(Report):
     def __init__(self, tags):
-        #print(tags)
         self.name = '{}_missing_fields_{}'.format(self.type, '+'.join(tags))
         self.title = 'Missing fields - {}'.format(' + '.join(tags))
         #self.description = '{} records from the given body/session that don\'t have a {} field.'.format(self.type.title(),tag)
@@ -87,8 +84,7 @@ class MissingFields(Report):
             Condition('930', ('a', Regex('^' + self.type_code))),
         )
         
-        for tag in self.tags:
-            query.add_condition(Condition(tag, modifier='not_exists'))
+        query.add_condition(Or(*[Condition(tag, modifier='not_exists') for tag in self.tags]))
         
         #if self.type == 'bib' and self.tag == '992':
         #    query.add_condition(Condition(self.symbol_field, ('a', Regex(r'(SR\.|PV\.)'))))
@@ -106,14 +102,17 @@ class MissingSubfield(Report):
     def __init__(self, tag, code):
         self.name = '{}_missing_{}'.format(self.type,tag + code)
         self.title = 'Missing subfield - {}${}'.format(tag,code)
-        #self.description = '{} records from the given body/session that don\'t have a {} field but no subfield ${}.'.format(self.type.title(),tag,code)
+        self.description = '{} records from the given body/session where {} is missing sufield ${}.'.format(self.type.title(), tag, code)
         self.description = ''
 
         self.tag = tag
         self.code = code
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        self.field_names = ['Record Type', 'Record ID', 'Document Symbol'] 
+        self.field_names = ['Record Type', 'Record ID', 'Document Symbol']
+        
+        if self.tag == '991':
+            self.field_names += ['991$a', '991$b', '991$c', '991$d', '991$e', '991$z']
     
     def execute(self,args):
         self.validate_args(args)
@@ -124,7 +123,6 @@ class MissingSubfield(Report):
             Condition(self.symbol_field, ('b', body), ('c', session)),
             Condition('930', ('a', Regex('^' + self.type_code))),
             Condition(self.tag, modifier='exists'),
-            #Condition(self.tag, (self.code, Regex('^.*')), modifier='not')
         )
         
         results = []
@@ -132,7 +130,15 @@ class MissingSubfield(Report):
         for bib in BibSet.from_query(query, projection={self.symbol_field: 1, self.tag: 1, '930': 1}):
             for field in bib.get_fields(self.tag):
                 if not field.get_value(self.code):
-                    results.append([bib.get_value('930', 'a'), str(bib.id), bib.get_value(self.symbol_field, 'a')])
+                    row = [bib.get_value('930', 'a'), str(bib.id), bib.get_value(self.symbol_field, 'a')]
+                    
+                    if self.tag == '991':
+                        row += [field.get_value(x) for x in ('a','b', 'c', 'd', 'e', 'z')]
+                        
+                    results.append(row)
+                    
+        if self.tag == '991':
+            results = natsorted(results, key=lambda x: x[4])
                 
         return results
 
@@ -178,7 +184,7 @@ class IncorrectSession(Report):
                      
                     bs = body + session
                     l = len(bs)
-                        
+
                     if field.get_value('r')[0:l] != bs:
                         row = [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')]
                         row.insert(0, bib.id)
@@ -639,13 +645,12 @@ class BibMissingSubfieldValue(BibReport):
                 row = []
                 
                 if field.get_value(self.code) != self.value:
-                    
-                    
                     row = [bib.id, '; '.join(bib.get_values('191', 'a'))]
                     
-                    
-                    
                     if self.tag == '991':
+                        if self.code == 'f' and self.value == 'X27' and 'Participation' not in field.get_value('e'):
+                            continue
+                            
                         for x in ('a', 'b', 'c', 'd', 'e', 'f', 'z'):
                             row.append(field.get_value(x))
                     
@@ -882,7 +887,39 @@ class SpeechMissingFields(SpeechReport, MissingFields):
     def __init__(self, tags):
         SpeechReport.__init__(self)
         MissingFields.__init__(self, tags)
-                  
+
+class SpeechMissingAgendaIndicator(SpeechReport):
+    def __init__(self):
+        SpeechReport.__init__(self)
+        
+        self.name = 'speech_missing_agenda_indicator'
+        self.title = 'Agenda item missing indicator'
+        self.description = ''
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        
+        self.field_names = ['Record ID', '791$a', '991']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition('791', {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^ITS')})
+        )
+        
+        results = []
+        
+        # no query by indicator in dlx yet :\
+        for bib in BibSet.from_query(query, projection={'791': 1, '991': 1}):
+            for field in bib.get_fields('991'):
+                if field.ind1 == ' ':
+                    results.append([bib.id, bib.get_value('791', 'a'), field.to_mrk()])
+                    
+        return results
+        
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -967,7 +1004,51 @@ class AnyMissingField(Report):
         # combine 191 and 791
         
         return list(map(lambda row: [row[0], row[1], row[2] + row[3]], results))
+
+class AnyMissing930(Report):
+    def __init__(self):
+        self.name = 'any_missing_930'
+        self.tag = '930'
+        self.title = 'Missing Field - ' + self.tag
+        self.description = 'Any records from the given body/session that don\'t have a 930 field.'
+        self.category = "OTHER"
+        self.form_class = SelectAuthority
         
+        self.expected_params = ['authority']
+       
+        self.output_fields = [
+            ('930','a'),
+            ('001',None),
+            ('191','a'),
+            ('791','a')
+        ]
+        
+        self.field_names = ['Record ID', 'Document Symbol']
+        
+    def execute(self, args):
+        self.validate_args(args)
+    
+        body,session = _get_body_session(args['authority'])
+    
+        bibs = Bib.match(
+            Or(
+                Condition('191',('b',body),('c',session)),
+                Condition('791',('b',body),('c',session))
+            ),
+            Condition('040', {'a': 'DHC'}, modifier='not'),
+            Condition('040', {'a': 'NNUN'}),
+            Condition('930', modifier='not_exists'),
+            project=[f[0] for f in self.output_fields]
+        )
+    
+        # list of lists
+        results = []
+        
+        for bib in bibs:
+            results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a')])
+            
+        return results
+
 ### For use by the main app to access the reports
      
 class ReportList(object):
@@ -996,14 +1077,15 @@ class ReportList(object):
         # Missing subfield - 191$9
         #BibMissingSubfield('191','9'), # *** disable as per VW - same as "Incorrect"
         # Missing subfield - 991$d
-        BibMissingSubfield991_d(),
+        #BibMissingSubfield991_d(),
+        BibMissingSubfield('991', 'd'),
         # Missing subfield value - 991$f X27
         BibMissingSubfieldValue('991', 'f', 'X27'),
         # Missing subfield value - 991$z I
         BibMissingSubfieldValue('991', 'z', 'I'),
         # Missing subfield value - 999$c t
         BibMissing999_c_t(),
-        BibMissingField('930'),
+        #BibMissingField('930'),
         BibMissingAgendaIndicator(),
         BibDuplicateAgenda(),
         
@@ -1039,11 +1121,13 @@ class ReportList(object):
         # Missing subfield - 991$d
         SpeechMissingSubfield('991','d'),
         
-        SpeechMissingField('930'),
+        #SpeechMissingField('930'),
         
         SpeechDuplicateAgenda(),
         
         SpeechMissingFields(['700', '710']),
+        
+        SpeechMissingAgendaIndicator(),
     
         # voting category
 
@@ -1066,7 +1150,7 @@ class ReportList(object):
         # Missing subfield - 991$d
         VoteMissingSubfield('991','d'),
         
-        VoteMissingField('930'),
+        #VoteMissingField('930'),
         
         # other
         
@@ -1074,7 +1158,7 @@ class ReportList(object):
         AgendaList(),
         
         # Missing field - 930
-        # AnyMissingField('930'),
+        AnyMissing930(),
         # Missing field - any
         # Missing subfield - any
     ]
@@ -1157,7 +1241,6 @@ def _body_session_from_symbol(symbol):
         return
         
     return [body, session]
-
 
 def _sc_convert(year):
     return str(int(year) - 1945)
