@@ -698,6 +698,8 @@ def itpres(bodysession):
                     }
                 ]
             }
+
+            transform['voteyear'] = {'$arrayElemAt': ['$votedate', 0]}
                     
         else:
             transform['ainumber'] = {
@@ -1445,7 +1447,7 @@ def itpsubj(bodysession):
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-       #print(pipeline)
+        #print(pipeline)
         
         inputCollection.aggregate(pipeline, collation=collation)
 
@@ -1512,7 +1514,9 @@ def itpdsl(bodysession):
         pipeline = []
 
         bs = bodysession.split("/")
+        body = bs[0]
         session = bs[1]
+        fullbody = body + "/"
 
         collation={
             'locale': 'en', 
@@ -1526,6 +1530,50 @@ def itpdsl(bodysession):
             }
         }
 
+        add_0 = {}
+
+        add_0['primary'] = {
+            '$cond': {
+                'if': {'$isArray': '$191'}, 
+                'then': {
+                    '$cond': {
+                        'if': {
+                            '$and': [
+                                {'$eq': [{'$arrayElemAt': ['$191.b', 0]}, fullbody]}, 
+                                {'$eq': [{'$arrayElemAt': ['$191.c', 0]}, session]}
+                            ]
+                        }, 
+                        'then': 0, 
+                        'else': 1
+                    }
+                }, 
+                'else': 'not an array'
+            }
+        }
+
+        add_0['secondary'] = {
+            '$cond': {
+                'if': {'$isArray': '$191'}, 
+                'then': {
+                    '$cond': {
+                        'if': {
+                            '$and': [
+                                {'$eq': [{'$arrayElemAt': ['$191.b', 1]}, fullbody]}, 
+                                {'$eq': [{'$arrayElemAt': ['$191.c', 1]}, session]}
+                            ]
+                        }, 
+                        'then': 0, 
+                        'else': 1
+                    }
+                }, 
+                'else': 'not an array'
+            }
+        }
+
+        add_stage0 = {}
+
+        add_stage0['$addFields'] = add_0
+
         add_1 = {}
 
         add_1['actualsession'] = {
@@ -1534,7 +1582,7 @@ def itpdsl(bodysession):
                     'sesh': {
                         '$cond': {
                             'if': {'$isArray': '$191'}, 
-                            'then': {'$split': [{'$arrayElemAt': ['$191.c', 0]}, '/']}, 
+                            'then': {'$split': [{'$arrayElemAt': ['$191.c', '$primary']}, '/']}, 
                             'else': {'$split': ['$191.c', '/']}
                         }
                     }
@@ -1558,141 +1606,278 @@ def itpdsl(bodysession):
         add_2 = {}
 
         add_2['docsymbol'] = {
-			'$concat': [
-				{
-					'$cond': {
-						'if': {'$isArray': '$191'}, 
-						'then': {
-							'$concat': [
-								{'$arrayElemAt': ['$191.a', 0]}, 
-								' (', 
-								{'$arrayElemAt': ['$191.a', 1]}, 
-								')'
-							]
-						}, 
-						'else': '$191.a'
-					}
-				}, {
-					'$cond': {
-						'if': {'$eq': ['$495', '']}, 
-						'then': '', 
-						'else': {'$concat': [' (', '$495.a', ')']}
-					}
-				}
-			]
-		}
+            '$concat': [
+                {'$cond': {
+                    'if': {'$isArray': '$191'}, 
+                    'then': {
+                        '$concat': [
+                            {'$arrayElemAt': ['$191.a', '$primary']}, 
+                            {'$cond': {
+                                'if': {'$arrayElemAt': ['$191.a', '$secondary']}, 
+                                'then': {'$concat': [' (', {'$arrayElemAt': ['$191.a', '$secondary']}, ')']}, 
+                                'else': ''
+                                }
+                            }
+                        ]
+                    }, 
+                    'else': '$191.a'
+                    }
+                }, 
+                {'$cond': {
+                    'if': {'$eq': ['$495', '']}, 
+                    'then': '', 
+                    'else': {'$concat': [' (', '$495.a', ')']}
+                }}
+            ]
+        }
 
-        add_2['committee'] = {
-			'$switch': {
-				'branches': [
-					{'case': {'$eq': ['$actualsession', 'other']}, 
-						'then': 'OTHER DOCUMENTS CONSIDERED BY THE MAIN COMMITTEES'}, 
-					{'case': {'$eq': ['$793.a', '01']}, 
-						'then': 'DISARMAMENT AND INTERNATIONAL SECURITY COMMITTEE (FIRST COMMITTEE)'}, 
-					{'case': {'$eq': ['$793.a', '02']}, 
-						'then': 'ECONOMIC AND FINANCIAL COMMITTEE (SECOND COMMITTEE)'}, 
-					{'case': {'$eq': ['$793.a', '03']}, 
-						'then': 'SOCIAL, HUMANITARIAN AND CULTURAL COMMITTEE (THIRD COMMITTEE)'}, 
-					{'case': {'$eq': ['$793.a', '04']}, 
-						'then': 'SPECIAL POLITICAL AND DECOLONIZATION COMMITTEE (FOURTH COMMITTEE)'}, 
-					{'case': {'$eq': ['$793.a', '05']}, 
-						'then': 'ADMINISTRATIVE AND BUDGETARY COMMITTEE (FIFTH COMMITTEE)'}, 
-					{'case': {'$eq': ['$793.a', '06']}, 
-						'then': 'LEGAL COMMITTEE (SIXTH COMMITTEE)'}, 
-					{'case': {'$eq': ['$793.a', 'PL']}, 
-						'then': 'PLENARY'}, 
-					{'case': {'$eq': ['$793.a', 'GL']}, 
-						'then': 'GENERAL COMMITTEE'}
-				], 
-				'default': 'PLENARY'
-			}
-		}
+        if body == "A":
 
-        add_2['series'] = {
-			'$let': {
-				'vars': {
-					'a': {
-						'$cond': {
-							'if': {'$isArray': '$191'}, 
-							'then': {'$arrayElemAt': ['$191.a', 0]}, 
-							'else': '$191.a'
-						}
-					}
-				}, 
-				'in': {
-					'$switch': {
-						'branches': [
-							{'case': {'$gt': [{'$indexOfCP': ['$$a', '/L.']}, -1]}, 
-								'then': 'Limited series'}, 
-							{'case': {'$gt': [{'$indexOfCP': ['$$a', '/INF/']}, -1]}, 
-								'then': 'Information series'}, 
-							{'case': {'$gt': [{'$indexOfCP': ['$$a', '/PV.']}, -1]}, 
-								'then': 'Verbatim records'}, 
-							{'case': {'$gt': [{'$indexOfCP': ['$$a', '/RES/']}, -1]}, 
-								'then': 'Resolutions'}, 
-							{'case': {'$gt': [{'$indexOfCP': ['$$a', '/SR.']}, -1]}, 
-								'then': 'Summary records'}, 
-							{'case': {'$gt': [{'$indexOfCP': ['$$a', '/PRST/']}, -1]}, 
-								'then': 'Statements of the President of the Security Council'}, 
-							{'case': {'$gt': [{'$indexOfCP': ['$$a', '/Agenda/']}, -1]}, 
-								'then': 'Agenda Series'}, 
-							{'case': {'$gt': [{'$indexOfCP': ['$$a', '/NGO/']}, -1]}, 
-								'then': 'Non-governmental organizations series'}
-						], 
-						'default': 'General series'
-					}
-				}
-			}
-		}
+            add_2['committee'] = {
+                '$let': {
+                    'vars': {
+                        'a': {
+                            '$cond': {
+                                'if': {'$isArray': '$191'}, 
+                                'then': {'$arrayElemAt': ['$191.a', 0]}, 
+                                'else': '$191.a'
+                            }
+                        }
+                    }, 
+                    'in': {
+                        '$switch': {
+                            'branches': [
+                                {'case': {'$eq': ['$actualsession', 'other']}, 
+                                    'then': 'OTHER DOCUMENTS CONSIDERED BY THE MAIN COMMITTEES'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/C.1/']}, -1]}, 
+                                    'then': 'DISARMAMENT AND INTERNATIONAL SECURITY COMMITTEE (FIRST COMMITTEE)'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/C.2/']}, -1]}, 
+                                    'then': 'ECONOMIC AND FINANCIAL COMMITTEE (SECOND COMMITTEE)'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/C.3/']}, -1]}, 
+                                    'then': 'SOCIAL, HUMANITARIAN AND CULTURAL COMMITTEE (THIRD COMMITTEE)'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/C.4/']}, -1]}, 
+                                    'then': 'SPECIAL POLITICAL AND DECOLONIZATION COMMITTEE (FOURTH COMMITTEE)'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/C.5/']}, -1]}, 
+                                    'then': 'ADMINISTRATIVE AND BUDGETARY COMMITTEE (FIFTH COMMITTEE)'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/C.6/']}, -1]}, 
+                                    'then': 'LEGAL COMMITTEE (SIXTH COMMITTEE)'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/BUR/']}, -1]}, 
+                                    'then': 'GENERAL COMMITTEE'}
+                            ], 
+                            'default': 'PLENARY'
+                        }
+                    }
+                }
+            }
+
+            add_2['series'] = {
+                '$let': {
+                    'vars': {
+                        'a': {
+                            '$cond': {
+                                'if': {'$isArray': '$191'}, 
+                                'then': {'$arrayElemAt': ['$191.a', '$primary']}, 
+                                'else': '$191.a'
+                            }
+                        }
+                    }, 
+                    'in': {
+                        '$switch': {
+                            'branches': [
+                                {'case': {'$eq': ['$actualsession', 'other']}, 
+                                    'then': ''},
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/L.']}, -1]}, 
+                                    'then': 'Limited series'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/INF/']}, -1]}, 
+                                    'then': 'Information series'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/PV.']}, -1]}, 
+                                    'then': 'Verbatim records'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/RES/']}, -1]}, 
+                                    'then': 'Resolutions and decisions'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/DEC/']}, -1]}, 
+                                    'then': 'Resolutions and decisions'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/SR.']}, -1]}, 
+                                    'then': 'Summary records'}, 
+                            ], 
+                            'default': 'General series'
+                        }
+                    }
+                }
+            }
+
+        if body == "E": 
+            
+            add_2['committee'] = ""
+
+            add_2['series'] = {
+                '$let': {
+                    'vars': {
+                        'a': {
+                            '$cond': {
+                                'if': {'$isArray': '$191'}, 
+                                'then': {'$arrayElemAt': ['$191.a', '$primary']}, 
+                                'else': '$191.a'
+                            }
+                        }
+                    }, 
+                    'in': {
+                        '$switch': {
+                            'branches': [
+                                {'case': {'$eq': ['$actualsession', 'other']}, 
+                                    'then': 'Miscellaneous documents'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/HLS/']}, -1]}, 
+                                    'then': 'Miscellaneous documents'},
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/L.']}, -1]}, 
+                                    'then': 'Limited series'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/INF/']}, -1]}, 
+                                    'then': 'Information series'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/RES/']}, -1]}, 
+                                    'then': 'Resolutions and decisions'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/DEC/']}, -1]}, 
+                                    'then': 'Resolutions and decisions'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/SR.']}, -1]}, 
+                                    'then': 'Summary records'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/NGO/']}, -1]}, 
+                                    'then': 'Non-governmental organizations series'}
+                            ], 
+                            'default': 'General series'
+                        }
+                    }
+                }
+            }
+
+        if body == "S":
+
+            add_2['committee'] = ""
+
+            add_2['series'] = {
+                '$let': {
+                    'vars': {
+                        'a': {
+                            '$cond': {
+                                'if': {'$isArray': '$191'}, 
+                                'then': {'$arrayElemAt': ['$191.a', '$primary']}, 
+                                'else': '$191.a'
+                            }
+                        }
+                    }, 
+                    'in': {
+                        '$switch': {
+                            'branches': [
+                                {'case': {'$eq': ['$actualsession', 'other']}, 
+                                    'then': 'Other documents'},
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/INF/']}, -1]}, 
+                                    'then': 'Information series'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/PV.']}, -1]}, 
+                                    'then': 'Verbatim records'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/RES/']}, -1]}, 
+                                    'then': 'Resolutions'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/DEC/']}, -1]}, 
+                                    'then': 'Resolutions'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/PRST/']}, -1]}, 
+                                    'then': 'Statements of the President of the Security Council'}, 
+                                {'case': {'$gt': [{'$indexOfCP': ['$$a', '/Agenda/']}, -1]}, 
+                                    'then': 'Agenda series'}, 
+                            ], 
+                            'default': 'General series'
+                        }
+                    }
+                }
+            }
 
         add_stage2 = {}
         add_stage2['$addFields'] = add_2
 
-        project_stage = {
-            '$project': {
-                '_id': 0, 
-                'bodysession': 1, 
-                'section': 1, 
-                'record_id': 1, 
-                'committee': 1, 
-                'series': 1, 
-                'docsymbol': 1, 
-                'sortkey1': {
-                    '$let': {
-                        'vars': {
-                            'x': {'$substr': ['$committee', 0, 2]}
-                        }, 
-                        'in': {
-                            '$switch': {
-                                'branches': [
-                                    {'case': {'$eq': ['$$x', 'PL']}, 
-                                        'then': '01'}, 
-                                    {'case': {'$eq': ['$$x', 'GE']}, 
-                                        'then': '02'}, 
-                                    {'case': {'$eq': ['$$x', 'DI']}, 
-                                        'then': '03'}, 
-                                    {'case': {'$eq': ['$$x', 'SP']}, 
-                                        'then': '04'}, 
-                                    {'case': {'$eq': ['$$x', 'EC']}, 
-                                        'then': '05'}, 
-                                    {'case': {'$eq': ['$$x', 'SO']}, 
-                                        'then': '06'}, 
-                                    {'case': {'$eq': ['$$x', 'AD']}, 
-                                        'then': '07'}, 
-                                    {'case': {'$eq': ['$$x', 'LE']}, 
-                                        'then': '08'}, 
-                                    {'case': {'$eq': ['$$x', 'OT']}, 
-                                        'then': '09'}
-                                ], 
-                                'default': '99'
-                            }
+        transform = {}
+
+        transform['_id'] = 0
+        transform['bodysession'] = 1
+        transform['section'] = 1
+        transform['record_id'] = 1
+        transform['committee'] = 1
+        transform['series'] = 1
+        transform['docsymbol'] = 1
+
+        if body == "A":
+            transform['sortkey1'] = {
+                '$let': {
+                    'vars': {
+                        'x': {'$substr': ['$committee', 0, 2]}
+                    }, 
+                    'in': {
+                        '$switch': {
+                            'branches': [
+                                {'case': {'$eq': ['$$x', 'PL']}, 'then': '01'}, 
+                                {'case': {'$eq': ['$$x', 'GE']}, 'then': '02'}, 
+                                {'case': {'$eq': ['$$x', 'DI']}, 'then': '03'}, 
+                                {'case': {'$eq': ['$$x', 'SP']}, 'then': '04'}, 
+                                {'case': {'$eq': ['$$x', 'EC']}, 'then': '05'}, 
+                                {'case': {'$eq': ['$$x', 'SO']}, 'then': '06'}, 
+                                {'case': {'$eq': ['$$x', 'AD']}, 'then': '07'}, 
+                                {'case': {'$eq': ['$$x', 'LE']}, 'then': '08'}, 
+                                {'case': {'$eq': ['$$x', 'OT']}, 'then': '09'}
+                            ], 
+                            'default': '99'
                         }
                     }
-                }, 
-                'sortkey2': '$series', 
-                'sortkey3': '$docsymbol'
+                }
             }
-        }
+            
+            transform['sortkey2'] = {
+                '$switch': {
+                    'branches': [
+                        {'case': {'$eq': ['$series', 'General series']}, 'then': '01'}, 
+                        {'case': {'$eq': ['$series', 'Information series']}, 'then': '02'}, 
+                        {'case': {'$eq': ['$series', 'Limited series']}, 'then': '03'}, 
+                        {'case': {'$eq': ['$series', 'Verbatim records']}, 'then': '04'}, 
+                        {'case': {'$eq': ['$series', 'Resolutions and decisions']}, 'then': '05'}, 
+                        {'case': {'$eq': ['$series', 'Summary records']}, 'then': '06'}
+                    ], 
+                    'default': '99'
+                }
+            }
+           
+        
+        if body == "E":
+            transform['sortkey1'] = "01"
+            
+            transform['sortkey2'] =  {
+                '$switch': {
+                    'branches': [
+                        {'case': {'$eq': ['$series', 'General series']}, 'then': '01'}, 
+                        {'case': {'$eq': ['$series', 'Information series']}, 'then': '02'}, 
+                        {'case': {'$eq': ['$series', 'Limited series']}, 'then': '03'}, 
+                        {'case': {'$eq': ['$series', 'Non-governmental organizations series']}, 'then': '04'}, 
+                        {'case': {'$eq': ['$series', 'Summary records']}, 'then': '05'},
+                        {'case': {'$eq': ['$series', 'Miscellaneous documents']}, 'then': '06'},
+                        {'case': {'$eq': ['$series', 'Resolutions and decisions']}, 'then': '07'}
+                    ], 
+                    'default': '99'
+                }
+            }
+            
+        if body == "S":
+            transform['sortkey1'] = "01"
+
+            transform['sortkey2'] =  {
+                '$switch': {
+                    'branches': [
+                        {'case': {'$eq': ['$series', 'General series']}, 'then': '01'}, 
+                        {'case': {'$eq': ['$series', 'Agenda series']}, 'then': '02'},
+                        {'case': {'$eq': ['$series', 'Verbatim records']}, 'then': '03'},
+                        {'case': {'$eq': ['$series', 'Resolutions']}, 'then': '04'},
+                        {'case': {'$eq': ['$series', 'Statements of the President of the Security Council']}, 'then': '05'},
+                        {'case': {'$eq': ['$series', 'Information series']}, 'then': '06'},
+                        {'case': {'$eq': ['$series', 'Other documents']}, 'then': '07'},                        
+                    ], 
+                    'default': '99'
+                }
+            }
+
+        transform['sortkey3'] = '$docsymbol'
+
+        transform_stage = {}
+        transform_stage['$project'] = transform
 
         sort_stage = {
             '$sort': {
@@ -1707,13 +1892,14 @@ def itpdsl(bodysession):
         }
 
         pipeline.append(match_stage)
+        pipeline.append(add_stage0)
         pipeline.append(add_stage1)
         pipeline.append(add_stage2)
-        pipeline.append(project_stage)
+        pipeline.append(transform_stage)
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-        print(pipeline)
+        #print(pipeline)
 
         inputCollection.aggregate(pipeline, collation=collation)
         #inputCollection.aggregate(pipeline)
