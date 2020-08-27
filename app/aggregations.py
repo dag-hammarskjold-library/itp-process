@@ -106,11 +106,11 @@ def itpitsc(bodysession):
         }
         
         if body == "S":
-            add_1['itssubhead'] = '$991.d'
+            add_1['itssubhead'] = { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } } #'$991.d'
         else:
             add_1['itssubhead'] = {
                 '$concat': [
-                    '$991.d', 
+                    { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }, #'$991.d', 
                     ' (Agenda item ', 
                     {'$cond': {
                         'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
@@ -278,11 +278,11 @@ def itpitsp(bodysession):
                 ')' ]}
         
         if body == "S":
-            add_1['itssubhead'] = '$991.d'
+            add_1['itssubhead'] = { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } } #'$991.d'
         else:
             add_1['itssubhead'] = {
                         '$concat': [
-                            '$991.d', 
+                            { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }, #'$991.d', 
                             ' (Agenda item ', 
                             {'$cond': {
                                 'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
@@ -425,11 +425,11 @@ def itpitss(bodysession):
         add_1['section'] = "itpitss"
         
         if body == "S":
-            add_1['itshead'] = '$991.d'
+            add_1['itshead'] = { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } } #'$991.d'
         else:
             add_1['itshead'] = {
                 '$concat': [
-                    '$991.d', 
+                    { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }, #'$991.d', 
                     ' (Agenda item ', 
                     {'$cond': {
                         'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
