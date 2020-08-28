@@ -1211,8 +1211,8 @@ def _body_session_from_symbol(symbol):
     body = sparts[0]
     session = None
                     
-    if body == 'A':
-        if sparts[1][0:1] == 'C' or sparts[1] in ['RES', 'INF', 'BUR', 'DEC']: 
+    if body == 'A' or body == 'E':
+        if sparts[1][0:1] == 'C.' or sparts[1] in ['RES', 'INF', 'BUR', 'DEC']: 
             session = sparts[2]
         else:
             session = sparts[1]
@@ -1232,11 +1232,6 @@ def _body_session_from_symbol(symbol):
         except(ValueError):
             warn('could not read ' + symbol)
             return       
-    elif body == 'E':
-        if sparts[1]== 'RES': 
-            session = sparts[2]
-        else:
-            session = sparts[1]
     else:
         return
         
