@@ -26,7 +26,7 @@ from time import sleep
 from zappa.asynchronous import task, get_async_response
 from pymongo import MongoClient
 from copy import deepcopy
-from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR,generateWordDocITPRES,generateWordDocITPSUBJ,generateWordDocITPDSL
+from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR,generateWordDocITPRES,generateWordDocITPSUBJ,generateWordDocITPDSL,generateWordDocITPMEET
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -1156,6 +1156,65 @@ def itpp_itpdsl(offset=0):
                            URL_PREFIX=URL_BY_DEFAULT
                            )
 
+@app.route('/itpp_itpmeet/<offset>',methods=["GET"])
+def itpp_itpmeet(offset=0):
+    
+    # delete old file in the server
+    if os.path.exists('itpmeet.docx'):
+        deleteFile('itpmeet.docx')
+    
+    # definition of the offset and the limit
+    offset=int(offset)
+    
+    # retrieve the first value and the last value of the set
+    firstId= myCollection.find({'section': 'itpmeet'}, {
+       'bodysession': 1,'_id': 1, 'section': 1, 'committee1': 1, 'committee2': 1 , 'years': 1}).sort("_id",pymongo.ASCENDING)
+    lastId=firstId[offset]["_id"]
+    
+    # retrieve the set of data
+    myTotal = myCollection.find({'section': 'itpmeet'}).count()
+
+    # definition of the default limit
+    if myTotal<100 :
+        defaultLimit=10
+    
+    if myTotal >=100 and myTotal <= 1000 :
+        defaultLimit=25
+        
+    if myTotal > 1000:
+        defaultLimit=100
+
+    myRecords = myCollection.find({"$and":[{"_id": {"$gte": lastId}},{'section': 'itpmeet'}]}).sort("_id", pymongo.ASCENDING).limit(defaultLimit)
+
+    myOffset=int(myTotal/defaultLimit)
+    
+    # dynamic url generation
+    firstUrl=url_for('itpp_itpmeet',offset=0)
+    
+    if offset < (myOffset*defaultLimit):
+        nextUrl=url_for('itpp_itpmeet',offset=offset+defaultLimit)
+    else:
+        nextUrl=url_for('itpp_itpmeet',offset=offset)
+        
+    if offset >= defaultLimit:
+        prevUrl=url_for('itpp_itpmeet',offset=offset-defaultLimit) 
+    else:
+        prevUrl=url_for('itpp_itpmeet',offset=offset)
+        
+    lastUrl=url_for('itpp_itpmeet',offset=myOffset*defaultLimit)
+    
+    # return values to render
+    return render_template('itpmeet.html',
+                           myRecords=myRecords,
+                           nextUrl=nextUrl,
+                           prevUrl=prevUrl,
+                           firstUrl=firstUrl,
+                           lastUrl=lastUrl,
+                           totalRecord= myTotal,
+                           myOffset=offset,
+                           URL_PREFIX=URL_BY_DEFAULT
+                           )
+
 
 
 ################## UPDATE ###########################################################
@@ -1381,6 +1440,34 @@ def itpp_updateRecorditpdsl(recordID):
     # Redirection
     return  redirect(url_for('itpp_itpdsl',offset=0))
 
+@app.route('/itpp_updateRecorditpmeet/<recordID>',methods=["POST"])  
+@login_required
+def itpp_updateRecorditpmeet(recordID):
+    
+    # Retrieving the values from the form sent
+    mySection=request.form["section"]
+    myCommittee1=request.form["committee1"]
+    myCommittee2=request.form["committee2"]
+    myYear=request.form["years"]
+
+    # Defining and executing the request
+    myCollection.update_one(
+        {"_id": ObjectId(recordID)},
+        {
+            "$set": {
+                "section":mySection,          
+                "committee1":myCommittee1,
+                "committee2":myCommittee2,  
+                "years":myYear       
+            }
+        }
+    )
+    
+    flash('Congratulations the record {} has been updated !!! '.format(recordID), 'message')
+
+    # Redirection
+    return  redirect(url_for('itpp_itpdsl',offset=0))
+
 ################## DELETION ###########################################################
 
 @app.route('/itpp_deleteRecord/<recordID>',methods=["POST"])  
@@ -1469,6 +1556,18 @@ def itpdsl_deleteRecord(recordID):
     # Redirection to the main page about itpsor
     return redirect(url_for('itpp_itpdsl',offset=0))
 
+@app.route('/itpmeet_deleteRecord/<recordID>',methods=["POST"])  
+@login_required
+def itpmeet_deleteRecord(recordID):
+    
+    # Defining and executing the request
+    myCollection.delete_one({"_id": ObjectId(recordID)})
+    
+    flash('Congratulations the record {} has been deleted !!! '.format(recordID), 'message')
+
+    # Redirection to the main page about itpsor
+    return redirect(url_for('itpp_itpmeet',offset=0))
+
 ################## DOWNLOAD ###########################################################
 
 def deleteFile(filename):
@@ -1503,7 +1602,9 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
             response = get_document_async('generateWordDocITPSUBJ', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
         if param_section=="itpdsl":
             response = get_document_async('generateWordDocITPDSL', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
-            
+        if param_section=="itpmeet":
+            response = get_document_async('generateWordDocITPMEET', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+
         flash("The document is being generated and will be in the Downloads section shortly.")
         return redirect(request.referrer)
 
@@ -1528,8 +1629,10 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
             document = get_document_async('generateWordDocITPITSS', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
 
         if param_section=="itpdsl":
-            print("ok")
             document = get_document_async('generateWordDocITPDSL', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+
+        if param_section=="itpmeet":
+            document = get_document_async('generateWordDocITPMEET', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
 
         file_stream = io.BytesIO()
         document.save(file_stream)
