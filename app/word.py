@@ -2078,7 +2078,8 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     stlSorentryFont=stlSorentry.font
     stlSorentryFont.name = 'Arial'
-    stlSorentryFont.size = Pt(10)
+    #stlSorentryFont.size = Pt(10)
+    stlSorentryFont.size = Pt(8)
     stlSorentryFont.bold = True
     
     pfSorentry = stlSorentry.paragraph_format
@@ -2175,14 +2176,135 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
             
             p3=document.add_paragraph(style="sornote")
             
-            print(myDocSymbols)
-            
             for doc in myDocSymbols:
                 
                 p3.add_run(doc)
                 p3.add_run("\n")
                     
 
+    return document
+
+def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
+
+    # Function to keep the header visible for the table
+
+    def set_repeat_table_header(row):
+
+        tr = row._tr
+        trPr = tr.get_or_add_trPr()
+        tblHeader = OxmlElement('w:tblHeader')
+        tblHeader.set(qn('w:val'), "true")
+        trPr.append(tblHeader)
+        return row
+    
+    # Setting some Variables
+
+    myMongoURI=Config.connect_string
+    myClient = MongoClient(myMongoURI)
+    myDatabase=myClient.undlFiles
+    myCollection=myDatabase['itp_sample_output_copy']
+    myTitle=paramTitle
+    print(bodysession)
+    print(paramSection)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+
+    # Creation of the word document
+
+    document = Document()
+
+   
+    ################## HEADER ###############################################
+    
+    styles = document.styles
+    new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
+    new_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    
+    font = new_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(12)
+    font.bold = True
+    font.color.rgb = RGBColor(0, 0, 0)
+    
+    # Adding the header to the document
+    
+    header=document.sections[0].header
+
+    ################## itssubhead ###############################################
+    
+    stlItssubHead = document.styles.add_style('itssubhead', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlItsSubHeadFont=stlItssubHead.font
+    stlItsSubHeadFont.name = 'Arial'
+    stlItsSubHeadFont.size = Pt(8)
+
+    pfItsSubHead = stlItssubHead.paragraph_format
+
+    # Indentation
+    
+    pfItsSubHead.left_indent = Inches(0)
+    
+    # Line spacing
+    
+    pfItsSubHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+   
+   ################## stylemeeting ###############################################
+    
+    stlSorentry = document.styles.add_style('stylemeeting', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSorentryFont=stlSorentry.font
+    stlSorentryFont.name = 'Arial'
+    stlSorentryFont.size = Pt(8)
+    
+    pfSorentry = stlSorentry.paragraph_format
+     
+    ################## WRITING THE DOCUMENT ###############################################
+    
+    # Adding the Header to the document
+
+    section = document.sections[0]
+    sectPr = section._sectPr
+    cols = sectPr.xpath('./w:cols')[0]
+    cols.set(qn('w:num'),'3')
+
+    datas=setOfData
+
+    p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run("\n")
+    
+    p=header.add_paragraph("(" + datas[0]["symbol"] +")", style='itssubhead')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run("\n")
+    p.add_run("\n")
+
+    # creation of the table
+    table = document.add_table(rows=1, cols=5)
+
+    table.alignment = WD_TABLE_ALIGNMENT.LEFT
+
+    # set the header visible
+    set_repeat_table_header(table.rows[0])
+
+    # Retrieve the first line
+    hdr_cells = table.rows[0].cells
+
+    hdr_cells[0].paragraphs[0].add_run('Meeting')
+
+    hdr_cells[0].paragraphs[0].add_run('Date')
+
+    for data in datas:
+        records=data["years"]
+        for record in records:
+            meetings=record["meetings"]
+            for meeting in meetings:
+                p=document.add_paragraph(meeting["meetingnum"]+"                          "+ meeting["meetingdate"],style='stylemeeting')
+   
     return document
 
     
