@@ -22,6 +22,7 @@ from docx.enum.table import WD_ALIGN_VERTICAL
 from pymongo.collation import Collation
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.section import WD_SECTION
+from docx.enum.table import WD_ROW_HEIGHT_RULE
 
 s3_client = boto3.client('s3')
 
@@ -1414,9 +1415,6 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         # Definition of the size of the column
 
-        # widths = (Inches(1.20), Inches(4.06), Inches(1.2), Inches(1.10), Inches(0.8))
-        # widths = (Inches(1.20), Inches(5.06), Inches(1.2),Inches(0.8))
-        # widths = (Inches(0.8), Inches(4.06), Inches(1.2),Inches(0.75)
         widths = (Inches(1.3), Inches(5.06), Inches(1.7),Inches(0.75))
         for row in table.rows:
             for idx, width in enumerate(widths):
@@ -1940,8 +1938,8 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
         paragraph_format = p.paragraph_format
         paragraph_format.space_after = Pt(5)
         paragraph_format.space_before = Pt(0)
-        paragraph_format.keep_together = True
-        paragraph_format.keep_with_next = True
+        # paragraph_format.keep_together = True
+        # paragraph_format.keep_with_next = True
         
         subheading=record['subheading'] 
 
@@ -1956,8 +1954,8 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
             paragraph_format = p1.paragraph_format
             paragraph_format.space_after = Pt(6)
             paragraph_format.space_before = Pt(0)
-            paragraph_format.keep_together = True
-            paragraph_format.keep_with_next = True
+            # paragraph_format.keep_together = True
+            # paragraph_format.keep_with_next = True
         
             
             itsentries=mysubhead["entries"]
@@ -2019,8 +2017,8 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     #paragraph_format.space_after = Pt(5)
                     paragraph_format.space_after = Pt(3)
                     paragraph_format.space_before = Pt(0)
-                    paragraph_format.keep_together = True
-                    paragraph_format.keep_with_next = True
+                    # paragraph_format.keep_together = True
+                    # paragraph_format.keep_with_next = True
 
     return document    
 
@@ -2262,6 +2260,17 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     stlSorentryFont.size = Pt(8)
     
     pfSorentry = stlSorentry.paragraph_format
+
+    ################## styletableheader ###############################################
+    
+    stlSorentry = document.styles.add_style('styletableheader', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSorentryFont=stlSorentry.font
+    
+    pfSorentry = stlSorentry.paragraph_format
+    pfSorentry.space_after = Pt(10)
      
     ################## WRITING THE DOCUMENT ###############################################
     
@@ -2284,7 +2293,11 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     p.add_run("\n")
 
     # creation of the table
-    table = document.add_table(rows=1, cols=5)
+    table = document.add_table(rows=1, cols=2)
+
+    table.allow_autofit=True
+
+    #table.rows.height_rule = WD_ROW_HEIGHT_RULE.AUTO
 
     table.alignment = WD_TABLE_ALIGNMENT.LEFT
 
@@ -2294,17 +2307,49 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Retrieve the first line
     hdr_cells = table.rows[0].cells
 
-    hdr_cells[0].paragraphs[0].add_run('Meeting')
+    myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+    myRun.underline=True
 
-    hdr_cells[0].paragraphs[0].add_run('Date')
+    myRun=hdr_cells[1].paragraphs[0].add_run('Date,'+datas[0]["years"][0]["year"])
+    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    myRun.underline=True
+
+    myRun=hdr_cells[1].paragraphs[0].add_run('\n')
 
     for data in datas:
         records=data["years"]
         for record in records:
             meetings=record["meetings"]
             for meeting in meetings:
-                p=document.add_paragraph(meeting["meetingnum"]+"                          "+ meeting["meetingdate"],style='stylemeeting')
+                row_cells = table.add_row().cells
+                row_cells[0].paragraphs[0].text=meeting["meetingnum"]
+                row_cells[1].paragraphs[0].text=meeting["meetingdate"]
+                row_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER 
+
+                
    
+    # Definition of the size of the column
+
+    widths = (Inches(1.4), Inches(0.7))
+    for row in table.rows:
+        for idx, width in enumerate(widths):
+            row.cells[idx].width = width
+
+    # Definition of the font
+
+    for row in table.rows:
+        for cell in row.cells:
+            paragraphs = cell.paragraphs
+            for paragraph in paragraphs:
+                paragraph_format = paragraph.paragraph_format
+                paragraph_format.space_after = Pt(0)
+                # Adding styling
+                for run in paragraph.runs:
+                    font = run.font
+                    font.name="Arial"
+                    font.size= Pt(8)
+
     return document
 
     
