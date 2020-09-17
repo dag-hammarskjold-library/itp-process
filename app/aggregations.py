@@ -92,8 +92,29 @@ def itpitsc(bodysession):
         }
 
         add_1 = {}
-        add_1['section'] = "itpitsc" 
-        add_1['itshead'] = {
+        
+        add_1['agendanum'] = {
+            '$cond': {
+                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                'then': '$991.b', 
+                'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+            }
+        }
+
+        add_1['agendasubject'] = {
+            '$replaceAll': {
+                'input': '$991.d', 
+                'find': '--', 
+                'replacement': '—'
+            }
+        }
+
+        add_stage1 = {}
+        add_stage1['$addFields'] = add_1
+
+        add_2 = {}
+        add_2['section'] = "itpitsc" 
+        add_2['itshead'] = {
             '$cond': {
                 'if': {'$ne': ['$710', '']}, 
                 'then': { 
@@ -106,22 +127,23 @@ def itpitsc(bodysession):
         }
         
         if body == "S":
-            add_1['itssubhead'] = { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } } #'$991.d'
+            add_2['itssubhead'] = '$agendasubject' #'$991.d'
         else:
-            add_1['itssubhead'] = {
-                '$concat': [
-                    { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }, #'$991.d', 
-                    ' (Agenda item ', 
-                    {'$cond': {
-                        'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
-                        'then':'$991.b', 
-                        'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}}
-                    },
-                    ')'
-                ]
+            add_2['itssubhead'] = {
+                '$cond': { 
+                    'if': {'$eq': ['$agendanum', ""]}, 
+                    'then':  '$agendasubject', #'$991.d', 
+                    'else': {
+                        '$concat': [
+                        '$agendasubject', #'$991.d',
+                        ' (Agenda item ',
+                        '$agendanum',
+                        ')']
+                    } 
+                } 
             }
 
-        add_1['itsentry'] = {
+        add_2['itsentry'] = {
             '$cond': {
                 'if': '$700.g', 
                 'then': {'$concat': ['$700.a', ' ', '$700.g']}, 
@@ -129,10 +151,10 @@ def itpitsc(bodysession):
             }
         }
 
-        add_1['docsymbol'] = '$791.a'
+        add_2['docsymbol'] = '$791.a'
 
-        add_stage = {}
-        add_stage['$addFields'] = add_1
+        add_stage2 = {}
+        add_stage2['$addFields'] = add_2
 
 
         project_stage = {
@@ -146,10 +168,20 @@ def itpitsc(bodysession):
                 'itsentry': 1, 
                 'docsymbol': 1, 
                 'sortkey1': {
-                    '$concat': [
-                        { '$toUpper': '$itshead' }, 
-                        "+",
-                        '$itssubhead']},
+                    '$replaceAll': {
+                        'input': {
+                            '$replaceAll': {
+                                'input': {
+                                    '$concat': [
+                                        {'$toUpper': '$itshead'}, '+', '$itssubhead']}, 
+                                'find': '. ', 
+                                'replacement': ' .'
+                            }
+                        }, 
+                        'find': '—', 
+                        'replacement': ' $'
+                    }
+                },
                 'sortkey2': '$itsentry', 
                 'sortkey3': '$docsymbol'
             }
@@ -171,7 +203,8 @@ def itpitsc(bodysession):
         pipeline.append(unwind_stage1)
         pipeline.append(unwind_stage2)
         pipeline.append(match_stage2)
-        pipeline.append(add_stage)
+        pipeline.append(add_stage1)
+        pipeline.append(add_stage2)
         pipeline.append(project_stage)
         pipeline.append(sort_stage)
     
@@ -2406,13 +2439,13 @@ def group_speeches(section, bodysession):
         }
     }
     
-    sort_stage1 = {
-        '$sort': {
-            'sortkey1': 1, 
-            'sortkey2': 1, 
-            'sortkey3': 1
-        }
-    }
+    #sort_stage1 = {
+    #    '$sort': {
+    #        'sortkey1': 1, 
+    #        'sortkey2': 1, 
+    #        'sortkey3': 1
+    #    }
+    #}
     
     group_stage1 = {
         '$group': {
@@ -2462,7 +2495,9 @@ def group_speeches(section, bodysession):
         '$group': {
             '_id': {
                 'itshead': '$_id.itshead',
-                'sort': {'$toUpper': '$_id.itshead'}
+                'sort': {
+                    '$substrCP': ['$_id.sortkey1', 0, {'$indexOfCP': ['$_id.sortkey1', '+']}]
+                }
             }, 
             'subheading': {
                 '$push': {
@@ -2495,7 +2530,7 @@ def group_speeches(section, bodysession):
     }
 
     pipeline.append(match_stage)
-    pipeline.append(sort_stage1)
+    #pipeline.append(sort_stage1)
     pipeline.append(group_stage1)
     pipeline.append(sort_stage2)
     pipeline.append(group_stage2)
@@ -2507,12 +2542,13 @@ def group_speeches(section, bodysession):
 
     #print(pipeline)
 
-    outputCollection.aggregate(pipeline, collation={
-            'locale': 'en', 
-            'numericOrdering': True,
-            'strength': 1, #ignore diacritics
-            'alternate': 'shifted' #ignore punctuation
-        })
+    outputCollection.aggregate(pipeline)
+    #, collation={
+    #        'locale': 'en', 
+    #        'numericOrdering': True,
+    #        'strength': 1, #ignore diacritics
+    #        'alternate': 'shifted' #ignore punctuation
+    #    })
 
 
 def group_itpsubj(section, bodysession):
