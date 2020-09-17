@@ -324,7 +324,7 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle=paramSubTitle
-    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
     # Creation of the word document
     document = Document()
 
@@ -583,7 +583,7 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle=paramSubTitle
-    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
 
     # Creation of the word document
     document = Document()
@@ -839,7 +839,7 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle=paramSubTitle
-    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
 
     # Creation of the word document
     document = Document()
@@ -1761,7 +1761,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
     myTitle=paramTitle
     mySubTitle=paramSubTitle
     #setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
-    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
 
     # Creation of the word document
     document = Document()
@@ -2287,7 +2287,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.add_run("\n")
     
-    p=header.add_paragraph("(" + datas[0]["symbol"] +")", style='itssubhead')
+    p=header.add_paragraph("(Symbol: " + datas[0]["symbol"] +")", style='itssubhead')
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.add_run("\n")
     p.add_run("\n")
@@ -2310,9 +2310,8 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
     myRun.underline=True
 
-    myRun=hdr_cells[1].paragraphs[0].add_run('Date,'+datas[0]["years"][0]["year"])
-    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
+    myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+datas[0]["years"][0]["year"])
+    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
     myRun.underline=True
 
     myRun=hdr_cells[1].paragraphs[0].add_run('\n')
@@ -2331,9 +2330,9 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
    
     # Definition of the size of the column
 
-    widths = (Inches(1.4), Inches(0.7))
+    widths = (Inches(2), Inches(1.5))
     for row in table.rows:
-        for idx, width in enumerate(widths):
+        for idx,width in enumerate(widths):
             row.cells[idx].width = width
 
     # Definition of the font
@@ -2349,6 +2348,8 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                     font = run.font
                     font.name="Arial"
                     font.size= Pt(8)
+    
+    
 
     return document
 
