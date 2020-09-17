@@ -1016,6 +1016,9 @@ def itpsubj(bodysession):
                 'else': '' } 
         }
         
+        add_1['agendasubject'] = { 
+            '$replaceAll': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }
+
         add_stage1 = {}
         add_stage1['$addFields'] = add_1
 
@@ -1228,7 +1231,7 @@ def itpsubj(bodysession):
 
         if body == "S":
             
-            transform['head'] = '$991.d'
+            transform['head'] = '$agendasubject' #'$991.d'
 
             transform['subhead'] = {
 	            '$switch': {
@@ -1253,10 +1256,10 @@ def itpsubj(bodysession):
             transform['head'] = {
                 '$cond': { 
                     'if': {'$eq': ['$agendanum', ""]}, 
-                    'then':  '$991.d', 
+                    'then':  '$agendasubject', #'$991.d', 
                     'else': {
                         '$concat': [
-                        '$991.d',
+                        '$agendasubject', #'$991.d',
                         ' (Agenda item ',
                         '$agendanum',
                         ')']
@@ -1299,10 +1302,10 @@ def itpsubj(bodysession):
             transform['head'] = {
                 '$cond': { 
                     'if': {'$eq': ['$agendanum', ""]}, 
-                    'then':  '$991.d', 
+                    'then':  '$agendasubject', #'$991.d', 
                     'else': {
                         '$concat': [
-                        '$991.d',
+                        '$agendasubject', #'$991.d',
                         ' (Agenda item ',
                         '$agendanum',
                         ')']
@@ -1419,7 +1422,19 @@ def itpsubj(bodysession):
                 'docsymbol': 1, 
                 'entry': 1, 
                 'note': 1, 
-                'sortkey1': '$head',
+                'sortkey1': {
+                    '$replaceAll': {
+                        'input': {
+                            '$replaceAll': {
+                                'input': '$head', 
+                                'find': '. ', 
+                                'replacement': ' .'
+                            }
+                        }, 
+                        'find': '—', 
+                        'replacement': ' $'
+                    }
+                },#'$head',
                 'sortkey2': '$code',
                 'sortkey3': '$docsymbol'
             }
@@ -1466,36 +1481,117 @@ def itpage(bodysession):
     Builds the aggregation query and inserts the results into another collection.
     """ 
     try: 
+        #clear the previous records if they exist
+        outputCollection.delete_many({ "section" : "itpage", "bodysession" : bodysession } )
+        
         pipeline = []
+
+        collation={
+            'locale': 'en', 
+            'strength': 1, #ignore diacritics
+        }
 
         bs = bodysession.split("/")
         body = bs[0]
 
-        match_stage = {}
-        unwind_stage = {}
-        
+        match_stage1 = {
+            '$match': {
+                'bodysession': bodysession, 
+                'record_type': 'BIB', 
+                '$or': [
+                    {'191.9': 'X00'}, 
+                    {'191.9': 'X01'}, 
+                    {'191.9': 'X88'}
+                ]
+            }
+        }
+
+        unwind_stage1 = {'$unwind': '$991'}
+
+        unwind_stage2 = {'$unwind': '$191'}
+
+        match_stage2 = {
+            '$match': {
+                '991.a': bodysession, 
+                '191.b': body + '/'
+            }
+        }
+
+        group_stage =  {
+            '$group': {
+                '_id': {
+                    '$replaceAll': {
+                        'input': '$991.d', 
+                        'find': '--', 
+                        'replacement': '–'
+                    }
+                }, 
+                'type': {
+                    '$push': {
+                        '$cond': {
+                            'if': {'$gt': [{'$indexOfCP': ['$191.a', '/PV.']}, -1]}, 
+                            'then': 'PV', 
+                            'else': 'non-PV'
+                        }
+                    }
+                }
+            }
+        }
+
+        add_stage = {
+            '$addFields': {
+                'heading': {
+                    '$cond': {
+                        'if': {'$in': ['PV', '$type']}, 
+                        'then': 'LIST OF MATTERS CONSIDERED BY THE SECURITY COUNCIL DURING XXXX', 
+                        'else': 'OTHER MATTERS BROUGHT TO THE ATTENTION OF THE SECURITY COUNCIL DURING XXXX'
+                    }
+                }
+            }
+        }   
+
+
         transform = {}
         transform['_id'] = 0
-        transform['record_id'] = 1
         transform['section'] = "itpage"
-        transform['bodysession'] = 1
-
+        transform['bodysession'] = bodysession
+        transform['agendanum'] = ''
+        transform['agendatitle'] = ''
+        transform['agendasubject'] = '$_id'
+        transform['heading'] = 1
+        transform['sortkey1'] = '$heading'
+        transform['sortkey2'] = '$_id'
 
         transform_stage = {}
         transform_stage['$project'] = transform
+
+        sort_stage = {
+            '$sort': {
+                'sortkey1': 1, 
+                'sortkey2': 1
+            }
+        }
 
         merge_stage = {
             '$merge': { 'into': editorOutput}
         }
 
-        pipeline.append(match_stage)
-        pipeline.append(unwind_stage)
+        pipeline.append(match_stage1)
+        pipeline.append(unwind_stage1)
+        pipeline.append(unwind_stage2)
+        pipeline.append(match_stage2)
+        pipeline.append(group_stage)
+        pipeline.append(add_stage)
         pipeline.append(transform_stage)
+        pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-        inputCollection.aggregate(pipeline)
+        if body == "S":
+            inputCollection.aggregate(pipeline, collation=collation)
+            group_itpage("itpage", bodysession)
 
-        return list(outputCollection.find({"bodysession": bodysession, "section": 'itpsubj'}))
+
+        return "itpage completed successfully"
 
     except Exception as e:    
         return e
@@ -1906,6 +2002,7 @@ def itpdsl(bodysession):
 
         group_itpdsl("itpdsl", bodysession)
 
+        return "itpdsl completed successfully"
 
     except Exception as e:
         return e
@@ -2468,7 +2565,8 @@ def group_itpsubj(section, bodysession):
     group_stage2 = {
         '$group': {
             '_id': {
-                'itp_head': '$_id.itp_head'
+                'itp_head': '$_id.itp_head',
+                'sortkey1': '$_id.sortkey1'
             }, 
             'subheading': {
                 '$push': {
@@ -2481,7 +2579,7 @@ def group_itpsubj(section, bodysession):
  
     sort_stage3 = {
         '$sort': {
-            '_id': 1
+            '_id.sortkey1': 1
         }
     }
 
@@ -2511,12 +2609,13 @@ def group_itpsubj(section, bodysession):
 
     #print(pipeline)
 
-    outputCollection.aggregate(pipeline, collation={
-            'locale': 'en', 
-            'numericOrdering': True,
-            'strength': 1, #ignore diacritics
-            'alternate': 'shifted' #ignore punctuation
-        })
+    outputCollection.aggregate(pipeline) 
+    # , collation={
+    #'locale': 'en', 
+    #'numericOrdering': True,
+    #'strength': 1, #ignore diacritics
+    ##'alternate': 'shifted' #ignore punctuation
+    #}) """
 
 def group_itpdsl(section, bodysession):
     
@@ -2708,6 +2807,67 @@ def group_itpmeet(section, bodysession):
             'numericOrdering': True,
         })
 
+def group_itpage(section, bodysession):
+    
+    clear_section(section, bodysession)
+
+    pipeline = []
+
+    match_stage = {
+        '$match': {
+            'bodysession': bodysession, 
+            'section': section
+        }
+    }
+
+    sort_stage1 = {
+        '$sort': {
+            'sortkey1': 1, 
+            'sortkey2': 1, 
+        }
+    }
+
+    group_stage = {
+        '$group': {
+            '_id': '$heading', 
+            'agendas': {
+                '$push': {
+                    'title': '$agendatitle', 
+                    'subject': '$agendasubject'
+                }
+            }
+        }
+    }
+
+    sort_stage2 = {
+        '$sort': {
+            '_id': 1
+        }
+    }
+
+    project_stage = {
+        '$project': {
+            '_id': 0, 
+            'bodysession': bodysession, 
+            'section': section,
+            'heading': '$_id', 
+            'agendas': 1
+        }
+    }
+
+    merge_stage = {
+        '$merge': { 'into': wordOutput}
+    }
+    
+    pipeline.append(match_stage)
+    pipeline.append(sort_stage1)
+    pipeline.append(group_stage)
+    pipeline.append(sort_stage2)
+    pipeline.append(project_stage)
+    pipeline.append(merge_stage)
+
+    outputCollection.aggregate(pipeline)
+
 def clear_section(section, bodysession):
     """
     Removes all records from the collection for a certain section
@@ -2723,6 +2883,7 @@ def clear_section(section, bodysession):
     deleted = copyCollection.delete_many({ "section" : section, "bodysession" : bodysession } )
 
     print(deleted.deleted_count, "documents deleted.")
+
 
 def lookup_code(lookup_field):
     """
