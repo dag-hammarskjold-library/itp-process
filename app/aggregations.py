@@ -1072,7 +1072,6 @@ def itpsubj(bodysession):
             }
         } 
 
-
         add_2['votedate'] = {
             '$let': {
                 'vars': {
@@ -2529,13 +2528,13 @@ def group_itpsubj(section, bodysession):
         }
     }
 
-    sort_stage1 = {
-        '$sort': {
-            'sortkey1': 1, 
-            'sortkey2': 1, 
-            'sortkey3': 1
-        }
-    }
+    #sort_stage1 = {
+    #    '$sort': {
+    #        'sortkey1': 1, 
+    #        'sortkey2': 1, 
+    #        'sortkey3': 1
+    #    }
+    #}
 
     group_stage1 = {
         '$group': {
@@ -2598,7 +2597,7 @@ def group_itpsubj(section, bodysession):
     }
 
     pipeline.append(match_stage)
-    pipeline.append(sort_stage1)
+    #pipeline.append(sort_stage1)
     pipeline.append(group_stage1)
     pipeline.append(sort_stage2)
     pipeline.append(group_stage2)
