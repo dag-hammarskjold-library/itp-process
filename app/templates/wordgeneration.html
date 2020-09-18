@@ -94,22 +94,13 @@ someInput2.addEventListener('input', function () {
 </script> -->
 <script type="text/javascript">
 var someInput1 = document.getElementById('paramTitle');
-var someInput2 = document.getElementById('paramSubTitle');
 
         someInput1.addEventListener('input', function(){
-        if ((someInput1.value.length > 0) && (someInput2.value.length > 0)) { 
+        if (someInput1.value.length > 0) { 
             document.getElementById('getResults').disabled = false; 
         } else { 
             document.getElementById('getResults').disabled = true;
         }});
-
-        someInput2.addEventListener('input', function(){
-        if ((someInput1.value.length > 0) && (someInput2.value.length > 0)) { 
-            document.getElementById('getResults').disabled = false; 
-        } else { 
-            document.getElementById('getResults').disabled = true;
-        }});
-
 
 </script>
 

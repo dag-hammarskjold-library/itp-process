@@ -366,7 +366,7 @@ class AgendaList(Report):
         self.expected_params = ['authority']
         
         self.output_fields = [('191', 'a'), ('991', 'b'), ('991', 'd')]
-        self.field_names = ['Document Symbol', 'Auth#', 'Agenda Item No.', 'Agenda Subject', 'Attached to at least one bib']
+        self.field_names = ['Document Symbol', 'Auth#', 'Agenda Item No.', 'Agenda Title', 'Agenda Subject', 'Attached to at least one bib']
         
     def execute(self,args):
         self.validate_args(args)
@@ -382,7 +382,7 @@ class AgendaList(Report):
         for auth in AuthSet.from_query(query):
             attached = 'Y' if Bib.find_one({'991.subfields.xref': auth.id}) else 'N'
             
-            results.append([auth.get_value('191', 'a'), auth.id, auth.get_value('191', 'b'), auth.get_value('191', 'd'), attached])
+            results.append([auth.get_value('191', 'a'), auth.id, auth.get_value('191', 'b'), auth.get_value('191', 'c'), auth.get_value('191', 'd'), attached])
 
         sorted_results = natsorted(results, key=lambda x: x[2])
         
