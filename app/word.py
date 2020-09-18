@@ -806,7 +806,7 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                 current=1
 
-                for docsymbol in sorted(docsymbols):
+                for docsymbol in docsymbols:
 
                     add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
                     
@@ -1065,7 +1065,7 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                 current=1
 
-                for docsymbol in sorted(docsymbols):
+                for docsymbol in docsymbols:
 
                     add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
                     
