@@ -173,7 +173,7 @@ def itpitsc(bodysession):
                             '$replaceAll': {
                                 'input': {
                                     '$concat': [
-                                        {'$toUpper': '$itshead'}, '+', '$itssubhead']}, 
+                                        {'$toUpper': '$itshead'}, '+', {'$toUpper':'$itssubhead'}]}, 
                                 'find': '. ', 
                                 'replacement': ' .'
                             }
@@ -288,11 +288,32 @@ def itpitsp(bodysession):
                     }
                 }
             }
-         
-        add_1 = {}
-        add_1['section'] = "itpitsp"
 
-        add_1['itshead'] = { 
+        add_1 = {}
+        
+        add_1['agendanum'] = {
+            '$cond': {
+                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                'then': '$991.b', 
+                'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+            }
+        }
+
+        add_1['agendasubject'] = {
+            '$replaceAll': {
+                'input': '$991.d', 
+                'find': '--', 
+                'replacement': '—'
+            }
+        }
+
+        add_stage1 = {}
+        add_stage1['$addFields'] = add_1
+
+        add_2 = {}
+        add_2['section'] = "itpitsp"
+
+        add_2['itshead'] = { 
                 '$concat': [        
                 {'$cond': {        
                     'if': '$700.g',        
@@ -311,26 +332,27 @@ def itpitsp(bodysession):
                 ')' ]}
         
         if body == "S":
-            add_1['itssubhead'] = { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } } #'$991.d'
+            add_2['itssubhead'] = '$agendasubject' #'$991.d'
         else:
-            add_1['itssubhead'] = {
+            add_2['itssubhead'] = {
+                '$cond': { 
+                    'if': {'$eq': ['$agendanum', ""]}, 
+                    'then':  '$agendasubject', #'$991.d', 
+                    'else': {
                         '$concat': [
-                            { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }, #'$991.d', 
-                            ' (Agenda item ', 
-                            {'$cond': {
-                                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
-                                'then':'$991.b', 
-                                'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}}
-                            },
-                            ')'
-                        ]
-                    }
+                        '$agendasubject', #'$991.d',
+                        ' (Agenda item ',
+                        '$agendanum',
+                        ')']
+                    } 
+                } 
+            }
 
 
-        add_1['docsymbol'] = '$791.a'
+        add_2['docsymbol'] = '$791.a'
 
-        add_stage = {}
-        add_stage['$addFields'] = add_1
+        add_stage2 = {}
+        add_stage2['$addFields'] = add_2
 
         project_stage = {
             '$project': {
@@ -343,11 +365,35 @@ def itpitsp(bodysession):
                 'itsentry': 1, 
                 'docsymbol': 1, 
                 'sortkey1': {
-                    '$concat': [
-                        { '$toUpper': '$itshead' }, 
-                        "+",
-                        '$itssubhead']},
-                'sortkey2': '$itsentry', 
+                    '$replaceAll': {
+                        'input': {
+                            '$replaceAll': {
+                                'input': {
+                                    '$concat': [
+                                        {'$toUpper': '$itshead'}, '+']}, 
+                                'find': '. ', 
+                                'replacement': ' .'
+                            }
+                        }, 
+                        'find': '—', 
+                        'replacement': ' $'
+                    }
+                },
+                'sortkey2': {
+                    '$replaceAll': {
+                        'input': {
+                            '$replaceAll': {
+                                'input': {
+                                    '$concat': [
+                                        {'$toUpper': '$itssubhead'}, '+']}, 
+                                'find': '. ', 
+                                'replacement': ' .'
+                            }
+                        }, 
+                        'find': '—', 
+                        'replacement': ' $'
+                    }
+                }, 
                 'sortkey3': '$docsymbol'
             }
         }
@@ -368,7 +414,8 @@ def itpitsp(bodysession):
         pipeline.append(unwind_stage1)
         pipeline.append(unwind_stage2)
         pipeline.append(match_stage2)
-        pipeline.append(add_stage)
+        pipeline.append(add_stage1)
+        pipeline.append(add_stage2)
         pipeline.append(project_stage)
         pipeline.append(sort_stage)
     
@@ -378,7 +425,7 @@ def itpitsp(bodysession):
 
         inputCollection.aggregate(pipeline, collation=collation)
 
-        group_speeches("itpitsp", bodysession)
+        group_itpitsp("itpitsp", bodysession)
 
         return "itpitsp completed successfully"
     
@@ -455,25 +502,47 @@ def itpitss(bodysession):
         }
 
         add_1 = {}
-        add_1['section'] = "itpitss"
+        
+        add_1['agendanum'] = {
+            '$cond': {
+                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                'then': '$991.b', 
+                'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+            }
+        }
+
+        add_1['agendasubject'] = {
+            '$replaceAll': {
+                'input': '$991.d', 
+                'find': '--', 
+                'replacement': '—'
+            }
+        }
+
+        add_stage1 = {}
+        add_stage1['$addFields'] = add_1
+
+        add_2 = {}
+        add_2['section'] = "itpitss"
         
         if body == "S":
-            add_1['itshead'] = { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } } #'$991.d'
+            add_2['itshead'] = '$agendasubject' #'$991.d'
         else:
-            add_1['itshead'] = {
-                '$concat': [
-                    { '$replaceOne': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }, #'$991.d', 
-                    ' (Agenda item ', 
-                    {'$cond': {
-                        'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]},
-                        'then':'$991.b', 
-                        'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}}
-                    },
-                    ')'
-                ]
+            add_2['itshead'] = {
+                '$cond': { 
+                    'if': {'$eq': ['$agendanum', ""]}, 
+                    'then':  '$agendasubject', #'$991.d', 
+                    'else': {
+                        '$concat': [
+                        '$agendasubject', #'$991.d',
+                        ' (Agenda item ',
+                        '$agendanum',
+                        ')']
+                    } 
+                } 
             }
 
-        add_1['itssubhead'] =  {
+        add_2['itssubhead'] =  {
             '$cond': {
                 'if': {'$ne': ['$710', '']}, 
                 'then': { 
@@ -485,7 +554,7 @@ def itpitss(bodysession):
             }
         }
         
-        add_1['itsentry'] = {
+        add_2['itsentry'] = {
             '$cond': {
                 'if': '$700.g', 
                 'then': {'$concat': ['$700.a', ' ', '$700.g']}, 
@@ -493,10 +562,10 @@ def itpitss(bodysession):
             }
         }
 
-        add_1['docsymbol'] = '$791.a'
+        add_2['docsymbol'] = '$791.a'
 
-        add_stage = {}
-        add_stage['$addFields'] = add_1
+        add_stage2 = {}
+        add_stage2['$addFields'] = add_2
 
         project_stage = {
             '$project': {
@@ -509,10 +578,20 @@ def itpitss(bodysession):
                 'itsentry': 1, 
                 'docsymbol': 1, 
                 'sortkey1': {
-                    '$concat': [
-                        { '$toUpper': '$itshead' }, 
-                        "+",
-                        '$itssubhead']},
+                    '$replaceAll': {
+                        'input': {
+                            '$replaceAll': {
+                                'input': {
+                                    '$concat': [
+                                        {'$toUpper': '$itshead'}, '+', {'$toUpper':'$itssubhead'}]}, 
+                                'find': '. ', 
+                                'replacement': ' .'
+                            }
+                        }, 
+                        'find': '—', 
+                        'replacement': ' $'
+                    }
+                },
                 'sortkey2': '$itsentry', 
                 'sortkey3': '$docsymbol'
             }
@@ -534,7 +613,8 @@ def itpitss(bodysession):
         pipeline.append(unwind_stage1)
         pipeline.append(unwind_stage2)
         pipeline.append(match_stage2)
-        pipeline.append(add_stage)
+        pipeline.append(add_stage1)
+        pipeline.append(add_stage2)
         pipeline.append(project_stage)
         pipeline.append(sort_stage)
     
@@ -2543,12 +2623,131 @@ def group_speeches(section, bodysession):
     #print(pipeline)
 
     outputCollection.aggregate(pipeline)
-    #, collation={
-    #        'locale': 'en', 
-    #        'numericOrdering': True,
-    #        'strength': 1, #ignore diacritics
-    #        'alternate': 'shifted' #ignore punctuation
-    #    })
+
+
+def group_itpitsp(section, bodysession):
+
+    clear_section(section, bodysession)
+
+    pipeline = []
+
+    match_stage = {
+        '$match': {
+            'bodysession': bodysession, 
+            'section': section
+        }
+    }
+    
+    #sort_stage1 = {
+    #    '$sort': {
+    #        'sortkey1': 1, 
+    #        'sortkey2': 1, 
+    #        'sortkey3': 1
+    #    }
+    #}
+    
+    group_stage1 = {
+        '$group': {
+            '_id': {
+                'itshead': '$itshead', 
+                'itsubhead': '$itssubhead', 
+                #'itsentry': '$itsentry', 
+                'sortkey1': '$sortkey1', 
+                'sortkey2': '$sortkey2'
+            }, 
+            'docsymbols': {
+                '$push': '$docsymbol'
+            }
+        }
+    }
+        
+    sort_stage2 = {
+        '$sort': {
+            '_id.sortkey1': 1, 
+            '_id.sortkey2': 1
+        }
+    }
+
+    group_stage2 = {
+        '$group': {
+            '_id': {
+                'itshead': '$_id.itshead', 
+                'itsubhead': '$_id.itsubhead', 
+                'sortkey1': '$_id.sortkey1',
+                'sortkey2': '$_id.sortkey2'
+            }, 
+            'itsentries': {
+                '$push': {
+                    #'itsentry': '$_id.itsentry', 
+                    'docsymbols': '$docsymbols'
+                }
+            }
+        }
+    }
+    
+    sort_stage3 = {
+        '$sort': {
+            '_id.sortkey1': 1,
+            '_id.sortkey2': 1
+        }
+    }
+
+    group_stage3 = {
+        '$group': {
+            '_id': {
+                'itshead': '$_id.itshead',
+                'sort': {
+                    '$substrCP': ['$_id.sortkey1', 0, {'$indexOfCP': ['$_id.sortkey1', '+']}]
+                }
+            }, 
+            'subheading': {
+                '$push': {
+                    'itssubhead': '$_id.itsubhead', 
+                    'itsentries': '$itsentries'
+                }
+            }
+        }
+    }
+    
+    sort_stage4 = {
+        '$sort': {
+            '_id.sort': 1
+        }
+    }
+
+    project_stage = {
+        '$project': {
+            '_id': 0,
+            'itshead': '$_id.itshead',
+            'bodysession': bodysession, 
+            'section': section, 
+            'subheading': 1,
+            'sort': '$_id.sort'
+        }
+    }
+
+    merge_stage = {
+        '$merge': { 'into': wordOutput}
+    }
+
+    pipeline.append(match_stage)
+    #pipeline.append(sort_stage1)
+    pipeline.append(group_stage1)
+    pipeline.append(sort_stage2)
+    pipeline.append(group_stage2)
+    pipeline.append(sort_stage3)
+    pipeline.append(group_stage3)
+    pipeline.append(sort_stage4)
+    pipeline.append(project_stage)
+    pipeline.append(merge_stage)
+
+    #print(pipeline)
+
+    outputCollection.aggregate(pipeline, 
+        collation={
+            'locale': 'en', 
+            'strength': 1, #ignore diacritics
+        })
 
 
 def group_itpsubj(section, bodysession):
@@ -2644,13 +2843,14 @@ def group_itpsubj(section, bodysession):
 
     #print(pipeline)
 
-    outputCollection.aggregate(pipeline) 
-    # , collation={
-    #'locale': 'en', 
+    outputCollection.aggregate(pipeline)
+    #, collation={
+    #    'locale': 'simple'
+    #    'locale': 'en', 
+    #    'strength': 1, #ignore diacritics
     #'numericOrdering': True,
-    #'strength': 1, #ignore diacritics
     ##'alternate': 'shifted' #ignore punctuation
-    #}) """
+    #}) 
 
 def group_itpdsl(section, bodysession):
     
