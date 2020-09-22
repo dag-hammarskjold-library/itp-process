@@ -806,7 +806,7 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                 current=1
 
-                for docsymbol in sorted(docsymbols):
+                for docsymbol in docsymbols:
 
                     add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
                     
@@ -1065,7 +1065,7 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                 current=1
 
-                for docsymbol in sorted(docsymbols):
+                for docsymbol in docsymbols:
 
                     add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
                     
@@ -2202,9 +2202,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     myDatabase=myClient.undlFiles
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
-    print(bodysession)
-    print(paramSection)
-    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
 
     # Creation of the word document
 
@@ -2350,6 +2348,169 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                     font.size= Pt(8)
     
     
+
+    return document
+
+def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
+    
+    # Setting some Variables
+
+    myMongoURI=Config.connect_string
+    myClient = MongoClient(myMongoURI)
+    myDatabase=myClient.undlFiles
+    myCollection=myDatabase['itp_sample_output_copy']
+    myTitle=paramTitle
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
+
+    # Creation of the word document
+
+    document = Document()
+   
+    ################## HEADER ###############################################
+    
+    styles = document.styles
+    new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
+    new_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    
+    font = new_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(12)
+    font.bold = True
+    font.color.rgb = RGBColor(0, 0, 0)
+    
+
+    ################## SORTITLE ###############################################
+    
+    stlSorentry = document.styles.add_style('sortitle', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSorentryFont=stlSorentry.font
+    stlSorentryFont.name = 'Arial'
+    stlSorentryFont.size = Pt(8)
+    stlSorentryFont.bold = True
+    
+    pfSorentry = stlSorentry.paragraph_format
+    pfSorentry.left_indent = Inches(0.80)
+
+    # Line spacing
+    
+    pfSorentry.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+
+    ################## NOTE ###############################################
+    
+    stlSorentry = document.styles.add_style('note', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSorentryFont=stlSorentry.font
+    stlSorentryFont.name = 'Arial'
+    stlSorentryFont.size = Pt(8)
+    stlSorentryFont.italic = True
+    
+    pfSorentry = stlSorentry.paragraph_format
+    pfSorentry.left_indent = Inches(1.39)
+
+    # Line spacing
+    
+    pfSorentry.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+   
+   ################## SORENTRY ###############################################
+    
+    stlSorentry = document.styles.add_style('sorentry', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSorentryFont=stlSorentry.font
+    stlSorentryFont.name = 'Arial'
+    stlSorentryFont.size = Pt(8)
+    
+    pfSorentry = stlSorentry.paragraph_format
+
+    # Line spacing
+    
+    pfSorentry.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+     
+    ################## WRITING THE DOCUMENT ###############################################
+    
+    # Adding the Header to the document
+    
+    myRecords=setOfData
+
+    p=document.add_paragraph(myTitle.upper(), style='New Heading')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run("\n")
+    p.add_run("\n")
+
+    section = document.sections[0]
+    sectPr = section._sectPr
+    cols = sectPr.xpath('./w:cols')[0]
+    cols.set(qn('w:num'),'1')
+
+    ### FIRST RECORD ##########
+
+    if (bodysession[0]=="S"):
+        p=document.add_paragraph("The Council's practice is to adopt at each meeting, on the basis of a provisional agenda circulated in advance, the agenda for that meeting. At subsequent meetings an item may appear in its original form or with the addition of such sub-items as the Council may decide to include. Once included in the agenda, an item remains on the list of matters of which the Council is seized, until the Council agrees to its removal.",style="sorentry")
+        p.add_run("\n")
+        p.add_run("\n")
+        p.add_run('The agenda as adopted for each meeting in 2018 will be found in the Official Records of the Security Council, Seventy-third Year (S/PV.8152-8439). A list of weekly summary statements of matters of which the Security Council is seized, and on the stage reached in their consideration, submitted by the Secretary-General under rule 11 of the provisional rules of procedure of the Security Council, appears in the Subject index under the heading "UN. SECURITY COUNCIL (2018)–AGENDA".')
+        p.add_run("\n")
+        p.add_run("\n")
+        p.add_run('Listed below are the matters considered by, or brought to the attention of the Council during 2018. They are arranged alphabetically by the subject headings under which related documents are to be found in the Subject index.')
+    
+    p.add_run("\n")
+    p.add_run("\n")
+
+    p=document.add_paragraph(myRecords[0]["heading"],style="sortitle")
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    p=document.add_paragraph('NOTE: Subject headings under which documentation related to agenda items is listed in the Subject index appear in capital letters following the title of the item.',style='note')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    p.add_run("\n")
+    p.add_run("\n")
+
+    p=document.add_paragraph('',style='sorentry')
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+    for record in myRecords[0]["agendas"]:
+
+        p.add_run("[To be completed manually]")
+        p.add_run("\n")
+        p.add_run("See    " + record["subject"])
+        p.add_run("\n")
+        p.add_run("\n")
+
+        
+    ### SECOND RECORD ##########
+    p=document.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    # run = p.add_run()
+    # run.add_break(WD_BREAK.PAGE)
+
+    p=document.add_paragraph(myRecords[1]["heading"],style="sortitle")
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    p=document.add_paragraph('NOTE:These items were not discussed by the Council',style='note')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    p.add_run("\n")
+    p.add_run("\n")
+
+    p=document.add_paragraph('',style='sorentry')
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+    for record in myRecords[1]["agendas"]:
+
+        p.add_run("[To be completed manually]")
+        p.add_run("\n")
+        p.add_run("See    " + record["subject"])
+        p.add_run("\n")
+        p.add_run("\n")
+
 
     return document
 

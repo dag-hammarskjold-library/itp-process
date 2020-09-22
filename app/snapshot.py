@@ -47,7 +47,7 @@ class Snapshot(object):
         except:
             print(f" there is no matching ITP document")
             itpp_doc=None
-        if itpp_doc is not None:
+        if itpp_doc is not None: 
             for itpp_section in itpp_doc.sections:
                 #print(f"    {itpp_section.name}")
                 for itpp_rule in itpp_section.rules:
@@ -57,7 +57,7 @@ class Snapshot(object):
                         for fld in itpp_rule.parameters[0].split(";"):
                             itp_bib_fields.append(fld.strip()) 
         else:
-            itp_bib_fields=['001', '035$a', '591$a','700$a', '700$g', '710$a', '711$a', '791$a','791$b','791$c','793$a', '930$a', '949$a','991$b', '991$d','001', '035$a', '089$b', '191$9', '191$a', '191$b', '191$c','191$d', '191$z', '239$a', '245$a', '245$b', '245$c', '248$a', '249$a', '269$a', '495$a', '515$a', '520$a', '580$a', '591$a', '592$a', '598$a', '599$a', '791$b', '791$c', '930$a', '949$a', '991$a', '991$b', '991$c', '991$d', '991$e', '991$m', '991$s', '991$z', '992$a', '995$a', '996$a']
+            itp_bib_fields=['001', '035$a', '591$a','700$a', '700$g', '710$a', '711$a', '791$a','791$b','791$c','793$a', '930$a', '949$a','991$b', '991$d','001', '035$a', '089$b', '191$9', '191$a', '191$b', '191$c','191$d', '191$z', '239$a', '245$a', '245$b', '245$c', '248$a', '249$a', '269$a', '495$a', '515$a', '520$a', '580$a', '591$a', '592$a', '598$a', '599$a', '791$b', '791$c', '930$a', '949$a', '991$a', '991$b', '991$c', '991$d', '991$e', '991$m', '991$s', '991$z', '992$a', '995$a', '996$a','967$c','967$d','968$c','968$d','969$c','969$d']
         set_itp_bib_fields=sorted(set(itp_bib_fields))
         print(f"fields are: {set_itp_bib_fields}")   
             
