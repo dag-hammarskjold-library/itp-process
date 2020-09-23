@@ -818,16 +818,31 @@ def itpres(bodysession):
             transform['ainumber'] = {
                 '$switch': {
                     'branches': [
-                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$gt': [{'$size': '$agendas'}, 1]}] }, 
-                            'then': {'$concat': [{'$arrayElemAt': ['$agendas.b', 0]}, ' ', {'$arrayElemAt': ['$agendas.b', 1]}] }}, 
-                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$eq': [{'$size': '$agendas'}, 1]}] }, 
-                            'then': {'$cond': {
-                                'if': {'$eq': [{'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}, -1]},
-                                'then': {'$arrayElemAt': ['$agendas.b', 0]},
-                                'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 0]}, 0, {'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}]}} } }
-                    ], 
+                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$gt': [{'$size': '$agendas'}, 1]}]},
+                            'then': {
+                                '$let': {
+                                    'vars': {
+                                        'element1': {'$cond': {'if': {'$eq': [{'$indexOfCP': [{ '$arrayElemAt': [ '$agendas.b', 0 ]}, '[']}, -1]},'then': {'$arrayElemAt': ['$agendas.b', 0]},'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 0]}, 0, {'$indexOfCP': [{ '$arrayElemAt': [ '$agendas.b', 0 ]}, '[']}]}}},
+                                        'element2': {'$cond': {'if': {'$eq': [{'$indexOfCP': [{ '$arrayElemAt': [ '$agendas.b', 1 ]}, '[']}, -1]},'then': {'$arrayElemAt': ['$agendas.b', 1]},'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 1]}, 0, {'$indexOfCP': [{ '$arrayElemAt': [ '$agendas.b', 1 ]}, '[']}]}}}},
+                                    'in': {
+                                        '$cond': {
+                                            'if': {'$eq': ['$$element1', '$$element2']},
+                                            'then': '$$element1',
+                                            'else': {'$concat': ['$$element1', ' ', '$$element2']}}}}
+                            }
+                        }, 
+                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$eq': [{'$size': '$agendas'}, 1]}]},
+                            'then': {
+                                '$cond': {
+                                    'if': {'$eq': [{'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}, -1]},
+                                    'then': {'$arrayElemAt': ['$agendas.b', 0]},
+                                    'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 0]}, 0, {'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}]}
+                                }
+                            }
+                        }
+                    ],
                     'default': '$agendas'
-                }
+                } 
             }
                
 
