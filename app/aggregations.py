@@ -1204,7 +1204,7 @@ def itpsubj(bodysession):
             '$let': {
                 'vars': {
                     'testMonth': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 1]},
-                    'testDate': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 2]},
+                    'testDate': {'$ltrim': { 'input': {'$arrayElemAt': [{'$split': [ '$992.a', '-']}, 2]}, 'chars': '0' }},
                     'testYear': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 0]}},
                 'in': {
                     '$switch': {
