@@ -818,16 +818,31 @@ def itpres(bodysession):
             transform['ainumber'] = {
                 '$switch': {
                     'branches': [
-                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$gt': [{'$size': '$agendas'}, 1]}] }, 
-                            'then': {'$concat': [{'$arrayElemAt': ['$agendas.b', 0]}, ' ', {'$arrayElemAt': ['$agendas.b', 1]}] }}, 
-                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$eq': [{'$size': '$agendas'}, 1]}] }, 
-                            'then': {'$cond': {
-                                'if': {'$eq': [{'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}, -1]},
-                                'then': {'$arrayElemAt': ['$agendas.b', 0]},
-                                'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 0]}, 0, {'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}]}} } }
-                    ], 
+                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$gt': [{'$size': '$agendas'}, 1]}]},
+                            'then': {
+                                '$let': {
+                                    'vars': {
+                                        'element1': {'$cond': {'if': {'$eq': [{'$indexOfCP': [{ '$arrayElemAt': [ '$agendas.b', 0 ]}, '[']}, -1]},'then': {'$arrayElemAt': ['$agendas.b', 0]},'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 0]}, 0, {'$indexOfCP': [{ '$arrayElemAt': [ '$agendas.b', 0 ]}, '[']}]}}},
+                                        'element2': {'$cond': {'if': {'$eq': [{'$indexOfCP': [{ '$arrayElemAt': [ '$agendas.b', 1 ]}, '[']}, -1]},'then': {'$arrayElemAt': ['$agendas.b', 1]},'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 1]}, 0, {'$indexOfCP': [{ '$arrayElemAt': [ '$agendas.b', 1 ]}, '[']}]}}}},
+                                    'in': {
+                                        '$cond': {
+                                            'if': {'$eq': ['$$element1', '$$element2']},
+                                            'then': '$$element1',
+                                            'else': {'$concat': ['$$element1', ' ', '$$element2']}}}}
+                            }
+                        }, 
+                        {'case': {'$and': [{'$isArray': ['$agendas']}, {'$eq': [{'$size': '$agendas'}, 1]}]},
+                            'then': {
+                                '$cond': {
+                                    'if': {'$eq': [{'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}, -1]},
+                                    'then': {'$arrayElemAt': ['$agendas.b', 0]},
+                                    'else': {'$substrCP': [{'$arrayElemAt': ['$agendas.b', 0]}, 0, {'$indexOfCP': [{'$arrayElemAt': ['$agendas.b', 0]}, '[']}]}
+                                }
+                            }
+                        }
+                    ],
                     'default': '$agendas'
-                }
+                } 
             }
                
 
@@ -2418,33 +2433,110 @@ def itpvot(bodysession):
     Builds the aggregation query and inserts the results into another collection.
     """ 
     try: 
+        outputCollection.delete_many({ "section" : "itpvot", "bodysession" : bodysession } )
+        
         pipeline = []
 
         bs = bodysession.split("/")
         body = bs[0]
+        session = bs[1]
 
-        match_stage = {}
-        unwind_stage = {}
+        if body == "S":
+            match_stage = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    'record_type': 'VOT', 
+                    '591.a': {
+                        '$ne': 'ADOPTED WITHOUT VOTE'
+                    }, 
+                    '791.a': {
+                        '$regex': re.compile(r"RES")
+                    }, 
+                    '791.b': body + "/", 
+                    '791.c': session
+                }
+            }
+
+            lookup_stage = {
+                '$lookup': {
+                    'from': 'itp_codes', 
+                    'localField': '967.c', 
+                    'foreignField': 'code', 
+                    'as': 'country_info'
+                }
+            }
         
-        transform = {}
-        transform['_id'] = 0
-        transform['record_id'] = 1
-        transform['section'] = "itpvot"
-        transform['bodysession'] = 1
+            transform = {}
+            transform['_id'] = 0
+            transform['record_id'] = 1
+            transform['section'] = "itpvot"
+            transform['bodysession'] = 1
+            
+            transform['docsymbol'] = '$791.a'
 
-        transform_stage = {}
-        transform_stage['$project'] = transform
+            transform['resnum'] = {
+                '$substrCP': [
+                    '$791.a', 
+                    {'$add': [1, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
+                    4
+                ]
+            }
 
-        merge_stage = {
-            '$merge': { 'into': editorOutput}
-        }
+            transform['votelist'] = {
+                '$map': {
+                    'input': {
+                        '$zip': {
+                            'inputs': [
+                                '$country_info.text', 
+                                '$967.d'
+                            ]
+                        }
+                    }, 
+                    'as': 'list', 
+                    'in': {
+                        'memberstate': {'$arrayElemAt': ['$$list', 0]}, 
+                        'vote': {'$arrayElemAt': ['$$list', 1]
+                        }
+                    }
+                }
+            }
 
-        pipeline.append(match_stage)
-        pipeline.append(unwind_stage)
-        pipeline.append(transform_stage)
-        pipeline.append(merge_stage)
+            transform['sortkey1'] = '$791.a'
 
-        inputCollection.aggregate(pipeline)
+            transform_stage = {}
+            transform_stage['$project'] = transform
+
+            merge_stage = {
+                '$merge': { 'into': editorOutput}
+            }
+
+            pipeline.append(match_stage)
+            pipeline.append(lookup_stage)
+            pipeline.append(transform_stage)
+            pipeline.append(merge_stage)
+
+            inputCollection.aggregate(pipeline)
+
+            #for the word collection
+            copyPipeline = []
+
+            copyMatch_stage = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    'section': "itpvot"
+                }
+            }
+
+            copyMerge_stage = {
+                '$merge': { 'into': wordOutput}
+            }
+            
+            clear_section("itpvot", bodysession)
+
+            copyPipeline.append(copyMatch_stage)
+            copyPipeline.append(copyMerge_stage)
+
+            outputCollection.aggregate(copyPipeline)
 
     except Exception as e:
         return e
