@@ -1493,7 +1493,7 @@ def itpsubj(bodysession):
         transform['note'] = {
             '$switch': {
                 'branches': [
-                    {'case': {'$and': [{'$or': [{'$eq': ['$191.9', 'C00']}, {'$eq': ['$191.9', 'G00']}, {'$eq': ['$191.9', 'X00']}]}, 
+                    {'case': {'$and': [{'$or': [{'$eq': ['$code', 'C00']}, {'$eq': ['$code', 'G00']}, {'$eq': ['$code', 'X00']}]}, 
                                 {'$eq': ['$letter', '']}]}, 
                         'then': {'$concat': [
                                     'Issued: ', 
