@@ -1553,7 +1553,7 @@ def itpsubj(bodysession):
                     '$replaceAll': {
                         'input': {
                             '$replaceAll': {
-                                'input': '$head', 
+                                'input': '$agendasubject', #'$head'
                                 'find': '. ', 
                                 'replacement': ' .'
                             }
