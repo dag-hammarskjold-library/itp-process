@@ -583,7 +583,7 @@ def itpitss(bodysession):
                             '$replaceAll': {
                                 'input': {
                                     '$concat': [
-                                        {'$toUpper': '$itshead'}, '+', {'$toUpper':'$itssubhead'}]}, 
+                                        {'$toUpper': '$agendasubject'}, '+', {'$toUpper':'$itssubhead'}]}, 
                                 'find': '. ', 
                                 'replacement': ' .'
                             }
