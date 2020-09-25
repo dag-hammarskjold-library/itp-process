@@ -72,7 +72,7 @@ class MissingFields(Report):
         self.expected_params = ['authority']
         self.tags = tags
 
-        self.field_names = ['Record Type', 'Record ID', 'Document Symbol']
+        self.field_names = ['Record ID', f'{self.symbol_field}$a', '930$a']
         
     def execute(self, args):
         self.validate_args(args)
@@ -92,7 +92,7 @@ class MissingFields(Report):
         results = []
         
         for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '930': 1}):            
-            results.append([bib.get_value('930', 'a'), bib.id, bib.get_value(self.symbol_field, 'a')])
+            results.append([bib.id, bib.get_value(self.symbol_field, 'a'), '; '.join(bib.get_values('930', 'a'))])
            
         return results    
         
@@ -194,17 +194,21 @@ class IncorrectSession(Report):
                     
         return results
 
-### 269 and 992 mismatch
-
-class Mismatch269_992(Report):
-    def __init__(self):
-        self.name = '{}_field_mismatch_269_992'.format(self.type)
-        self.title = "Field mismatch - 269 & 992"
+##
+        
+class FieldMismatch(Report):
+    def __init__(self, tag1, tag2):
+        self.tag1 = tag1
+        self.tag2 = tag2
+        
+        self.name = f'{self.type}_mismatch_{tag1}_{tag2}'
+        self.title = f'Field mismatch - {tag1} & {tag2}'
+        self.description = f'{self.type} records where {tag1} does not match {tag2}'.capitalize()
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
         
-        self.field_names = ['Record ID', self.symbol_field + '$a', '269$a', '992$a']
+        self.field_names = ['Record ID', f'${self.symbol_field}a', f'{self.tag1}$a', f'{self.tag2}$a']
         
     def execute(self, args):
         self.validate_args(args)
@@ -217,9 +221,9 @@ class Mismatch269_992(Report):
         
         results = []
         
-        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '269': 1, '992': 1}):
-            if bib.get_value('269', 'a') != bib.get_value('992', 'a'):
-                results.append([bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_value('269', 'a'), bib.get_value('992', 'a')])
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, self.tag1: 1, self.tag2: 1}):
+            if bib.get_value(self.tag1, 'a') != bib.get_value(self.tag2, 'a'):
+                results.append([bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_value(self.tag1, 'a'), bib.get_value(self.tag2, 'a')])
                 
         return results
         
@@ -858,11 +862,6 @@ class SpeechIncompleteAuthMother(SpeechReport):
 
         return results
     
-class SpeechMismatch(SpeechReport, Mismatch269_992):
-    def __init__(self):
-        SpeechReport.__init__(self)
-        Mismatch269_992.__init__(self)
-        
 class SpeechIncorrect991(SpeechReport, Incorrect991):
     def __init__(self):
         SpeechReport.__init__(self)
@@ -920,6 +919,11 @@ class SpeechMissingAgendaIndicator(SpeechReport):
                     
         return results
         
+class SpeechMismatch(SpeechReport, FieldMismatch):
+    def __init__(self, tag1, tag2):
+        SpeechReport.__init__(self)
+        FieldMismatch.__init__(self, tag1, tag2)
+
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -945,10 +949,10 @@ class VoteMissingSubfield(VoteReport, MissingSubfield):
         VoteReport.__init__(self)
         MissingSubfield.__init__(self, tag, code)
         
-class VoteMismatch(VoteReport, Mismatch269_992):
-    def __init__(self):
+class VoteMismatch(VoteReport, FieldMismatch):
+    def __init__(self, tag1, tag2):
         VoteReport.__init__(self)
-        Mismatch269_992.__init__(self)
+        FieldMismatch.__init__(self, tag1, tag2)
   
 class VoteIncorrect991(VoteReport, Incorrect991):
     def __init__(self):
@@ -1023,29 +1027,30 @@ class AnyMissing930(Report):
             ('791','a')
         ]
         
-        self.field_names = ['Record ID', 'Document Symbol']
+        self.field_names = ['Record ID', 'Document Symbol', '930$a']
         
     def execute(self, args):
         self.validate_args(args)
     
         body,session = _get_body_session(args['authority'])
-    
-        bibs = Bib.match(
+        
+        query = QueryDocument(
             Or(
-                Condition('191',('b',body),('c',session)),
-                Condition('791',('b',body),('c',session))
+                Condition('191', {'b': body, 'c': session}),
+                Condition('791', {'b': body, 'c': session})
             ),
-            Condition('040', {'a': 'DHC'}, modifier='not'),
             Condition('040', {'a': 'NNUN'}),
-            Condition('930', modifier='not_exists'),
-            project=[f[0] for f in self.output_fields]
+            Condition('040', {'a': 'DHC'}, modifier='not'),
+            Condition('930', modifier='not_exists')
         )
+            
+        bibs = BibSet.from_query(query, projection=[f[0] for f in self.output_fields])
     
         # list of lists
         results = []
         
         for bib in bibs:
-            results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a')])
+            results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a'), '; '.join(bib.get_values('930', 'a'))])
             
         return results
 
@@ -1094,7 +1099,7 @@ class ReportList(object):
         # Duplicate speech records
         SpeechDuplicateRecord(),
         # Field mismatch - 269 & 992
-        SpeechMismatch(),
+        SpeechMismatch('269', '992'),
         
         # Incomplete authorities # *** split into two reports below as per VW
         # SpeechIncompleteAuthority(),
@@ -1120,19 +1125,20 @@ class ReportList(object):
         SpeechMissingField('992'),
         # Missing subfield - 991$d
         SpeechMissingSubfield('991','d'),
-        
         #SpeechMissingField('930'),
-        
+        # Duplicate agenda item
         SpeechDuplicateAgenda(),
-        
+        # Missing fields - 700 + 710
         SpeechMissingFields(['700', '710']),
-        
+        # Agenda item missing indicator
         SpeechMissingAgendaIndicator(),
+        # Field mismatch - 039 & 930
+        SpeechMismatch('039', '930'),
     
         # voting category
 
         # Field mismatch - 269 & 992
-        VoteMismatch(),
+        VoteMismatch('269', '992'),
         # Incorrect field - 991
         VoteIncorrect991(),
         # Incorrect field - 992
@@ -1149,8 +1155,9 @@ class ReportList(object):
         VoteMissingField('992'),
         # Missing subfield - 991$d
         VoteMissingSubfield('991','d'),
-        
         #VoteMissingField('930'),
+        # Field mismatch - 039 & 930
+        VoteMismatch('039', '930'),
         
         # other
         
