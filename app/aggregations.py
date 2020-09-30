@@ -371,12 +371,12 @@ def itpitsp(bodysession):
                                 'input': {
                                     '$concat': [
                                         {'$toUpper': '$itshead'}, '+']}, 
-                                'find': '. ', 
-                                'replacement': ' .'
+                                'find': ' ', 
+                                'replacement': '!'
                             }
                         }, 
-                        'find': '—', 
-                        'replacement': ' $'
+                        'find': ',', 
+                        'replacement': ' '
                     }
                 },
                 'sortkey2': {
@@ -985,6 +985,7 @@ def itpsubj(bodysession):
         body = bs[0]
         fullbody = body + "/"
         session = bs[1]
+        itpcode = 'ITP' + body + session
 
         empty_string = ''
 
@@ -1005,16 +1006,40 @@ def itpsubj(bodysession):
         if body == "S":
             match_stage2 = {
                 '$match': {
-                    '991.z': "I",
-                    '991.a' : {'$regex': "^S"}
+                    '$or': [
+                        {'$and': [
+                            {'991.z': 'I'},
+                            {'991.a': {'$regex': '^S'}},
+                            {'930.a': {'$ne': itpcode}},
+                            {'991.m': {'$ne': fullbody}},
+                            {'991.s': {'$ne': session}}]}, 
+                        {'$and': [
+                            {'991.z': 'I'}, 
+                            {'991.a': {'$regex': '^S'}}, 
+                            {'930.a': itpcode}, 
+                            {'991.m': fullbody}, 
+                            {'991.s': session}]}
+                    ]
                 }
             }
 
         if body == "A":
             match_stage2 = {
                 '$match': {
-                    '991.z': "I",
-                    '991.a' : {'$regex': "^A"}
+                    '$or': [
+                        {'$and': [
+                            {'991.z': 'I'},
+                            {'991.a': {'$regex': '^A'}},
+                            {'930.a': {'$ne': itpcode}},
+                            {'991.m': {'$ne': fullbody}},
+                            {'991.s': {'$ne': session}}]}, 
+                        {'$and': [
+                            {'991.z': 'I'}, 
+                            {'991.a': {'$regex': '^A'}}, 
+                            {'930.a': itpcode}, 
+                            {'991.m': fullbody}, 
+                            {'991.s': session}]}
+                    ]
                 }
             }
 
