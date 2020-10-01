@@ -2531,6 +2531,12 @@ def itpvot(bodysession):
             transform_stage = {}
             transform_stage['$project'] = transform
 
+            sort_stage = {
+                '$sort': {
+                    'sortkey1': 1
+                }
+            }
+
             merge_stage = {
                 '$merge': { 'into': editorOutput}
             }
@@ -2538,6 +2544,7 @@ def itpvot(bodysession):
             pipeline.append(match_stage)
             pipeline.append(lookup_stage)
             pipeline.append(transform_stage)
+            pipeline.append(sort_stage)
             pipeline.append(merge_stage)
 
             inputCollection.aggregate(pipeline)
