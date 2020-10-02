@@ -371,12 +371,12 @@ def itpitsp(bodysession):
                                 'input': {
                                     '$concat': [
                                         {'$toUpper': '$itshead'}, '+']}, 
-                                'find': '. ', 
-                                'replacement': ' .'
+                                'find': ' ', 
+                                'replacement': '!'
                             }
                         }, 
-                        'find': '—', 
-                        'replacement': ' $'
+                        'find': ',', 
+                        'replacement': ' '
                     }
                 },
                 'sortkey2': {
@@ -583,7 +583,7 @@ def itpitss(bodysession):
                             '$replaceAll': {
                                 'input': {
                                     '$concat': [
-                                        {'$toUpper': '$itshead'}, '+', {'$toUpper':'$itssubhead'}]}, 
+                                        {'$toUpper': '$agendasubject'}, '+', {'$toUpper':'$itssubhead'}]}, 
                                 'find': '. ', 
                                 'replacement': ' .'
                             }
@@ -985,6 +985,7 @@ def itpsubj(bodysession):
         body = bs[0]
         fullbody = body + "/"
         session = bs[1]
+        itpcode = 'ITP' + body + session
 
         empty_string = ''
 
@@ -1005,16 +1006,40 @@ def itpsubj(bodysession):
         if body == "S":
             match_stage2 = {
                 '$match': {
-                    '991.z': "I",
-                    '991.a' : {'$regex': "^S"}
+                    '$or': [
+                        {'$and': [
+                            {'991.z': 'I'},
+                            {'991.a': {'$regex': '^S'}},
+                            {'930.a': {'$ne': itpcode}},
+                            {'991.m': {'$ne': fullbody}},
+                            {'991.s': {'$ne': session}}]}, 
+                        {'$and': [
+                            {'991.z': 'I'}, 
+                            {'991.a': {'$regex': '^S'}}, 
+                            {'930.a': itpcode}, 
+                            {'991.m': fullbody}, 
+                            {'991.s': session}]}
+                    ]
                 }
             }
 
         if body == "A":
             match_stage2 = {
                 '$match': {
-                    '991.z': "I",
-                    '991.a' : {'$regex': "^A"}
+                    '$or': [
+                        {'$and': [
+                            {'991.z': 'I'},
+                            {'991.a': {'$regex': '^A'}},
+                            {'930.a': {'$ne': itpcode}},
+                            {'991.m': {'$ne': fullbody}},
+                            {'991.s': {'$ne': session}}]}, 
+                        {'$and': [
+                            {'991.z': 'I'}, 
+                            {'991.a': {'$regex': '^A'}}, 
+                            {'930.a': itpcode}, 
+                            {'991.m': fullbody}, 
+                            {'991.s': session}]}
+                    ]
                 }
             }
 
@@ -1204,7 +1229,7 @@ def itpsubj(bodysession):
             '$let': {
                 'vars': {
                     'testMonth': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 1]},
-                    'testDate': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 2]},
+                    'testDate': {'$ltrim': { 'input': {'$arrayElemAt': [{'$split': [ '$992.a', '-']}, 2]}, 'chars': '0' }},
                     'testYear': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 0]}},
                 'in': {
                     '$switch': {
@@ -1493,7 +1518,7 @@ def itpsubj(bodysession):
         transform['note'] = {
             '$switch': {
                 'branches': [
-                    {'case': {'$and': [{'$or': [{'$eq': ['$191.9', 'C00']}, {'$eq': ['$191.9', 'G00']}, {'$eq': ['$191.9', 'X00']}]}, 
+                    {'case': {'$and': [{'$or': [{'$eq': ['$code', 'C00']}, {'$eq': ['$code', 'G00']}, {'$eq': ['$code', 'X00']}]}, 
                                 {'$eq': ['$letter', '']}]}, 
                         'then': {'$concat': [
                                     'Issued: ', 
@@ -1553,7 +1578,7 @@ def itpsubj(bodysession):
                     '$replaceAll': {
                         'input': {
                             '$replaceAll': {
-                                'input': '$head', 
+                                'input': '$agendasubject', #'$head'
                                 'find': '. ', 
                                 'replacement': ' .'
                             }
