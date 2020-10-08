@@ -26,7 +26,7 @@ from time import sleep
 from zappa.asynchronous import task, get_async_response
 from pymongo import MongoClient
 from copy import deepcopy
-from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR,generateWordDocITPRES,generateWordDocITPSUBJ,generateWordDocITPDSL,generateWordDocITPMEET,generateWordDocITPAGE
+from app.word import generateWordDocITPITSC,generateWordDocITPITSP,generateWordDocITPITSS,generateWordDocITPSOR,generateWordDocITPRES,generateWordDocITPSUBJ,generateWordDocITPDSL,generateWordDocITPMEET,generateWordDocITPAGE,generateWordDocITPVOT
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
@@ -1606,6 +1606,8 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
             response = get_document_async('generateWordDocITPMEET', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
         if param_section=="itpage":
             response = get_document_async('generateWordDocITPAGE', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+        if param_section=="itpvot":
+            response = get_document_async('generateWordDocITPVOT', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
 
         flash("The document is being generated and will be in the Downloads section shortly.")
         return redirect(request.referrer)
@@ -1637,8 +1639,10 @@ def generateWordFile(param_title,param_subtitle,body_session,param_section):
             document = get_document_async('generateWordDocITPMEET', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
 
         if param_section=="itpage":
-                    document = get_document_async('generateWordDocITPAGE', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
+            document = get_document_async('generateWordDocITPAGE', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
 
+        if param_section=="itpvot":
+            document = get_document_async('generateWordDocITPVOT', param_title, param_subtitle, body_session, param_section, param_name_file_output, key)
 
         file_stream = io.BytesIO()
         document.save(file_stream)

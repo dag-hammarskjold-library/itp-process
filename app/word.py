@@ -23,6 +23,8 @@ from pymongo.collation import Collation
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_ROW_HEIGHT_RULE
+from docx.enum.section import WD_ORIENT
+import itertools
 
 s3_client = boto3.client('s3')
 
@@ -225,19 +227,19 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     #footer = document.sections[0].footer
     #paragraph=footer.add_paragraph("No footer defined",style="New Heading")
-    
+
     myRecords=setOfData
 
     for record in myRecords:
-        
+        print(record)
         try :
             sorentry= record['sorentry'].strip()
         except :
             sorentry=""
         
         try :
-            if record['docSymbol'].strip()!="":
-                docSymbol=record['docSymbol'].strip()
+            if record['docsymbol'].strip()!="":
+                docSymbol=record['docsymbol'].strip()
             else:
                 docSymbol="Symbol not used."
         except :
@@ -2514,4 +2516,237 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     return document
 
+def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
+    # Setting some Variables
+
+    myMongoURI=Config.connect_string
+    myClient = MongoClient(myMongoURI)
+    myDatabase=myClient.undlFiles
+    myCollection=myDatabase['itp_sample_output_copy']
+    myTitle=paramTitle
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
+    setOfData1=myCollection.find({'bodysession': bodysession,'section': paramSection})
+    setOfData2=myCollection.find({'bodysession': bodysession,'section': paramSection})
+
+    # Creation of the word document
+
+    document = Document()
+
+    # Adding the header to the document
+    
+    header=document.sections[0].header
+    header.orientation=WD_ORIENT.LANDSCAPE
+
+    section = document.sections[0]
+    section.orientation=WD_ORIENT.LANDSCAPE
+    new_height = section.page_width
+    section.page_width = section.page_height
+    section.page_height = new_height
+   
+    ################## HEADER ###############################################
+    
+    styles = document.styles
+    new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
+    new_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    
+    font = new_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(12)
+    font.bold = True
+    font.color.rgb = RGBColor(0, 0, 0)
+
+    pfNew_heading_style = new_heading_style.paragraph_format
+    pfNew_heading_style.alignment=WD_ALIGN_PARAGRAPH.CENTER
+    
+
+    ################## SUBTITLE ###############################################
+    
+    stlSubtitle = document.styles.add_style('subtitle', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSubtitleFont=stlSubtitle.font
+    stlSubtitleFont.name = 'Arial'
+    stlSubtitleFont.size = Pt(8)
+    
+    pfSubtitle = stlSubtitle.paragraph_format
+    pfSubtitle.left_indent = Inches(0.80)
+    pfSubtitle.alignment=WD_ALIGN_PARAGRAPH.CENTER
+
+    # Line spacing
+    
+    pfSubtitle.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+
+    ################## CONTENT ###############################################
+    
+    stlContent = document.styles.add_style('content', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlContentFont=stlContent.font
+    stlContentFont.name = 'Arial'
+    stlContentFont.size = Pt(8)
+    
+    pfContent = stlContent.paragraph_format
+
+    # Line spacing
+    
+    pfContent.line_spacing_rule =  WD_LINE_SPACING.DOUBLE
+     
+    ################## WRITING THE DOCUMENT ###############################################
+    
+    # Adding the Header to the document
+    
+    myRecords=setOfData
+    myRecords1=setOfData1
+    myRecords2=setOfData2
+
+    ### scenario for security council ##########
+
+    if (bodysession[0]=="S"):
+        
+        # Header
+
+        p=header.add_paragraph(myTitle.upper(), style='New Heading')
+        # p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p=header.add_paragraph("",style='subtitle')
+        # p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        #p.add_run("\n")
+        p.add_run("Votes are as indicated in the provisional verbatim records of the Security Council,")
+        p.add_run("\n")
+        p.add_run('seventy-third year, 2018. The following symbols are used to indicate how each member voted:')
+        p.add_run("\n")
+        p.add_run('  Y	Voted   Yes')
+        p.add_run("\n")
+        p.add_run(' N	Voted   No')
+        p.add_run("\n")
+        p.add_run('A	Abstained')
+        p.add_run("\n")
+        p.add_run("\t"+'     NP  Not Participating')
+        p.add_run("\n")
+        p.add_run('Resolutions adopted without vote are indicated by a blank space')
+        # p.add_run("\n")
+
+        # Retrieving the number of records
+        recordNumber = 0
+
+        # Country list
+        countries=[]     
+        for datax in myRecords2[0]["votelist"]:
+            countries.append(datax["memberstate"])
+
+        for record in myRecords:
+            recordNumber+=1
+     
+
+        # creation of the table
+        table = document.add_table(rows=1,cols=16)
+        table.style = 'TableGrid'
+
+        myRow = 0
+        myCol = 0
+
+        for record1 in myRecords1:     
+
+            # Check if we have already 15 records
+
+            if myRow==15:
+            
+                myRow=0
+
+                if myCol==16:
+
+                    p=document.add_paragraph()
+
+                    myBreak = p.add_run().add_break(WD_BREAK.PAGE)
+
+                    table = document.add_table(rows=1,cols=16)
+
+                    table.style = 'TableGrid'
+
+                    myCol=0
+
+
+            # check if we 
+ 
+            if myRow==0 and myCol==0:
+        
+                #table.cell(myRow,myCol).paragraphs[0].text="S/RES/"
+
+                paragraph=table.cell(myRow,myCol).paragraphs[0]
+
+                paragraph.text="S/RES/"
+
+                run = paragraph.runs
+
+                font = run[0].font
+
+                font.size= Pt(8)
+
+                font.name = "Arial"
+
+                # loop for the countries name to display in column
+
+                for country in countries:
+
+                    table.add_row()
+                    
+                    myRow=myRow+1
+                    
+                    paragraph=table.cell(myRow,myCol).paragraphs[0]
+
+                    paragraph.text=country
+
+                    run = paragraph.runs
+
+                    font = run[0].font
+
+                    font.size= Pt(8)
+
+                    font.name = "Arial"
+
+                    # size of the first column
+
+                    table.cell(myRow,myCol).width=Inches(2.0)
+                
+                myRow=0
+                myCol=myCol + 1
+
+            if myRow==0 and myCol!=0:
+
+                paragraph=table.cell(myRow,myCol).paragraphs[0]
+
+                add_hyperlink(paragraph,record1["resnum"],"http://undocs.org/s/res/"+record1["docsymbol"])
+
+                run = paragraph.runs
+
+                font = run[0].font
+
+                font.size= Pt(8)
+
+                font.name = "Arial"
+
+
+                for data in record1["votelist"]:
+                    
+                    myRow=myRow+1
+
+                    paragraph=table.cell(myRow,myCol).paragraphs[0]
+
+                    paragraph.text=data["vote"]
+
+                    run = paragraph.runs
+
+                    font = run[0].font
+
+                    font.size= Pt(8)
+
+                    font.name = "Arial"
+                    
+
+            myCol = myCol + 1
+
+    return document
