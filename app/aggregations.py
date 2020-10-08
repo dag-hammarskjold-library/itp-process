@@ -2740,7 +2740,22 @@ def itpsor(bodysession):
             ]
         }
 
-        add_1['physdesc'] = '$300.a'
+        add_1['physdesc'] = {
+            '$concat': [
+                '$300.a', 
+                {'$cond': {
+                    'if': '$300.b', 
+                    'then': {
+                        '$concat': [
+                            ' ', 
+                            {'$trim': {'input': '$300.b', 'chars': ' '}}
+                        ]
+                    }, 
+                    'else': ''
+                }},  
+                '.'
+            ]
+        }#'$300.a'
 
         add_1['ordocno'] = '$495.a'
 
