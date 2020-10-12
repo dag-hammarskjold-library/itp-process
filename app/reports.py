@@ -1083,15 +1083,7 @@ class AnyMissing930(Report):
         self.category = "OTHER"
         self.form_class = SelectAuthority
         
-        self.expected_params = ['authority']
-       
-        self.output_fields = [
-            ('930','a'),
-            ('001',None),
-            ('191','a'),
-            ('791','a')
-        ]
-        
+        self.expected_params = ['authority']    
         self.field_names = ['Record ID', 'Document Symbol', '930$a']
         
     def execute(self, args):
@@ -1106,15 +1098,12 @@ class AnyMissing930(Report):
             ),
             Condition('040', {'a': 'NNUN'}),
             Condition('040', {'a': 'DHC'}, modifier='not'),
-            Condition('930', modifier='not_exists')
+            Condition('930', {'a': Regex('^(UND|ITS|VOT)')}, modifier='not')
         )
-            
-        bibs = BibSet.from_query(query, projection=[f[0] for f in self.output_fields])
-    
-        # list of lists
+
         results = []
         
-        for bib in bibs:
+        for bib in BibSet.from_query(query, projection={'191': 1, '791': 1, '930': 1}):
             results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a'), '; '.join(bib.get_values('930', 'a'))])
             
         return results
