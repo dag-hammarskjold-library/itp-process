@@ -1079,7 +1079,7 @@ class AnyMissing930(Report):
         self.name = 'any_missing_930'
         self.tag = '930'
         self.title = 'Missing Field - ' + self.tag
-        self.description = 'Any records from the given body/session that don\'t have a 930 field.'
+        self.description = 'Any records from the given body/session that do not contain a value in 930$a starting with "UND", "ITS", or "VOT".'
         self.category = "OTHER"
         self.form_class = SelectAuthority
         
