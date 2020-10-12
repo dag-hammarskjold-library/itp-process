@@ -923,7 +923,40 @@ class SpeechMismatch(SpeechReport, FieldMismatch):
     def __init__(self, tag1, tag2):
         SpeechReport.__init__(self)
         FieldMismatch.__init__(self, tag1, tag2)
-
+        
+class Speech039_930(SpeechReport):
+    def __init__(self):
+        SpeechReport.__init__(self)
+        
+        self.name = f'{self.type}_mismatch_039_930'
+        self.title = f'Field mismatch - 039 & 930'
+        self.description = f'{self.type} records where 039 = {self.type_code} and 930 does not'.capitalize()
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        
+        self.field_names = ['Record ID', f'${self.symbol_field}a', f'039$a', f'930$a']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            Condition('039', {'a': Regex('^{}'.format(self.type_code))})
+        )
+        
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '039': 1, '930': 1}):
+            
+            if self.type_code in bib.get_values('039', 'a'):
+                if self.type_code not in bib.get_values('930', 'a'):
+                    results.append([bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_value('039', 'a'), bib.get_value('930', 'a')])
+                
+        return results
+    
+        
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -963,6 +996,38 @@ class VoteIncorrect992(VoteReport, Incorrect992):
     def __init__(self):
         VoteReport.__init__(self)
         Incorrect992.__init__(self)
+
+class Vote039_930(VoteReport):
+    def __init__(self):
+        SpeechReport.__init__(self)
+        
+        self.name = f'{self.type}_mismatch_039_930'
+        self.title = f'Field mismatch - 039 & 930'
+        self.description = f'{self.type} records where 039 = {self.type_code} and 930 does not'.capitalize()
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        
+        self.field_names = ['Record ID', f'${self.symbol_field}a', f'039$a', f'930$a']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            Condition('039', {'a': Regex('^{}'.format(self.type_code))})
+        )
+        
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '039': 1, '930': 1}):
+            
+            if self.type_code in bib.get_values('039', 'a'):
+                if self.type_code not in bib.get_values('930', 'a'):
+                    results.append([bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_value('039', 'a'), bib.get_value('930', 'a')])
+                
+        return results
 
 ### "Other" reports
 
@@ -1018,15 +1083,7 @@ class AnyMissing930(Report):
         self.category = "OTHER"
         self.form_class = SelectAuthority
         
-        self.expected_params = ['authority']
-       
-        self.output_fields = [
-            ('930','a'),
-            ('001',None),
-            ('191','a'),
-            ('791','a')
-        ]
-        
+        self.expected_params = ['authority']    
         self.field_names = ['Record ID', 'Document Symbol', '930$a']
         
     def execute(self, args):
@@ -1041,15 +1098,12 @@ class AnyMissing930(Report):
             ),
             Condition('040', {'a': 'NNUN'}),
             Condition('040', {'a': 'DHC'}, modifier='not'),
-            Condition('930', modifier='not_exists')
+            Condition('930', {'a': Regex('^(UND|ITS|VOT)')}, modifier='not')
         )
-            
-        bibs = BibSet.from_query(query, projection=[f[0] for f in self.output_fields])
-    
-        # list of lists
+
         results = []
         
-        for bib in bibs:
+        for bib in BibSet.from_query(query, projection={'191': 1, '791': 1, '930': 1}):
             results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a'), '; '.join(bib.get_values('930', 'a'))])
             
         return results
@@ -1133,8 +1187,9 @@ class ReportList(object):
         # Agenda item missing indicator
         SpeechMissingAgendaIndicator(),
         # Field mismatch - 039 & 930
-        SpeechMismatch('039', '930'),
-    
+        #SpeechMismatch('039', '930'),
+        Speech039_930(),
+        
         # voting category
 
         # Field mismatch - 269 & 992
