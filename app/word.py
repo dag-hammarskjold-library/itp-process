@@ -2170,7 +2170,7 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
         
             p2=document.add_paragraph(serie["series"],style="sornorm")
             
-            p2.add_run("\n")
+            #p2.add_run("\n")
             
             myDocSymbols=serie["docsymbols"]
             
@@ -2325,8 +2325,6 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                 row_cells[0].paragraphs[0].text=meeting["meetingnum"]
                 row_cells[1].paragraphs[0].text=meeting["meetingdate"]
                 row_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER 
-
-                
    
     # Definition of the size of the column
 
@@ -2646,6 +2644,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         table = document.add_table(rows=1,cols=16)
         table.style = 'TableGrid'
 
+
         myRow = 0
         myCol = 0
 
@@ -2677,6 +2676,10 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                 #table.cell(myRow,myCol).paragraphs[0].text="S/RES/"
 
                 paragraph=table.cell(myRow,myCol).paragraphs[0]
+                
+                paragraph_format = paragraph.paragraph_format
+                #paragraph_format.space_before = Pt(3)
+                paragraph_format.space_after = Pt(3)            
 
                 paragraph.text="S/RES/"
 
@@ -2697,6 +2700,10 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                     myRow=myRow+1
                     
                     paragraph=table.cell(myRow,myCol).paragraphs[0]
+                    
+                    paragraph_format = paragraph.paragraph_format
+                    #paragraph_format.space_before = Pt(3)
+                    paragraph_format.space_after = Pt(3)
 
                     paragraph.text=country
 
@@ -2711,6 +2718,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                     # size of the first column
 
                     table.cell(myRow,myCol).width=Inches(2.0)
+
                 
                 myRow=0
                 myCol=myCol + 1
@@ -2719,6 +2727,12 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
                 paragraph=table.cell(myRow,myCol).paragraphs[0]
 
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                paragraph_format = paragraph.paragraph_format
+                #paragraph_format.space_before = Pt(3)
+                paragraph_format.space_after = Pt(3)
+                
                 add_hyperlink(paragraph,record1["resnum"],"http://undocs.org/s/res/"+record1["docsymbol"])
 
                 run = paragraph.runs
@@ -2736,7 +2750,9 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
                     paragraph=table.cell(myRow,myCol).paragraphs[0]
 
-                    paragraph.text=data["vote"]
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                    paragraph.text=data["vote"]                    
 
                     run = paragraph.runs
 
