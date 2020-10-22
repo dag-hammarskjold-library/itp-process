@@ -1063,35 +1063,51 @@ class ReportList(object):
         
         # bib category 
         
-        # Incorrect field - 793 (Committees)
+        # (1) Missing subfield value - 999$c t
+        BibMissing999_c_t(),
+
+        # (11) Incorrect field - 793 (Committees)
         BibIncorrect793Comm(),
-        # Incorrect field - 793 (Plenary)
+
+        # (12) Incorrect field - 793 (Plenary)
         BibIncorrect793Plen(),
-        # Incorrect field - 991
+        
+        # (8) Incorrect field - 991
         BibIncorrect991(),
-        # Incorrect session - 191
+        
+        # (2) Incorrect session - 191
         BibIncorrectSession191(),
-        # Incorrect subfield - 191$9
+        
+        # (3) Incorrect subfield - 191$9
         BibIncorrectSubfield191_9(),
         # Missing field - 793
         #BibMissingField('793'), # *** disable as per VW - same as "Incorrect"
-        # Missing field - 991
+        
+        # (4) Missing field - 991
         BibMissingField('991'),
-        # Missing field - 992
+        
+        # (10) Missing field - 992
         BibMissingField('992'),
+        
         # Missing subfield - 191$9
         #BibMissingSubfield('191','9'), # *** disable as per VW - same as "Incorrect"
-        # Missing subfield - 991$d
+        
+        # (9) Missing subfield - 991$d
         #BibMissingSubfield991_d(),
         BibMissingSubfield('991', 'd'),
-        # Missing subfield value - 991$f X27
+        
+        # (13) Missing subfield value - 991$f X27
         BibMissingSubfieldValue('991', 'f', 'X27'),
-        # Missing subfield value - 991$z I
+        
+        # (5) Missing subfield value - 991$z I
         BibMissingSubfieldValue('991', 'z', 'I'),
-        # Missing subfield value - 999$c t
-        BibMissing999_c_t(),
+        
         #BibMissingField('930'),
+
+        # (7) Agenda item misisng indicator
         BibMissingAgendaIndicator(),
+
+        # (6) Duplicate agenda item
         BibDuplicateAgenda(),
         
         # speech category 
