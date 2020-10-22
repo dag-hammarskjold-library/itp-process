@@ -202,11 +202,13 @@
     function editSection(id, name, order) {
         $('#updateSection input#section_id').val(id);
         $('#updateSection input#sectionName').val(name);
-        $('#updateSection input#sectionOrder').val(order); { %
-            if snapshots %
-        }
-        $('#updateSection input#dataSource').val(order); { % endif %
-        }
+        $('#updateSection input#sectionOrder').val(order);
+        // There was an if-else statement around the following line, but
+        // it was creatnig issues in the user interface. Not sure what the
+        // implications are of removing it, but section saving works without
+        // it.
+        $('#updateSection input#dataSource').val(order);
+
         console.log(id, name, order)
     };
 </script>
