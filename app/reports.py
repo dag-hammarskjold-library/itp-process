@@ -203,7 +203,7 @@ class FieldMismatch(Report):
         
         self.name = f'{self.type}_mismatch_{tag1}_{tag2}'
         self.title = f'Field mismatch - {tag1} & {tag2}'
-        self.description = f'{self.type} records where {tag1} does not match {tag2}'.capitalize()
+        self.description = '' #f'{self.type} records where {tag1} does not match {tag2}'.capitalize()
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -363,7 +363,7 @@ class AgendaList(Report):
     def __init__(self):
         self.name = 'agenda_list'
         self.title = 'Agenda list'
-        self.description = 'Agenda items from the given session'
+        self.description = '' #'Agenda items from the given session'
         
         self.category = "OTHER"
         self.form_class = SelectAuthority
@@ -406,7 +406,7 @@ class BibIncorrect793Comm(Report):
     def __init__(self):
         self.name = 'bib_incorrect_793_committees'
         self.title = 'Incorrect and/or missing field – 793 (Committees)'
-        self.description = 'Bib records where 191 starts with "A/C.<committee number>" and 793$a does not equal the committe number'
+        self.description = '191 starts with "A/C.<committee number>" and 793$a does not equal the committe number'
 
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -439,7 +439,7 @@ class BibIncorrect793Plen(BibReport):
     def __init__(self):
         self.name = 'bib_incorrect_793_plenary'
         self.title = 'Incorrect and/or missing field – 793 (Plenary)'
-        self.description = 'Bib records where 191 starts with "A/RES" or "A/<session>/L." and 793$a does not equal with "PL"'
+        self.description = '191 starts with "A/RES" or "A/<session>/L." and 793$a does not equal with "PL"'
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -575,7 +575,7 @@ class BibIncorrectSubfield191_9(BibReport):
 class BibMissing999_c_t(BibReport):
     def __init__(self):
         self.name = 'bib_missing_subfield_value_999_c_t'
-        self.title = 'Missing subfield value - 999$c t'
+        self.title = 'Records not revised' #'Missing subfield value - 999$c t'
         self.description = ''
         
         self.form_class = SelectAuthority
@@ -725,7 +725,7 @@ class SpeechDuplicateRecord(SpeechReport):
         SpeechReport.__init__(self)
         
         self.name = 'speech_duplicate_record'
-        self.title = "Duplicate speech records"
+        self.title = "Duplicate records" #"Duplicate speech records"
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -930,7 +930,7 @@ class Speech039_930(SpeechReport):
         
         self.name = f'{self.type}_mismatch_039_930'
         self.title = f'Field mismatch - 039 & 930'
-        self.description = f'{self.type} records where 039 = {self.type_code} and 930 does not'.capitalize()
+        self.description = '' #f'{self.type} records where 039 = {self.type_code} and 930 does not'.capitalize()
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -1037,7 +1037,7 @@ class AnyMissingField(Report):
         
         self.name = 'any_missing_field'
         self.tag = tag
-        self.title = 'Missing Field - ' + tag
+        self.title = 'Missing field - ' + tag
         self.description = 'Any records from the given body/session that don\'t have a {} field.'.format(tag)
         self.category = "OTHER"
         self.form_class = SelectAuthority
@@ -1078,7 +1078,7 @@ class AnyMissing930(Report):
     def __init__(self):
         self.name = 'any_missing_930'
         self.tag = '930'
-        self.title = 'Missing Field - ' + self.tag
+        self.title = 'Missing field - ' + self.tag
         self.description = 'Any records from the given body/session that do not contain a value in 930$a starting with "UND", "ITS", or "VOT".'
         self.category = "OTHER"
         self.form_class = SelectAuthority
@@ -1115,111 +1115,111 @@ class ReportList(object):
         
         # predefined reports
         
-        # bib category 
+        ############ bib category #############
         
-        # Incorrect field - 793 (Committees)
-        BibIncorrect793Comm(),
-        # Incorrect field - 793 (Plenary)
-        BibIncorrect793Plen(),
-        # Incorrect field - 991
-        BibIncorrect991(),
-        # Incorrect session - 191
+        # (1) Missing subfield value - 999$c t
+        BibMissing999_c_t(),
+        # (2) Incorrect session - 191
         BibIncorrectSession191(),
-        # Incorrect subfield - 191$9
+        # (3) Incorrect subfield - 191$9
         BibIncorrectSubfield191_9(),
-        # Missing field - 793
-        #BibMissingField('793'), # *** disable as per VW - same as "Incorrect"
-        # Missing field - 991
+        # (4) Missing field - 991
         BibMissingField('991'),
-        # Missing field - 992
-        BibMissingField('992'),
-        # Missing subfield - 191$9
-        #BibMissingSubfield('191','9'), # *** disable as per VW - same as "Incorrect"
-        # Missing subfield - 991$d
+        # (5) Missing subfield value - 991$z I
+        BibMissingSubfieldValue('991', 'z', 'I'),
+        # (6) Duplicate agenda item
+        BibDuplicateAgenda(),
+        # (7) Agenda item misisng indicator
+        BibMissingAgendaIndicator(),
+        # (8) Incorrect field - 991
+        BibIncorrect991(),
+        # (9) Missing subfield - 991$d
         #BibMissingSubfield991_d(),
         BibMissingSubfield('991', 'd'),
-        # Missing subfield value - 991$f X27
+        # (10) Missing field - 992
+        BibMissingField('992'),
+        # (11) Incorrect field - 793 (Committees)
+        BibIncorrect793Comm(),
+        # (12) Incorrect field - 793 (Plenary)
+        BibIncorrect793Plen(),
+        # (13) Missing subfield value - 991$f X27
         BibMissingSubfieldValue('991', 'f', 'X27'),
-        # Missing subfield value - 991$z I
-        BibMissingSubfieldValue('991', 'z', 'I'),
-        # Missing subfield value - 999$c t
-        BibMissing999_c_t(),
+        
+        # Missing field - 793
+        #BibMissingField('793'), # *** disable as per VW - same as "Incorrect"
+        # Missing subfield - 191$9
+        #BibMissingSubfield('191','9'), # *** disable as per VW - same as "Incorrect"
         #BibMissingField('930'),
-        BibMissingAgendaIndicator(),
-        BibDuplicateAgenda(),
+
+        ############# speech category ###############
         
-        # speech category 
-        
-        # Duplicate speech records
+        # (1) Duplicate speech records
         SpeechDuplicateRecord(),
-        # Field mismatch - 269 & 992
-        SpeechMismatch('269', '992'),
-        
+        # (2) Incorrect session - 791
+        SpeechIncorrectSession791(),
+        # (3) Missing fields - 700 + 710
+        SpeechMissingFields(['700', '710']),
+        # (4) Incomplete authorities - mother record
+        SpeechIncompleteAuthMother(),
         # Incomplete authorities # *** split into two reports below as per VW
         # SpeechIncompleteAuthority(),
-        
-        # Incomplete authorities - mother record
-        SpeechIncompleteAuthMother(),
-        # Incomplete authorities - subfield g
+        # (5) Incomplete authorities - subfield g
         SpeechIncompleteAuthSubfieldG(),
-        
-        # Incorrect field - 991
-        SpeechIncorrect991(),
-        # Incorrect field - 992
-        SpeechIncorrect992(),
-        # Incorrect session - 791
-        SpeechIncorrectSession791(),
-        # Missing field - 039
-        SpeechMissingField('039'),
-        # Missing field - 856
-        SpeechMissingField('856'),
-        # Missing field - 991
+        # (7) Missing field - 991
         SpeechMissingField('991'),
-        # Missing field - 992
-        SpeechMissingField('992'),
-        # Missing subfield - 991$d
+        # (8) Agenda item missing indicator
+        SpeechMissingAgendaIndicator(),
+        # (9) Incorrect field - 991
+        SpeechIncorrect991(),
+        # (10) Duplicate agenda item
+        SpeechDuplicateAgenda(),
+        # (11) Missing subfield - 991$d
         SpeechMissingSubfield('991','d'),
         #SpeechMissingField('930'),
-        # Duplicate agenda item
-        SpeechDuplicateAgenda(),
-        # Missing fields - 700 + 710
-        SpeechMissingFields(['700', '710']),
-        # Agenda item missing indicator
-        SpeechMissingAgendaIndicator(),
-        # Field mismatch - 039 & 930
+        # (12) Missing field - 039
+        SpeechMissingField('039'),
+        # (13) Field mismatch - 039 & 930
         #SpeechMismatch('039', '930'),
         Speech039_930(),
-        
-        # voting category
+        # (14) Missing field - 992
+        SpeechMissingField('992'),
+        # (15) Incorrect field - 992
+        SpeechIncorrect992(),
+        # (16) Field mismatch - 269 & 992
+        SpeechMismatch('269', '992'), 
+        # (17) Missing field - 856
+        SpeechMissingField('856'),
+               
+        ################ voting category ############
 
-        # Field mismatch - 269 & 992
-        VoteMismatch('269', '992'),
-        # Incorrect field - 991
-        VoteIncorrect991(),
-        # Incorrect field - 992
-        VoteIncorrect992(),
-        # Incorrect session - 791
+        # (1) Incorrect session - 791
         VoteIncorrectSession(),
-        # Missing field - 039
+        # (2) Missing field - 039
         VoteMissingField('039'),
-        # Missing field - 856
-        VoteMissingField('856'),
-        # Missing field - 991
-        VoteMissingField('991'),
-        # Missing field - 992
-        VoteMissingField('992'),
-        # Missing subfield - 991$d
-        VoteMissingSubfield('991','d'),
-        #VoteMissingField('930'),
-        # Field mismatch - 039 & 930
+        # (3) Field mismatch - 039 & 930
         VoteMismatch('039', '930'),
+        # (4) Missing field - 992
+        VoteMissingField('992'),
+        # (5) Incorrect field - 992
+        VoteIncorrect992(),
+        # (6) Field mismatch - 269 & 992
+        VoteMismatch('269', '992'),
+        # (7) Missing field - 991
+        VoteMissingField('991'),
+        # (8) Incorrect field - 991
+        VoteIncorrect991(),
+        # (9) Missing subfield - 991$d
+        VoteMissingSubfield('991','d'),
+        # (10) Missing field - 856
+        VoteMissingField('856'),
+
+        #VoteMissingField('930'),
+
+        ########## other ##########
         
-        # other
-        
-        # Agenda List
-        AgendaList(),
-        
-        # Missing field - 930
+        # (1) Agenda List
+        AgendaList(), 
+        # (2) Missing field - 930
         AnyMissing930(),
         # Missing field - any
         # Missing subfield - any

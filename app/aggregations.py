@@ -1645,103 +1645,272 @@ def itpage(bodysession):
 
         bs = bodysession.split("/")
         body = bs[0]
+        session = bs[1]
 
-        match_stage1 = {
-            '$match': {
-                'bodysession': bodysession, 
-                'record_type': 'BIB', 
-                '$or': [
-                    {'191.9': 'X00'}, 
-                    {'191.9': 'X01'}, 
-                    {'191.9': 'X88'}
-                ]
+        if body == "A":
+            match_criteria = "A/" + session + "/251"
+        
+        if body == "E":
+            year = session.split("-")
+            match_criteria = "E/" + year[0] + "/100"
+        
+        if body == "S":
+            match_stage1 = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    'record_type': 'BIB', 
+                    '$or': [
+                        {'191.9': 'X00'}, 
+                        {'191.9': 'X01'}, 
+                        {'191.9': 'X88'}
+                    ]
+                }
             }
-        }
 
-        unwind_stage1 = {'$unwind': '$991'}
+            unwind_stage1 = {'$unwind': '$991'}
 
-        unwind_stage2 = {'$unwind': '$191'}
+            unwind_stage2 = {'$unwind': '$191'}
 
-        match_stage2 = {
-            '$match': {
-                '991.a': bodysession, 
-                '191.b': body + '/'
+            match_stage2 = {
+                '$match': {
+                    '991.a': bodysession, 
+                    '191.b': body + '/'
+                }
             }
-        }
 
-        group_stage =  {
-            '$group': {
-                '_id': {
-                    '$replaceAll': {
-                        'input': '$991.d', 
-                        'find': '--', 
-                        'replacement': '–'
-                    }
-                }, 
-                'type': {
-                    '$push': {
-                        '$cond': {
-                            'if': {'$gt': [{'$indexOfCP': ['$191.a', '/PV.']}, -1]}, 
-                            'then': 'PV', 
-                            'else': 'non-PV'
+            group_stage =  {
+                '$group': {
+                    '_id': {
+                        '$replaceAll': {
+                            'input': '$991.d', 
+                            'find': '--', 
+                            'replacement': '–'
+                        }
+                    }, 
+                    'type': {
+                        '$push': {
+                            '$cond': {
+                                'if': {'$gt': [{'$indexOfCP': ['$191.a', '/PV.']}, -1]}, 
+                                'then': 'PV', 
+                                'else': 'non-PV'
+                            }
                         }
                     }
                 }
             }
-        }
 
-        add_stage = {
-            '$addFields': {
-                'heading': {
-                    '$cond': {
-                        'if': {'$in': ['PV', '$type']}, 
-                        'then': 'LIST OF MATTERS CONSIDERED BY THE SECURITY COUNCIL DURING XXXX', 
-                        'else': 'OTHER MATTERS BROUGHT TO THE ATTENTION OF THE SECURITY COUNCIL DURING XXXX'
+            add_stage = {
+                '$addFields': {
+                    'heading': {
+                        '$cond': {
+                            'if': {'$in': ['PV', '$type']}, 
+                            'then': 'LIST OF MATTERS CONSIDERED BY THE SECURITY COUNCIL DURING XXXX', 
+                            'else': 'OTHER MATTERS BROUGHT TO THE ATTENTION OF THE SECURITY COUNCIL DURING XXXX'
+                        }
                     }
                 }
+            }   
+
+
+            transform = {}
+            transform['_id'] = 0
+            transform['section'] = "itpage"
+            transform['bodysession'] = bodysession
+            transform['agendanum'] = ''
+            transform['agendatitle'] = ''
+            transform['agendasubject'] = '$_id'
+            transform['heading'] = 1
+            transform['sortkey1'] = '$heading'
+            transform['sortkey2'] = '$_id'
+
+            transform_stage = {}
+            transform_stage['$project'] = transform
+
+            sort_stage = {
+                '$sort': {
+                    'sortkey1': 1, 
+                    'sortkey2': 1
+                }
             }
-        }   
 
-
-        transform = {}
-        transform['_id'] = 0
-        transform['section'] = "itpage"
-        transform['bodysession'] = bodysession
-        transform['agendanum'] = ''
-        transform['agendatitle'] = ''
-        transform['agendasubject'] = '$_id'
-        transform['heading'] = 1
-        transform['sortkey1'] = '$heading'
-        transform['sortkey2'] = '$_id'
-
-        transform_stage = {}
-        transform_stage['$project'] = transform
-
-        sort_stage = {
-            '$sort': {
-                'sortkey1': 1, 
-                'sortkey2': 1
+            merge_stage = {
+                '$merge': { 'into': editorOutput}
             }
-        }
 
-        merge_stage = {
-            '$merge': { 'into': editorOutput}
-        }
+            pipeline.append(match_stage1)
+            pipeline.append(unwind_stage1)
+            pipeline.append(unwind_stage2)
+            pipeline.append(match_stage2)
+            pipeline.append(group_stage)
+            pipeline.append(add_stage)
+            pipeline.append(transform_stage)
+            pipeline.append(sort_stage)
+            pipeline.append(merge_stage)
 
-        pipeline.append(match_stage1)
-        pipeline.append(unwind_stage1)
-        pipeline.append(unwind_stage2)
-        pipeline.append(match_stage2)
-        pipeline.append(group_stage)
-        pipeline.append(add_stage)
-        pipeline.append(transform_stage)
-        pipeline.append(sort_stage)
-        pipeline.append(merge_stage)
-
-        if body == "S":
             inputCollection.aggregate(pipeline, collation=collation)
             group_itpage("itpage", bodysession)
 
+        else: #A or E
+            match_stage1 = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    '$or': [
+                        {'record_type': {'$eq': 'ITS'}}, 
+                        {'record_type': {'$eq': 'BIB'}}
+                    ]
+                }
+            }
+
+            unwind_stage = {'$unwind': '$991'}
+
+            match_stage2 = {
+                '$match': {
+                    '991.a': match_criteria
+                }
+            }
+
+            add_1 = {}
+
+            add_1['agendaitem'] = {
+                '$cond': {
+                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                    'then': '$991.b', 
+                    'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+                }
+            }
+
+            add_1['agendatitle'] = {
+                '$cond': {
+                    'if': '$991.c', 
+                    'then': '$991.c', 
+                    'else': ''
+                }
+            }
+
+            add_1['agendasubject'] = {
+                '$cond': {
+                    'if': '$991.d', 
+                    'then': {
+                        '$replaceAll': {
+                            'input': '$991.d', 
+                            'find': '--', 
+                            'replacement': '—'
+                        }
+                    }, 
+                    'else': ''
+                }
+            }
+
+            add_stage1 = {}
+
+            add_stage1['$addFields'] = add_1
+
+            add_2 = {}
+
+            add_2['subagenda'] = {
+                '$cond': {
+                    'if': {
+                        '$regexMatch': {
+                            'input': '$agendaitem', 
+                            'regex': '[a-z]'
+                        }
+                    }, 
+                    'then': {
+                        '$substrCP': [
+                            '$agendaitem', 
+                            {'$subtract': [{'$strLenCP': '$agendaitem'}, 1]}, 
+                            1
+                        ]
+                    }, 
+                    'else': ''
+                }
+            }
+
+            add_stage2 = {}
+
+            add_stage2['$addFields'] = add_2
+
+            add_3 = {}
+
+            add_3['agendanum'] = {
+                '$cond': {
+                    'if': {'$ne': ['$subagenda', '']}, 
+                    'then': {
+                        '$substrCP': [
+                            '$agendaitem', 
+                            0, 
+                            {'$indexOfCP': ['$agendaitem', '$subagenda']}
+                        ]
+                    }, 
+                    'else': '$agendaitem'
+                }
+            }
+
+            add_stage3 = {}
+
+            add_stage3['$addFields'] = add_3
+
+            group_stage =  {
+                '$group': {
+                    '_id': {
+                        'a': '$agendanum', 
+                        'b': '$subagenda', 
+                        'c': '$agendatitle', 
+                        'd': '$agendasubject'
+                    }
+                }
+            }
+
+            transform = {}
+            transform['_id'] = 0
+            transform['section'] = "itpage"
+            transform['bodysession'] = bodysession
+            transform['agendanum'] = '$_id.a'
+            transform['subagenda'] = '$_id.b'
+            transform['agendatitle'] = '$_id.c'
+            transform['agendasubject'] = '$_id.d'
+            transform['heading'] = {
+                '$cond': {
+                    'if': {'$eq': ['$_id.a', '']}, 
+                    'then': 'OTHER MATTERS INCLUDED IN THE INDEX', 
+                    'else': 'AGENDA'
+                }
+            }
+            transform['sortkey1'] = {
+                '$concat': [
+                    '$_id.a',
+                    '$_id.b']
+            }
+            transform['sortkey2'] = '$_id.d'
+
+            transform_stage = {}
+            transform_stage['$project'] = transform
+
+            sort_stage = {
+                '$sort': {
+                    'sortkey1': 1, 
+                    'sortkey2': 1
+                }
+            }
+        
+            merge_stage = {
+                '$merge': { 'into': editorOutput}
+            }
+
+            pipeline.append(match_stage1)
+            pipeline.append(unwind_stage)
+            pipeline.append(match_stage2)
+            pipeline.append(add_stage1)
+            pipeline.append(add_stage2)
+            pipeline.append(add_stage3)
+            pipeline.append(group_stage)
+            pipeline.append(transform_stage)
+            pipeline.append(sort_stage)
+            pipeline.append(merge_stage)
+
+            inputCollection.aggregate(pipeline, collation=collation)
+
+            #print(pipeline)
 
         return "itpage completed successfully"
 
@@ -2531,6 +2700,12 @@ def itpvot(bodysession):
             transform_stage = {}
             transform_stage['$project'] = transform
 
+            sort_stage = {
+                '$sort': {
+                    'sortkey1': 1
+                }
+            }
+
             merge_stage = {
                 '$merge': { 'into': editorOutput}
             }
@@ -2538,6 +2713,7 @@ def itpvot(bodysession):
             pipeline.append(match_stage)
             pipeline.append(lookup_stage)
             pipeline.append(transform_stage)
+            pipeline.append(sort_stage)
             pipeline.append(merge_stage)
 
             inputCollection.aggregate(pipeline)
@@ -2574,8 +2750,320 @@ def itpsor(bodysession):
     Builds the aggregation query and inserts the results into another collection.
     """ 
     try:
-        print("I made it in")
-        return list(inputCollection.find({"bodysession": bodysession}, {"record_id": 1, "_id": 0}))
+         
+        #clear the previous records if they exist
+        outputCollection.delete_many({ "section" : "itpsor", "bodysession" : bodysession } )
+        
+        pipeline = []
+
+        bs = bodysession.split("/")
+        body = bs[0]
+        session = bs[1]
+        fullbody = body + "/"
+
+        collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
+      
+        if body == 'A':
+            match_stage = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    'record_type': 'BIB', 
+                    '$and': [
+                    {
+                        '191.a': {
+                            '$not': {
+                                '$regex': re.compile(r"RES")
+                            }
+                        }
+                    }, {
+                        '191.a': {
+                            '$not': {
+                                '$regex': re.compile(r"DEC")
+                            }
+                        }
+                    }, {
+                        '191.a': {
+                            '$not': {
+                                '$regex': re.compile(r"PV")
+                            }
+                        }
+                    }, {
+                        '191.a': {
+                            '$not': {
+                                '$regex': re.compile(r"SR")
+                            }
+                        }
+                    }
+                ], 
+                    '495.a': {
+                        '$regex': re.compile(r"GAOR")
+                    }, 
+                }
+            }
+        
+        if body == 'E':
+            match_stage = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    'record_type': 'BIB', 
+                    '$and': [
+                        {
+                            '191.a': {
+                                '$not': {
+                                    '$regex': re.compile(r"RES")
+                                }
+                            }
+                        }, {
+                            '191.a': {
+                                '$not': {
+                                    '$regex': re.compile(r"DEC")
+                                }
+                            }
+                        }, {
+                            '191.a': {
+                                '$not': {
+                                    '$regex': re.compile(r"PV")
+                                }
+                            }
+                        }, {
+                            '191.a': {
+                                '$not': {
+                                    '$regex': re.compile(r"SR")
+                                }
+                            }
+                        }
+                    ], 
+                    '495.a': {
+                        '$regex': re.compile(r"ESCOR")
+                    }, 
+                }
+            }
+
+        add_1 = {}
+
+        add_1['supplno'] = {
+            '$let': {
+                'vars': {
+                    'a': {'$add': [{'$indexOfCP': ['$495.a', 'no.']}, 4]}, 
+                    'b': {'$strLenCP': '$495.a'}
+                }, 
+                'in': {
+                    '$substrCP': ['$495.a', '$$a', {'$subtract': ['$$b', '$$a']}]
+                }
+            }
+        }
+
+        add_1['title'] = {
+            '$concat': [
+                '$245.a', 
+                {'$cond': {
+                    'if': '$245.b', 
+                    'then': {
+                        '$concat': [
+                            ' ', 
+                            {'$trim': {'input': '$245.b', 'chars': ' '}}
+                        ]
+                    }, 
+                    'else': ''
+                }}, 
+                {'$cond': {
+                    'if': '$245.c', 
+                    'then': {
+                        '$concat': [
+                            ' ', 
+                            '$245.c'
+                        ]
+                    }, 
+                    'else': ''
+                }}, 
+                '.'
+            ]
+        }
+
+        add_1['imprint'] = {
+            '$concat': [
+                '$260.a', 
+                {'$cond': {
+                    'if': '$260.b', 
+                    'then': {
+                        '$concat': [
+                            ' ', 
+                            {'$trim': {'input': '$260.b', 'chars': ' '}}
+                        ]
+                    }, 
+                    'else': ''
+                }}, 
+                {'$cond': {
+                    'if': '$260.c', 
+                    'then': {
+                        '$concat': [
+                            ' ', '$260.c'
+                        ]
+                    }, 
+                    'else': ''
+                }}, 
+                '.'
+            ]
+        }
+
+        add_1['physdesc'] = {
+            '$concat': [
+                '$300.a', 
+                {'$cond': {
+                    'if': '$300.b', 
+                    'then': {
+                        '$concat': [
+                            ' ', 
+                            {'$trim': {'input': '$300.b', 'chars': ' '}}
+                        ]
+                    }, 
+                    'else': ''
+                }}
+            ]
+        }#'$300.a'
+
+        add_1['ordocno'] = '$495.a'
+
+        add_stage1 = {}
+
+        add_stage1['$addFields'] = add_1
+
+        transform = {}
+
+        transform['_id'] = 0
+        transform['bodysession'] = 1
+        transform['section'] = 'itpsor'
+        transform['record_id'] = 1
+
+        transform['sorentry'] = {
+            '$concat': [
+                'No. ', 
+                '$supplno'
+            ]
+        }
+
+        transform['docsymbol'] = {
+            '$cond': {
+                'if': {'$isArray': '$191'}, 
+                'then': {
+                    '$let': {
+                        'vars': {
+                            'a': {'$arrayElemAt': ['$191.b', 0]}, 
+                            'b': {'$arrayElemAt': ['$191.c', 0]}, 
+                            'x': {'$arrayElemAt': ['$191.b', 1]}, 
+                            'y': {'$arrayElemAt': ['$191.c', 1]}, 
+                            'first': {'$arrayElemAt': ['$191.a', 0]}, 
+                            'second': {'$arrayElemAt': ['$191.a', 1]}
+                        }, 
+                        'in': {
+                            '$cond': {
+                                'if': {
+                                    '$and': [
+                                        {'$eq': ['$$a', fullbody]}, 
+                                        {'$eq': ['$$b', session]}, 
+                                        '$$second'
+                                    ]
+                                }, 
+                                'then': {
+                                    '$concat': [
+                                        '$$first', ' (', '$$second', ')'
+                                    ]
+                                }, 
+                                'else': {
+                                    '$cond': {
+                                        'if': {
+                                            '$and': [
+                                                {'$eq': ['$$x', fullbody]}, 
+                                                {'$eq': ['$$y', session]}, 
+                                                '$$second'
+                                            ]
+                                        }, 
+                                        'then': {
+                                            '$concat': [
+                                                '$$second', ' (', '$$first', ')'
+                                            ]
+                                        }, 
+                                        'else': '$$first'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, 
+                'else': '$191.a'
+            }
+        }
+
+        transform['sornorm'] = {
+            '$concat': [
+                '$title', ' - ', '$imprint'
+            ]
+        }
+
+        transform['sornote'] = {
+            '$concat': [
+                '$physdesc', ' - ', '(', '$ordocno', ')', '.'
+            ]
+        }
+
+        transform_stage = {}
+        transform_stage['$project'] = transform
+
+        add_2 = {}
+
+        add_2['sortkey1'] = '$sorentry'
+        add_2['sortkey2'] = '$docsymbol'
+
+        add_stage2 = {}
+        add_stage2['$addFields'] = add_2
+
+        sort_stage = {
+            '$sort': {
+                'sortkey1': 1, 
+                'sortkey2': 1
+            }
+        }
+
+        merge_stage = {
+            '$merge': { 'into': editorOutput}
+        }
+
+        pipeline.append(match_stage)
+        pipeline.append(add_stage1)
+        pipeline.append(transform_stage)
+        pipeline.append(add_stage2)
+        pipeline.append(sort_stage)
+        pipeline.append(merge_stage)
+
+        #print(pipeline)
+
+        inputCollection.aggregate(pipeline, collation=collation)
+        #inputCollection.aggregate(pipeline)
+
+        copyPipeline = []
+
+        copyMatch_stage = {
+            '$match': {
+                'bodysession': bodysession, 
+                'section': "itpsor"
+            }
+        }
+
+        copyMerge_stage = {
+            '$merge': { 'into': wordOutput}
+        }
+        
+        clear_section("itpsor", bodysession)
+
+        copyPipeline.append(copyMatch_stage)
+        copyPipeline.append(copyMerge_stage)
+
+        outputCollection.aggregate(copyPipeline)
+
+        return "itpsor completed successfully"
 
     except Exception as e:
         return e
