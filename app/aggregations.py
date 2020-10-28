@@ -3043,6 +3043,7 @@ def itpsor(bodysession):
         inputCollection.aggregate(pipeline, collation=collation)
         #inputCollection.aggregate(pipeline)
 
+
         copyPipeline = []
 
         copyMatch_stage = {
