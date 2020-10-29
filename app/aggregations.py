@@ -2635,6 +2635,11 @@ def itpvot(bodysession):
         body = bs[0]
         session = bs[1]
 
+        collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
+
         if body == "S":
             match_stage = {
                 '$match': {
@@ -2718,26 +2723,129 @@ def itpvot(bodysession):
 
             inputCollection.aggregate(pipeline)
 
-            #for the word collection
-            copyPipeline = []
-
-            copyMatch_stage = {
+        if body == 'A':
+            match_stage = {
                 '$match': {
                     'bodysession': bodysession, 
-                    'section': "itpvot"
+                    'record_type': 'VOT', 
+                    '591.a': {
+                        '$ne': 'ADOPTED WITHOUT VOTE'
+                    }, 
+                    '791.a': {
+                        '$regex': re.compile(r"RES")
+                    }, 
+                    '791.b': body + "/", 
+                    '791.c': session
                 }
             }
 
-            copyMerge_stage = {
-                '$merge': { 'into': wordOutput}
+            unwind_stage = { '$unwind': '$967'}
+
+            lookup_stage = {
+                '$lookup': {
+                    'from': 'itp_codes', 
+                    'localField': '967.c', 
+                    'foreignField': 'code', 
+                    'as': 'country_info'
+                }
             }
+
+            add_1 = {}
+
+            add_1['order'] = '$967.a'
+            add_1['memberstate'] = {'$arrayElemAt': ['$country_info.text', 0]}
+            add_1['vote'] = {
+                '$cond': {
+                    'if': '$967.d', 
+                    'then': '$967.d', 
+                    'else': ''
+                }
+            }
+
+            add_stage1 = {}
+
+            add_stage1['$addFields'] = add_1
+
+            group_stage =  {
+                '$group': {
+                    '_id': {
+                        'r': '$record_id', 
+                        'docsymbol': '$791.a', 
+                        'resnum': {
+                            '$substrCP': [
+                                '$791.a', 
+                                {'$add': [4, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
+                                4
+                            ]
+                        }
+                    }, 
+                    'votelist': {
+                        '$push': {
+                            'order': '$order', 
+                            'memberstate': '$memberstate', 
+                            'vote': '$vote'
+                        }
+                    }
+                }
+            }
+
+            transform = {}
+
+            transform['_id'] = 0
+            transform['record_id'] = '$_id.r'
+            transform['section'] = "itpvot"
+            transform['bodysession'] = bodysession
             
-            clear_section("itpvot", bodysession)
+            transform['docsymbol'] = '$_id.docsymbol'
+            transform['resnum'] = '$_id.resnum'
+            transform['votelist'] = 1
+            transform['sortkey1'] = '$_id.resnum'
 
-            copyPipeline.append(copyMatch_stage)
-            copyPipeline.append(copyMerge_stage)
+            transform_stage = {}
+            transform_stage['$project'] = transform
 
-            outputCollection.aggregate(copyPipeline)
+            sort_stage = {
+                '$sort': {
+                    'sortkey1': 1
+                }
+            }
+
+            merge_stage = {
+                '$merge': { 'into': editorOutput}
+            }
+
+            pipeline.append(match_stage)
+            pipeline.append(unwind_stage)
+            pipeline.append(lookup_stage)
+            pipeline.append(add_stage1)
+            pipeline.append(group_stage)
+            pipeline.append(transform_stage)
+            pipeline.append(sort_stage)
+            pipeline.append(merge_stage)
+
+            inputCollection.aggregate(pipeline, collation=collation )
+
+
+        #for the word collection
+        copyPipeline = []
+
+        copyMatch_stage = {
+            '$match': {
+                'bodysession': bodysession, 
+                'section': "itpvot"
+            }
+        }
+
+        copyMerge_stage = {
+            '$merge': { 'into': wordOutput}
+        }
+        
+        clear_section("itpvot", bodysession)
+
+        copyPipeline.append(copyMatch_stage)
+        copyPipeline.append(copyMerge_stage)
+
+        outputCollection.aggregate(copyPipeline)
 
     except Exception as e:
         return e
@@ -3042,6 +3150,7 @@ def itpsor(bodysession):
 
         inputCollection.aggregate(pipeline, collation=collation)
         #inputCollection.aggregate(pipeline)
+
 
         copyPipeline = []
 
