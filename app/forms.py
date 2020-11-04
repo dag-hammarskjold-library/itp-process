@@ -68,8 +68,11 @@ class MissingFieldReportForm(FlaskForm):
     ,validators=[DataRequired()])
     
 class SelectAuthority(FlaskForm):
-    authority = StringField('Authority', validators=[DataRequired()])
-  
+    authority = StringField('Authority number or Series symbol (e.g. 896399 or A/74)', validators=[DataRequired()])
+
+class SelectAgendaAuthority(FlaskForm):
+    authority = StringField('Series symbol or Document symbol (e.g. A/74 or A/74/251)', validators=[DataRequired()])
+
 class MissingSubfieldReportForm(FlaskForm):
     authority = StringField('Authority ID', validators=[DataRequired()])
     field = SelectField('Field',choices=[
