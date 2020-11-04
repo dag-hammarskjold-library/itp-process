@@ -1748,7 +1748,7 @@ def itpage(bodysession):
             pipeline.append(merge_stage)
 
             inputCollection.aggregate(pipeline, collation=collation)
-            group_itpage("itpage", bodysession)
+            group_itpage_S("itpage", bodysession)
 
         else: #A or E
             match_stage1 = {
@@ -1908,6 +1908,7 @@ def itpage(bodysession):
             pipeline.append(merge_stage)
 
             inputCollection.aggregate(pipeline, collation=collation)
+            group_itpage_AE("itpage", bodysession)
 
             #print(pipeline)
 
@@ -3761,7 +3762,7 @@ def group_itpmeet(section, bodysession):
             'numericOrdering': True,
         })
 
-def group_itpage(section, bodysession):
+def group_itpage_S(section, bodysession):
     
     clear_section(section, bodysession)
 
@@ -3821,6 +3822,120 @@ def group_itpage(section, bodysession):
     pipeline.append(merge_stage)
 
     outputCollection.aggregate(pipeline)
+
+def group_itpage_AE(section, bodysession):
+    
+    clear_section(section, bodysession)
+
+    collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
+    
+    pipeline = []
+
+    match_stage = {
+        '$match': {
+            'bodysession': bodysession, 
+            'section': section
+        }
+    }
+
+    group_stage1 = {
+        '$group': {
+            '_id': {
+                'a': '$agendanum', 
+                'sub': '$subagenda', 
+                'title': '$agendatitle', 
+                'heading': '$heading'
+            }, 
+            'see': {
+                '$push': '$agendasubject'
+            }
+        }
+    }
+
+    group_stage2 = {
+        '$group': {
+            '_id': {
+                'a': '$_id.a', 
+                'sub': '$_id.sub', 
+                'h': '$_id.heading'
+            }, 
+            'titlesubject': {
+                '$push': {
+                    'title': '$_id.title', 
+                    'subjects': '$see'
+                }
+            }
+        }
+    }
+
+    sort_stage1 =  {
+        '$sort': {
+            '_id.a': 1, 
+            '_id.sub': 1
+        }
+    }
+
+    group_stage3 = {
+        '$group': {
+            '_id': {
+                'a': '$_id.a', 
+                'h': '$_id.h'
+            }, 
+            'agendainfo': {
+                '$push': {
+                    'subagenda': '$_id.sub', 
+                    'agendatext': '$titlesubject'
+                }
+            }
+        }
+    }
+
+    sort_stage2 = {
+        '$sort': {
+            '_id': 1
+        }
+    }
+
+    group_stage4 = {
+        '$group': {
+            '_id': '$_id.h', 
+            'agendas': {
+                '$push': {
+                    'agendanum': '$_id.a', 
+                    'text': '$agendainfo'
+                }
+            }
+        }
+    }
+
+    project_stage = {
+        '$project': {
+            '_id': 0, 
+            'bodysession': bodysession, 
+            'section': section,
+            'heading': '$_id', 
+            'agendas': 1
+        }
+    }
+
+    merge_stage = {
+        '$merge': { 'into': wordOutput}
+    }
+    
+    pipeline.append(match_stage)
+    pipeline.append(group_stage1)
+    pipeline.append(group_stage2)
+    pipeline.append(sort_stage1)
+    pipeline.append(group_stage3)
+    pipeline.append(sort_stage2)
+    pipeline.append(group_stage4)
+    pipeline.append(project_stage)
+    pipeline.append(merge_stage)
+
+    outputCollection.aggregate(pipeline, collation=collation)
 
 def clear_section(section, bodysession):
     """
