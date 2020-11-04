@@ -1,6 +1,6 @@
 import re
 from warnings import warn
-from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority
+from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority, SelectAgendaAuthority
 from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition, Or
 from bson.regex import Regex
 from natsort import natsorted
@@ -10,7 +10,7 @@ from collections import Counter
 
 class Report(object):
     def __init__(self):
-        self.form_class = SeletAuthority
+        self.form_class = SelectAuthority
         
         # these attributes must be implemented by the subclasses
         for att in ('name', 'title', 'description', 'category', 'form_class', 'expected_params', 'field_names'):
@@ -327,7 +327,7 @@ class DuplicateAgenda(Report):
     def __init__(self):
         self.name = self.type + '_duplicate_agenda'
         self.title = "Duplicate agenda item"
-        self.description = self.type.title() + " records that contain duplicate agenda items (991 field)" 
+        self.description = "" #self.type.title() + " records that contain duplicate agenda items (991 field)" 
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
@@ -366,7 +366,7 @@ class AgendaList(Report):
         self.description = '' #'Agenda items from the given session'
         
         self.category = "OTHER"
-        self.form_class = SelectAuthority
+        self.form_class = SelectAgendaAuthority
         self.expected_params = ['authority']
         
         self.output_fields = [('191', 'a'), ('991', 'b'), ('991', 'd')]

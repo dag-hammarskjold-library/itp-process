@@ -27,6 +27,9 @@
     <img src="{{ url_for('static', filename='img/ajax-loader.gif') }}">
 </div>
 <div id="content">
+    <div class="container">
+        <h5>{{report['category'].capitalize()}} Reports</h5>
+    </div>
     <div class="container customize shadow">
         <div class="container mt-4 mb-4">
             <h1>{{report['title']}}</h1>

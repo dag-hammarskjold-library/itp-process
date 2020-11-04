@@ -1640,7 +1640,7 @@ def itpage(bodysession):
 
         collation={
             'locale': 'en', 
-            'strength': 1, #ignore diacritics
+            'numericOrdering': True
         }
 
         bs = bodysession.split("/")
@@ -1876,12 +1876,11 @@ def itpage(bodysession):
                     'else': 'AGENDA'
                 }
             }
-            transform['sortkey1'] = {
-                '$concat': [
-                    '$_id.a',
-                    '$_id.b']
-            }
-            transform['sortkey2'] = '$_id.d'
+            transform['sortkey1'] = '$_id.a'
+            
+            transform['sortkey2'] = '$_id.b'
+
+            transform['sortkey3'] = '$_id.d'
 
             transform_stage = {}
             transform_stage['$project'] = transform
@@ -1920,16 +1919,17 @@ def itpage(bodysession):
 # List of Documents #
 def itpdsl(bodysession):
     """
-    List of Documents
+    List of Documents. Executed for the follownig bodies: A/, E/ and S/.
 
-    Builds the aggregation query and inserts the results into another collection.
+    Builds the aggregation query based on business logic and inserts the results into another collection.
     """ 
     try: 
-        #clear the previous records if they exist
+        # clear the previous records if they exist
         outputCollection.delete_many({ "section" : "itpdsl", "bodysession" : bodysession } )
         
         pipeline = []
 
+        # set variables
         bs = bodysession.split("/")
         body = bs[0]
         session = bs[1]
@@ -1940,6 +1940,7 @@ def itpdsl(bodysession):
             'numericOrdering': True
         }
 
+        # filter by bodysession and record type
         match_stage = {
             '$match': {
                 'record_type': 'BIB', 
@@ -1947,6 +1948,7 @@ def itpdsl(bodysession):
             }
         }
 
+        # add fields to determine the order of the document symbols
         add_0 = {}
 
         add_0['primary'] = {
@@ -1991,6 +1993,8 @@ def itpdsl(bodysession):
 
         add_stage0['$addFields'] = add_0
 
+        # add fields to determine if the primary document symbol belongs to the actual session
+        #   being run
         add_1 = {}
 
         add_1['actualsession'] = {
@@ -2022,6 +2026,7 @@ def itpdsl(bodysession):
 
         add_2 = {}
 
+        # add a field to concatenate all of the elements of the document symbol string
         add_2['docsymbol'] = {
             '$concat': [
                 {'$cond': {
@@ -2048,6 +2053,7 @@ def itpdsl(bodysession):
             ]
         }
 
+        # set the committee and series based on body
         if body == "A":
 
             add_2['committee'] = {
@@ -2205,6 +2211,7 @@ def itpdsl(bodysession):
         add_stage2 = {}
         add_stage2['$addFields'] = add_2
 
+        # set up the final project stage and create sortkeys based on the committees and series
         transform = {}
 
         transform['_id'] = 0
@@ -2308,6 +2315,7 @@ def itpdsl(bodysession):
             '$merge': { 'into': editorOutput}
         }
 
+        # add all stages to the pipeline
         pipeline.append(match_stage)
         pipeline.append(add_stage0)
         pipeline.append(add_stage1)
@@ -2316,11 +2324,10 @@ def itpdsl(bodysession):
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-        #print(pipeline)
-
+        # execute pipeline
         inputCollection.aggregate(pipeline, collation=collation)
-        #inputCollection.aggregate(pipeline)
 
+        # further process results by grouping them for display
         group_itpdsl("itpdsl", bodysession)
 
         return "itpdsl completed successfully"
@@ -3338,7 +3345,6 @@ def group_speeches(section, bodysession):
 
     outputCollection.aggregate(pipeline)
 
-
 def group_itpitsp(section, bodysession):
 
     clear_section(section, bodysession)
@@ -3462,7 +3468,6 @@ def group_itpitsp(section, bodysession):
             'locale': 'en', 
             'strength': 1, #ignore diacritics
         })
-
 
 def group_itpsubj(section, bodysession):
 
@@ -3832,7 +3837,6 @@ def clear_section(section, bodysession):
     deleted = copyCollection.delete_many({ "section" : section, "bodysession" : bodysession } )
 
     print(deleted.deleted_count, "documents deleted.")
-
 
 def lookup_code(lookup_field):
     """
