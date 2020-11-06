@@ -62,13 +62,18 @@
 
     </div>
     
+
     <div class="container customize1 shadow">
+
         <div class="container mt-4 mb-4" id="results">
 
             <h3>Previously Generated Sections</h3>
 
             <hr>
-            <table id="myTable" class="table table-striped sortable">
+            
+            <p>Filter by Body/Session: <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Ex. A/74 or E/2018-S"></p>
+
+            <table id="myTable" class="table sortable">
                 <thead>
                     <tr>
                         <th scope="col">Body / Session</th>
@@ -104,6 +109,28 @@
    function loading() {
         $("#loading").show();
   }
+
+  function myFunction() {
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById("myInput");
+  filter = input.value.toUpperCase();
+  table = document.getElementById("results");
+  tr = table.getElementsByTagName("tr");
+
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[0];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
+    }
+  }
+}
 </script>
 
 
