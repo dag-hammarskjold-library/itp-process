@@ -2608,11 +2608,11 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         
         # Header
 
-        p=header.add_paragraph(myTitle.upper(), style='New Heading')
-        # p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p=header.add_paragraph("\t"+myTitle.upper(), style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p=header.add_paragraph("",style='subtitle')
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        #p.add_run("\n")
+        p.add_run("\n")
         p.add_run("Votes are as indicated in the provisional verbatim records of the Security Council,")
         p.add_run("\n")
         p.add_run('seventy-third year, 2018. The following symbols are used to indicate how each member voted:')
