@@ -2608,25 +2608,24 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         
         # Header
 
-        p=header.add_paragraph(myTitle.upper(), style='New Heading')
-        # p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p=header.add_paragraph("\t"+myTitle.upper(), style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p=header.add_paragraph("",style='subtitle')
-        # p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        #p.add_run("\n")
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run("\n")
         p.add_run("Votes are as indicated in the provisional verbatim records of the Security Council,")
         p.add_run("\n")
         p.add_run('seventy-third year, 2018. The following symbols are used to indicate how each member voted:')
         p.add_run("\n")
-        p.add_run('  Y	Voted   Yes')
+        p.add_run('   Y	      Voted   Yes')
         p.add_run("\n")
-        p.add_run(' N	Voted   No')
+        p.add_run('  N	     Voted   No')
         p.add_run("\n")
-        p.add_run('A	Abstained')
+        p.add_run(' A	    Abstained')
         p.add_run("\n")
-        p.add_run("\t"+'     NP  Not Participating')
+        p.add_run("\t"+'     NP    Not Participating')
         p.add_run("\n")
         p.add_run('Resolutions adopted without vote are indicated by a blank space')
-        # p.add_run("\n")
 
         # Retrieving the number of records
         recordNumber = 0
@@ -2642,14 +2641,18 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         # creation of the table
         table = document.add_table(rows=1,cols=16)
+        print("tableau cree 0")
         table.style = 'TableGrid'
 
-
+        first=True
         myRow = 0
         myCol = 0
-
+        
+        # Variable for managing the number of column to build
+        columnToBuild=recordNumber;
+        
         for record1 in myRecords1:     
-
+            
             # Check if we have already 15 records
 
             if myRow==15:
@@ -2661,27 +2664,36 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                     p=document.add_paragraph()
 
                     myBreak = p.add_run().add_break(WD_BREAK.PAGE)
+                    
+                    columnToBuild=(columnToBuild-15)
+                    
+                    if columnToBuild>=15 :
+                    
+                        table = document.add_table(rows=1,cols=16)
 
-                    table = document.add_table(rows=1,cols=16)
+                        
+                    if (columnToBuild<15):
+                        
+                        table = document.add_table(rows=1,cols=columnToBuild+1) 
+                        
+                        table.alignment = WD_TABLE_ALIGNMENT.LEFT
+
 
                     table.style = 'TableGrid'
 
                     myCol=0
-
-
-            # check if we 
  
             if myRow==0 and myCol==0:
-        
-                #table.cell(myRow,myCol).paragraphs[0].text="S/RES/"
 
                 paragraph=table.cell(myRow,myCol).paragraphs[0]
+
+                paragraph.text="S/RES/-"                
                 
                 paragraph_format = paragraph.paragraph_format
-                #paragraph_format.space_before = Pt(3)
-                paragraph_format.space_after = Pt(3)            
-
-                paragraph.text="S/RES/"
+                paragraph_format.space_before = Inches(0.08)
+                paragraph_format.space_after = Inches(0.08)    
+                
+                table.rows[0].cells[0].width = Inches(1.5)
 
                 run = paragraph.runs
 
@@ -2702,8 +2714,8 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                     paragraph=table.cell(myRow,myCol).paragraphs[0]
                     
                     paragraph_format = paragraph.paragraph_format
-                    #paragraph_format.space_before = Pt(3)
-                    paragraph_format.space_after = Pt(3)
+                    paragraph_format.space_before = Inches(0.08)
+                    paragraph_format.space_after = Inches(0.08)
 
                     paragraph.text=country
 
@@ -2727,13 +2739,17 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
                 paragraph=table.cell(myRow,myCol).paragraphs[0]
 
-                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-                paragraph_format = paragraph.paragraph_format
-                #paragraph_format.space_before = Pt(3)
-                paragraph_format.space_after = Pt(3)
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER 
                 
-                add_hyperlink(paragraph,record1["resnum"],"http://undocs.org/s/res/"+record1["docsymbol"])
+                #add_hyperlink(paragraph,record1["resnum"],"http://undocs.org/s/res/"+record1["docsymbol"])
+                add_hyperlink(paragraph,record1["resnum"],"http://undocs.org/"+record1["docsymbol"])
+               
+                
+                paragraph_format = paragraph.paragraph_format
+                paragraph_format.space_before = Inches(0.08)
+                paragraph_format.space_after = Inches(0.08)  
+                
+                table.rows[myRow].cells[myCol].width = Inches(0.53)   
 
                 run = paragraph.runs
 
@@ -2752,7 +2768,13 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-                    paragraph.text=data["vote"]                    
+                    paragraph.text=data["vote"]  
+                    
+                    paragraph_format = paragraph.paragraph_format
+                    paragraph_format.space_before = Inches(0.08)
+                    paragraph_format.space_after = Inches(0.08)   
+                    
+                    table.rows[myRow].cells[myCol].width = Inches(0.53)  
 
                     run = paragraph.runs
 
