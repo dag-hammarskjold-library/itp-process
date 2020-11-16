@@ -273,7 +273,11 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
         
         # Create the hyperlink for the document symbol
         if docSymbol!="Symbol not used." :
-            add_hyperlink(p,docSymbol,Config.url_prefix+docSymbol)
+            if (bodysession[0] in ["E"]):
+                recup=docSymbol.split(" ")
+                add_hyperlink(p,docSymbol,Config.url_prefix+recup[0])
+            else:
+                add_hyperlink(p,docSymbol,Config.url_prefix+docSymbol)
         else:
             x=p.add_run("Symbol not used.")
             x.bold=False
