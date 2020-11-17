@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import pprint
 import re
 from datetime import datetime
+import json
 
 ### connection
 myMongoURI=Config.connect_string
@@ -3159,6 +3160,7 @@ def itpsor(bodysession):
         inputCollection.aggregate(pipeline, collation=collation)
         #inputCollection.aggregate(pipeline)
 
+        insert_itpsor("itpsor", bodysession)
 
         copyPipeline = []
 
@@ -3169,6 +3171,13 @@ def itpsor(bodysession):
             }
         }
 
+        copySort_stage = {
+            '$sort': {
+                'sortkey1': 1, 
+                'sortkey2': 1
+            }
+        }
+
         copyMerge_stage = {
             '$merge': { 'into': wordOutput}
         }
@@ -3176,9 +3185,10 @@ def itpsor(bodysession):
         clear_section("itpsor", bodysession)
 
         copyPipeline.append(copyMatch_stage)
+        copyPipeline.append(copySort_stage)
         copyPipeline.append(copyMerge_stage)
 
-        outputCollection.aggregate(copyPipeline)
+        outputCollection.aggregate(copyPipeline, collation=collation)
 
         return "itpsor completed successfully"
 
@@ -3936,6 +3946,89 @@ def group_itpage_AE(section, bodysession):
     pipeline.append(merge_stage)
 
     outputCollection.aggregate(pipeline, collation=collation)
+
+def insert_itpsor(section, bodysession):
+    pipeline = []
+
+    match_stage = {
+        '$match': {
+            'bodysession': bodysession, 
+            'section': section
+        }
+    }
+
+    add_stage = {
+        '$addFields': {
+            'num': {'$arrayElemAt': [{'$split': ['$sorentry', ' ']}, 1]}
+        }
+    }
+
+    group_stage = {
+        '$group': {
+            '_id': 0, 
+            'ar': {
+                '$addToSet': {
+                    '$let': {
+                        'vars': {
+                            'f': {
+                                '$regexFind': {
+                                    'input': '$num', 
+                                    'regex': '[A-z]'
+                                }
+                            }
+                        }, 
+                        'in': {
+                            '$cond': {
+                                'if': '$$f.idx', 
+                                'then': {'$toInt': {'$substrCP': ['$num', 0, '$$f.idx']}}, 
+                                'else': {'$toInt': '$num'}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    project_stage = {
+        '$project': {
+            '_id': 0, 
+            'highest': {
+                '$max': '$ar'
+            }, 
+            'ar': 1, 
+        }
+    }
+
+    pipeline.append(match_stage)
+    pipeline.append(add_stage)
+    pipeline.append(group_stage)
+    pipeline.append(project_stage)
+
+    results = list(outputCollection.aggregate(pipeline))
+
+    ar = results[0]['ar']
+
+    ###Stopped here###
+    i = 1
+    
+    for a in ar:
+        if i not in ar:
+            x = {}
+            #print(str(i) + " is not in the set")
+            x['bodysession'] = bodysession
+            x['docsymbol'] = ""
+            x['record_id'] = 0
+            x['section'] = section
+            x['sorentry'] = "No. " + str(i)
+            x['sornorm'] = ""
+            x['sornote'] = ""
+            x['sortkey1'] = "No. " + str(i)
+            x['sortkey2'] = ""
+
+            outputCollection.insert_one(x)
+        i = i + 1
+    
 
 def clear_section(section, bodysession):
     """
