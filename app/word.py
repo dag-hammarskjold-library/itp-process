@@ -1900,7 +1900,8 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     # Indentation
     
-    #pfNote.left_indent = Inches(0.40)
+    pfNote.left_indent = Inches(0.05)
+
     pfNote.first_line_indent = Cm(0.90)
     
     # Line spacing
@@ -1990,9 +1991,6 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                 except:
                     pass
                 
-
-
-
                 if entry["note"]!="":
                     p2.add_run(" ")
                     p2.add_run(entry["entry"])
@@ -2009,10 +2007,11 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     
                     #Breaks management
                     paragraph_format = p3.paragraph_format
-                    paragraph_format.space_after = Pt(3)
+                    paragraph_format.space_after = Pt(7)
                     paragraph_format.space_before = Pt(0)
                     # paragraph_format.keep_together = True
                     # paragraph_format.keep_with_next = True
+   
                 
                 else:
                     p2.add_run(" ")
@@ -2021,7 +2020,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     #Breaks management
                     paragraph_format = p2.paragraph_format
                     #paragraph_format.space_after = Pt(5)
-                    paragraph_format.space_after = Pt(3)
+                    paragraph_format.space_after = Pt(7)
                     paragraph_format.space_before = Pt(0)
                     # paragraph_format.keep_together = True
                     # paragraph_format.keep_with_next = True
