@@ -4019,11 +4019,9 @@ def insert_itpsor(section, bodysession):
     results = list(outputCollection.aggregate(pipeline))
 
     ar = results[0]['ar']
+    highest = results[0]['highest']
 
-    ###Stopped here###
-    i = 1
-    
-    for a in ar:
+    for i in range(1, highest):
         if i not in ar:
             x = {}
             #print(str(i) + " is not in the set")
@@ -4038,7 +4036,6 @@ def insert_itpsor(section, bodysession):
             x['sortkey2'] = ""
 
             outputCollection.insert_one(x)
-        i = i + 1
     
 
 def clear_section(section, bodysession):
