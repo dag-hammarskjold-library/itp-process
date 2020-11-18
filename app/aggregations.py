@@ -3002,7 +3002,18 @@ def itpsor(bodysession):
 
         add_1['imprint'] = {
             '$concat': [
-                '$260.a', 
+                #'$260.a', 
+                {'$cond': {
+                    'if': {'$isArray': ['$260.a']}, 
+                    'then': {
+                        '$concat': [
+                            {'$arrayElemAt': ['$260.a', 0]}, 
+                            ' ', 
+                            {'$arrayElemAt': ['$260.a', 1]}
+                        ]
+                    }, 
+                    'else': '$260.a'
+                }},
                 {'$cond': {
                     'if': '$260.b', 
                     'then': {
