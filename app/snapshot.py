@@ -58,7 +58,7 @@ class Snapshot(object):
                             itp_bib_fields.append(fld.strip()) 
         else:
             itp_bib_fields=['001', '035$a', '591$a','700$a', '700$g', '710$a', '711$a', '791$a','791$b','791$c','793$a', '930$a', '949$a','991$b', '991$d','001', '035$a', '089$b', '191$9', '191$a', '191$b', '191$c','191$d', '191$z', '239$a', '245$a', '245$b', '245$c', '248$a', '249$a', '260$a','260$b','260$c','269$a','300$a', '495$a', '515$a', '520$a', '580$a', '591$a', '592$a', '598$a', '599$a', '791$b', '791$c', '930$a', '949$a', '991$a', '991$b', '991$c', '991$d', '991$e', '991$m', '991$s', '991$z', '992$a', '995$a', '996$a','967$c','967$d','968$c','968$d','969$c','969$d']
-        itp_auth_fields=['191$b', '191$c','191$d']
+        itp_auth_fields=['191$a','191$b', '191$c','191$d']
         set_itp_bib_fields=sorted(set(itp_bib_fields))
         set_itp_auth_fields=sorted(set(itp_auth_fields))
         print(f"bib fields are: {set_itp_bib_fields}")   
@@ -149,14 +149,18 @@ class Snapshot(object):
         
    
     ''' get the subfield values'''
-    def list_of_subfields(self,bib,field,sbflds):
+    def list_of_subfields(self,bib,fld,sbflds):
         temp_lst=[]
         
-        for field in bib.get_fields(field):
+        for field in bib.get_fields(fld):
             temp_dict={}
             for sub in field.subfields:
                 if sub.code in sbflds:
-                    temp_dict[sub.code]= sub.value
+                    #temp_dict[sub.code]= sub.value
+                    if len(bib.get_values(fld, sub.code))==1:
+                        temp_dict[sub.code]= ''.join(bib.get_values(fld, sub.code))
+                    else:
+                        temp_dict[sub.code]= bib.get_values(fld, sub.code)
             temp_lst.append(temp_dict)
         return temp_lst
 
