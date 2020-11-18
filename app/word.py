@@ -436,7 +436,10 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     # Indentation
     
-    pfstlitsentry.left_indent = Inches(0.40)
+    #pfstlitsentry.left_indent = Inches(0.40)
+    pfstlitsentry.first_line_indent = Inches(-0.20)
+    pfstlitsentry.left_indent = Inches(0.50)
+    
     
     # Line spacing
     
@@ -501,7 +504,7 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
         # Breaks management
         paragraph_format = p.paragraph_format
         # last update
-        paragraph_format.space_after = Pt(1)
+        paragraph_format.space_after = Pt(3)
                
         # Breaks management
         paragraph_format.keep_together = True
@@ -696,7 +699,8 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     # Indentation
     
-    pfstlitsentry.left_indent = Inches(0.40)
+    pfstlitsentry.first_line_indent = Inches(-0.20)
+    pfstlitsentry.left_indent = Inches(0.50)
     
     # Line spacing
     
@@ -760,7 +764,7 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
 
         # Breaks management
         paragraph_format = p.paragraph_format
-        paragraph_format.space_after = Pt(1)
+        paragraph_format.space_after = Pt(3)
                
         # Breaks management
         paragraph_format.keep_together = True
@@ -952,7 +956,8 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     # Indentation
     
-    pfstlitsentry.left_indent = Inches(0.40)
+    pfstlitsentry.first_line_indent = Inches(-0.20)
+    pfstlitsentry.left_indent = Inches(0.50)
     
     # Line spacing
     
@@ -1016,7 +1021,7 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
         # Breaks management
         paragraph_format = p.paragraph_format
-        paragraph_format.space_after = Pt(1)
+        paragraph_format.space_after = Pt(3)
                
         # Breaks management
         paragraph_format.keep_together = True
