@@ -3002,7 +3002,18 @@ def itpsor(bodysession):
 
         add_1['imprint'] = {
             '$concat': [
-                '$260.a', 
+                #'$260.a', 
+                {'$cond': {
+                    'if': {'$isArray': ['$260.a']}, 
+                    'then': {
+                        '$concat': [
+                            {'$arrayElemAt': ['$260.a', 0]}, 
+                            ' ', 
+                            {'$arrayElemAt': ['$260.a', 1]}
+                        ]
+                    }, 
+                    'else': '$260.a'
+                }},
                 {'$cond': {
                     'if': '$260.b', 
                     'then': {
@@ -4008,11 +4019,9 @@ def insert_itpsor(section, bodysession):
     results = list(outputCollection.aggregate(pipeline))
 
     ar = results[0]['ar']
+    highest = results[0]['highest']
 
-    ###Stopped here###
-    i = 1
-    
-    for a in ar:
+    for i in range(1, highest):
         if i not in ar:
             x = {}
             #print(str(i) + " is not in the set")
@@ -4027,7 +4036,6 @@ def insert_itpsor(section, bodysession):
             x['sortkey2'] = ""
 
             outputCollection.insert_one(x)
-        i = i + 1
     
 
 def clear_section(section, bodysession):
