@@ -154,15 +154,22 @@ class Snapshot(object):
         
         for field in bib.get_fields(fld):
             temp_dict={}
+            sub_codes=[]
+            for sub in field.subfields:
+                sub_codes.append(sub.code) # get the kust of all subcodes in a field e.g. [a,a,b,c]
             for sub in field.subfields:
                 if sub.code in sbflds:
                     #temp_dict[sub.code]= sub.value
-                    if len(bib.get_values(fld, sub.code))==1:
-                        temp_dict[sub.code]= ''.join(bib.get_values(fld, sub.code))
+                    if sub_codes.count(sub.code)>1:
+                        temp_dict[sub.code]=bib.get_values(fld,sub.code)
                     else:
-                        temp_dict[sub.code]= bib.get_values(fld, sub.code)
+                        temp_dict[sub.code]=sub.value
+                    
             temp_lst.append(temp_dict)
+            
         return temp_lst
+
+       
 
       
     ''' not used any more'''           
