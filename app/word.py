@@ -2194,6 +2194,8 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
 
 def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
 
+    
+
     # Function to keep the header visible for the table
 
     def set_repeat_table_header(row):
@@ -2213,6 +2215,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
+    setOfData1=myCollection.find({'bodysession': bodysession,'section': paramSection})
 
     # Creation of the word document
 
@@ -2282,82 +2285,447 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
      
     ################## WRITING THE DOCUMENT ###############################################
     
-    # Adding the Header to the document
+    if (bodysession[0]=="S"):
 
-    section = document.sections[0]
-    sectPr = section._sectPr
-    cols = sectPr.xpath('./w:cols')[0]
-    cols.set(qn('w:num'),'3')
+        # Adding the Header to the document
 
-    datas=setOfData
+        section = document.sections[0]
+        sectPr = section._sectPr
+        cols = sectPr.xpath('./w:cols')[0]
+        cols.set(qn('w:num'),'3')
 
-    p=header.add_paragraph(myTitle.upper(), style='New Heading')
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.add_run("\n")
+        datas=setOfData
+
+        p=header.add_paragraph(myTitle.upper(), style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run("\n")
+        
+        p=header.add_paragraph("(Symbol: " + datas[0]["symbol"] +")", style='itssubhead')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run("\n")
+        p.add_run("\n")
+
+        # creation of the table
+        table = document.add_table(rows=1, cols=2)
+
+        table.allow_autofit=True
+
+        #table.rows.height_rule = WD_ROW_HEIGHT_RULE.AUTO
+
+        table.alignment = WD_TABLE_ALIGNMENT.LEFT
+
+        # set the header visible
+        set_repeat_table_header(table.rows[0])
+
+        # Retrieve the first line
+        hdr_cells = table.rows[0].cells
+
+        myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+        myRun.underline=True
+
+        myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+datas[0]["years"][0]["year"])
+        hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+        myRun.underline=True
+
+        myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+
+        for data in datas:
+            records=data["years"]
+            for record in records:
+                meetings=record["meetings"]
+                for meeting in meetings:
+                    row_cells = table.add_row().cells
+                    row_cells[0].paragraphs[0].text=meeting["meetingnum"]
+                    row_cells[1].paragraphs[0].text=meeting["meetingdate"]
+                    row_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER 
     
-    p=header.add_paragraph("(Symbol: " + datas[0]["symbol"] +")", style='itssubhead')
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.add_run("\n")
-    p.add_run("\n")
+        # Definition of the size of the column
 
-    # creation of the table
-    table = document.add_table(rows=1, cols=2)
+        widths = (Inches(2), Inches(1.5))
+        for row in table.rows:
+            for idx,width in enumerate(widths):
+                row.cells[idx].width = width
 
-    table.allow_autofit=True
+        # Definition of the font
 
-    #table.rows.height_rule = WD_ROW_HEIGHT_RULE.AUTO
+        for row in table.rows:
+            for cell in row.cells:
+                paragraphs = cell.paragraphs
+                for paragraph in paragraphs:
+                    paragraph_format = paragraph.paragraph_format
+                    paragraph_format.space_after = Pt(0)
+                    # Adding styling
+                    for run in paragraph.runs:
+                        font = run.font
+                        font.name="Arial"
+                        font.size= Pt(8)
 
-    table.alignment = WD_TABLE_ALIGNMENT.LEFT
-
-    # set the header visible
-    set_repeat_table_header(table.rows[0])
-
-    # Retrieve the first line
-    hdr_cells = table.rows[0].cells
-
-    myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-    myRun.underline=True
-
-    myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+datas[0]["years"][0]["year"])
-    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-    myRun.underline=True
-
-    myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-
-    for data in datas:
-        records=data["years"]
-        for record in records:
-            meetings=record["meetings"]
-            for meeting in meetings:
-                row_cells = table.add_row().cells
-                row_cells[0].paragraphs[0].text=meeting["meetingnum"]
-                row_cells[1].paragraphs[0].text=meeting["meetingdate"]
-                row_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER 
-   
-    # Definition of the size of the column
-
-    widths = (Inches(2), Inches(1.5))
-    for row in table.rows:
-        for idx,width in enumerate(widths):
-            row.cells[idx].width = width
-
-    # Definition of the font
-
-    for row in table.rows:
-        for cell in row.cells:
-            paragraphs = cell.paragraphs
-            for paragraph in paragraphs:
-                paragraph_format = paragraph.paragraph_format
-                paragraph_format.space_after = Pt(0)
-                # Adding styling
-                for run in paragraph.runs:
-                    font = run.font
-                    font.name="Arial"
-                    font.size= Pt(8)
-    
+        return document
     
 
-    return document
+    if (bodysession[0]=="E"):
+        
+        datas=setOfData
+        datas1=setOfData1
+
+        p=header.add_paragraph(myTitle.upper(), style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run("\n")
+        p.add_run("\n")
+        
+        p=header.add_paragraph("(Symbol: " + datas[0]["symbol"] +")", style='itssubhead')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run("\n")
+
+        ###########################################################################################
+        # Process
+        ###########################################################################################
+        
+        # 0- Settings
+
+        section = document.sections[0]
+        sectPr = section._sectPr
+        cols = sectPr.xpath('./w:cols')[0]
+        cols.set(qn('w:num'),'3')
+
+        nbRecords=0
+        nbYears=0
+        nbMeetings=0
+        
+
+        # 1- Count the number of records
+
+        for data in datas:
+            nbRecords=nbRecords+1
+            for year in data["years"]:
+                nbYears=nbYears+1
+                for meeting in year["meetings"]:
+                    nbMeetings=nbMeetings+1
+
+        # 2- Define the number of records per cols
+        nbMeeting=1
+        nbrRecPerCol0= round(nbMeetings / 3)
+        nbrRecPerCol1= round(nbMeetings / 3)
+        print(nbrRecPerCol1)
+        nbrRecPerCol2= round(nbMeetings / 3)
+        nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol2)
+        print(nbrRecPerCol3)
+
+        # 3- Define a closure feature
+
+        # 4- Display the record after check of the date a new date should call the closure function
+
+        startGroup=False
+
+        for data1 in datas1:
+            for year1 in data1["years"]:
+
+                if startGroup==True:
+
+                    hdr_cells = table.rows[nbMeeting].cells
+                    hdr_cells[1].text=" "
+                    nbMeeting=nbMeeting+1
+
+                    hdr_cells = table.rows[nbMeeting].cells
+                    hdr_cells[1].text="Date, "+ year1["year"]
+                    paragraphs = hdr_cells[1].paragraphs
+                    for paragraph in paragraphs:
+                        for run in paragraph.runs:
+                            font = run.font
+                            font.underline=True
+                    nbMeeting=nbMeeting+1
+
+                    hdr_cells = table.rows[nbMeeting].cells
+                    hdr_cells[1].text=" "
+                    nbMeeting=nbMeeting+1
+
+                    table.add_row()
+                    table.add_row()
+                    nbrRecPerCol1=nbrRecPerCol1+2
+
+                for meeting1 in year1["meetings"]:
+
+                    if (nbMeeting<=nbrRecPerCol1):
+
+                        if nbMeeting==1:
+
+                            p=document.add_paragraph()
+                            run = p.add_run()
+                            
+                            table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
+                        
+                            # set the header visible
+                            set_repeat_table_header(table.rows[0])
+
+                            # Retrieve the first line
+                            hdr_cells = table.rows[0].cells
+                            myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+                            myRun.underline=True
+                            myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+year1["year"])
+                            hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            myRun.underline=True
+                            myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+                            #nbMeeting=nbMeeting+1
+                            hdr_cells = table.rows[nbMeeting].cells
+                            hdr_cells[0].text=meeting1["meetingnum"]
+                            hdr_cells[1].text=meeting1["meetingdate"]
+                            
+                        else :
+
+                            # fill the cell of the table
+                            hdr_cells = table.rows[nbMeeting].cells
+                            hdr_cells[0].text=meeting1["meetingnum"]
+                            hdr_cells[1].text=meeting1["meetingdate"]
+
+
+                    # if (nbMeeting>nbrRecPerCol1 and nbMeeting<=2*nbrRecPerCol2):
+                    if (nbMeeting>nbrRecPerCol1):
+
+                        print("i was inside")
+
+                        if nbMeeting==nbrRecPerCol1+1:
+
+                            print("i was inside 1")
+
+                            # column break
+                            p=document.add_paragraph()
+                            run = p.add_run()
+                            myBreak = run.add_break(WD_BREAK.COLUMN)
+                            table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
+                        
+                            # set the header visible
+                            set_repeat_table_header(table.rows[0])
+
+                            # Retrieve the first line
+                            hdr_cells = table.rows[0].cells
+                            myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+                            myRun.underline=True
+                            myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+year1["year"])
+                            hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            myRun.underline=True
+                            myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+                            print(nbMeeting)
+                            nbMeeting=1
+                            nbrRecPerCol1=nbrRecPerCol0
+                            hdr_cells = table.rows[nbMeeting].cells
+                            hdr_cells[0].text=meeting1["meetingnum"]
+                            hdr_cells[1].text=meeting1["meetingdate"]
+                            
+                        else :
+
+                            # fill the cell of the table
+                            hdr_cells = table.rows[nbMeeting].cells
+                            hdr_cells[0].text=meeting1["meetingnum"]
+                            hdr_cells[1].text=meeting1["meetingdate"]
+
+                    
+                    nbMeeting=nbMeeting+1
+                
+                startGroup=True
+
+
+        # Apply the font
+        for table in document.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    paragraphs = cell.paragraphs
+                    for paragraph in paragraphs:
+                        # Adding styling
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        paragraph_format = paragraph.paragraph_format
+                        paragraph_format.space_after = Pt(0)
+                        for run in paragraph.runs:
+                            font = run.font
+                            font.name="Arial"
+                            font.size= Pt(8)
+
+        return document
+
+    # if (bodysession[0]=="A"):
+        
+    #     datas=setOfData
+    #     datas1=setOfData1
+
+    #     p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    #     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    #     p.add_run("\n")
+        
+    #     p=header.add_paragraph("(Symbol: " + datas[0]["symbol"] +")", style='itssubhead')
+    #     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    #     p.add_run("\n")
+    #     p.add_run("\n")
+
+    #     ###########################################################################################
+    #     # Process
+    #     ###########################################################################################
+        
+    #     # 0- Settings
+
+    #     section = document.sections[0]
+    #     sectPr = section._sectPr
+    #     cols = sectPr.xpath('./w:cols')[0]
+    #     cols.set(qn('w:num'),'3')
+
+    #     nbRecords=0
+    #     nbYears=0
+    #     nbMeetings=0
+    #     nbMeeting=1
+
+    #     # 1- Count the number of records
+
+    #     for data in datas:
+    #         nbRecords=nbRecords+1
+    #         for year in data["years"]:
+    #             nbYears=nbYears+1
+    #             for meeting in year["meetings"]:
+    #                 nbMeetings=nbMeetings+1
+
+    #     # 2- Define the number of records per cols
+
+    #     if nbMeetings>9 :
+
+    #         nbrRecPerCol1= round(nbMeetings / 3)
+    #         nbrRecPerCol2= round(nbMeetings / 3)
+    #         nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol2)
+
+    #     else :
+
+    #         nbrRecPerCol1= nbMeetings
+
+
+    #     # 3- Define a closure feature
+
+    #     # 4- Display the record after check of the date a new date should call the closure function
+
+    #     startGroup=False
+
+    #     for data1 in datas1:
+    #         for year1 in data1["years"]:
+
+    #             if startGroup==True:
+
+    #                 hdr_cells = table.rows[nbMeeting].cells
+    #                 hdr_cells[1].text=" "
+    #                 nbMeeting=nbMeeting+1
+
+    #                 hdr_cells = table.rows[nbMeeting].cells
+    #                 hdr_cells[1].text="Date, "+ year1["year"]
+    #                 paragraphs = hdr_cells[1].paragraphs
+    #                 for paragraph in paragraphs:
+    #                     for run in paragraph.runs:
+    #                         font = run.font
+    #                         font.underline=True
+    #                 nbMeeting=nbMeeting+1
+
+    #                 hdr_cells = table.rows[nbMeeting].cells
+    #                 hdr_cells[1].text=" "
+    #                 nbMeeting=nbMeeting+1
+
+
+    #             for meeting1 in year1["meetings"]:
+
+    #                 if (nbMeeting<=nbrRecPerCol1):
+
+    #                     if nbMeeting==1:
+
+    #                         p=document.add_paragraph()
+    #                         run = p.add_run()
+                            
+    #                         table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
+
+    #                         # align the table according the number of record
+    #                         if nbMeetings <= 9 :
+    #                             table.alignment = WD_TABLE_ALIGNMENT.CENTER
+                        
+    #                         # set the header visible
+    #                         set_repeat_table_header(table.rows[0])
+
+    #                         # Retrieve the first line
+    #                         hdr_cells = table.rows[0].cells
+    #                         myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+    #                         myRun.underline=True
+    #                         myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+year1["year"])
+    #                         hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+    #                         myRun.underline=True
+    #                         myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+    #                         #nbMeeting=nbMeeting+1
+    #                         hdr_cells = table.rows[nbMeeting].cells
+    #                         hdr_cells[0].text=meeting1["meetingnum"]
+    #                         hdr_cells[1].text=meeting1["meetingdate"]
+                            
+    #                     else :
+
+    #                         # fill the cell of the table
+    #                         hdr_cells = table.rows[nbMeeting].cells
+    #                         hdr_cells[0].text=meeting1["meetingnum"]
+    #                         hdr_cells[1].text=meeting1["meetingdate"]
+
+
+    #                 if (nbMeeting>nbrRecPerCol1 and nbMeeting<=2*nbrRecPerCol2):
+
+    #                     print("i was inside")
+
+    #                     if nbMeeting==nbrRecPerCol1+1:
+
+    #                         print("i was inside 1")
+
+    #                         # column break
+    #                         p=document.add_paragraph()
+    #                         run = p.add_run()
+    #                         myBreak = run.add_break(WD_BREAK.COLUMN)
+
+
+
+    #                         table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
+                        
+    #                         # set the header visible
+    #                         set_repeat_table_header(table.rows[0])
+
+    #                         # Retrieve the first line
+    #                         hdr_cells = table.rows[0].cells
+    #                         myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+    #                         myRun.underline=True
+    #                         myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+year1["year"])
+    #                         hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+    #                         myRun.underline=True
+    #                         myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+    #                         print(nbMeeting)
+    #                         nbMeeting=1
+    #                         hdr_cells = table.rows[nbMeeting].cells
+    #                         hdr_cells[0].text=meeting1["meetingnum"]
+    #                         hdr_cells[1].text=meeting1["meetingdate"]
+                            
+    #                     else :
+
+    #                         # fill the cell of the table
+    #                         hdr_cells = table.rows[nbMeeting].cells
+    #                         hdr_cells[0].text=meeting1["meetingnum"]
+    #                         hdr_cells[1].text=meeting1["meetingdate"]
+
+                    
+    #                 nbMeeting=nbMeeting+1
+                
+    #             startGroup=True
+
+
+    #     # Apply the font
+    #     for table in document.tables:
+    #         for row in table.rows:
+    #             for cell in row.cells:
+    #                 paragraphs = cell.paragraphs
+    #                 for paragraph in paragraphs:
+    #                     # Adding styling
+    #                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    #                     paragraph_format = paragraph.paragraph_format
+    #                     paragraph_format.space_after = Pt(0)
+    #                     for run in paragraph.runs:
+    #                         font = run.font
+    #                         font.name="Arial"
+    #                         font.size= Pt(8)
+
+
+    #     return document
+
 
 def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
@@ -2698,7 +3066,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         myCol = 0
         
         # Variable for managing the number of column to build
-        columnToBuild=recordNumber;
+        columnToBuild=recordNumber
         
         for record1 in myRecords1:     
             
