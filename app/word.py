@@ -2406,10 +2406,10 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         nbMeeting=1
         nbrRecPerCol0= round(nbMeetings / 3)
         nbrRecPerCol1= round(nbMeetings / 3)
-        print(nbrRecPerCol1)
+
         nbrRecPerCol2= round(nbMeetings / 3)
         nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol2)
-        print(nbrRecPerCol3)
+
 
         # 3- Define a closure feature
 
@@ -2481,11 +2481,9 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                     # if (nbMeeting>nbrRecPerCol1 and nbMeeting<=2*nbrRecPerCol2):
                     if (nbMeeting>nbrRecPerCol1):
 
-                        print("i was inside")
 
                         if nbMeeting==nbrRecPerCol1+1:
 
-                            print("i was inside 1")
 
                             # column break
                             p=document.add_paragraph()
@@ -2504,7 +2502,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                             hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
                             myRun.underline=True
                             myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                            print(nbMeeting)
+
                             nbMeeting=1
                             nbrRecPerCol1=nbrRecPerCol0
                             hdr_cells = table.rows[nbMeeting].cells
@@ -2529,6 +2527,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
             for row in table.rows:
                 for cell in row.cells:
                     paragraphs = cell.paragraphs
+                    cell.width = Inches(0.7)
                     for paragraph in paragraphs:
                         # Adding styling
                         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -2855,7 +2854,7 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     cols = sectPr.xpath('./w:cols')[0]
     cols.set(qn('w:num'),'1')
 
-    ### FIRST RECORD ##########
+    ### SECURITY COUNCIL ##########
 
     if (bodysession[0]=="S"):
         
@@ -2872,64 +2871,113 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
         p3.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY_LOW
         p3.add_run("\n")
     
-    p.add_run("\n")
-
-    p=document.add_paragraph("       "+myRecords[0]["heading"],style="sortitle")
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    p=document.add_paragraph('NOTE: Subject headings under which documentation related to agenda items is listed \n    in the Subject index appear in capital letters following the title of the item.',style='note')
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    p.add_run("\n")
-    p.add_run("\n")
-
-    p=document.add_paragraph('',style='sorentry')
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-
-    for record in myRecords[0]["agendas"]:
-
-        p.add_run("[To be completed manually]")
         p.add_run("\n")
-        run=p.add_run("See    ")
-        run.font.italic=True
-        run=p.add_run(record["subject"])
-        run.font.italic=False
+
+        p=document.add_paragraph("       "+myRecords[0]["heading"],style="sortitle")
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        p=document.add_paragraph('NOTE: Subject headings under which documentation related to agenda items is listed \n    in the Subject index appear in capital letters following the title of the item.',style='note')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
         p.add_run("\n")
         p.add_run("\n")
 
+        p=document.add_paragraph('',style='sorentry')
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+        for record in myRecords[0]["agendas"]:
+
+            p.add_run("[To be completed manually]")
+            p.add_run("\n")
+            run=p.add_run("See    ")
+            run.font.italic=True
+            run=p.add_run(record["subject"])
+            run.font.italic=False
+            p.add_run("\n")
+            p.add_run("\n")
+
+            
+        ### SECOND RECORD ##########
+        p=document.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        # run = p.add_run()
+        # run.add_break(WD_BREAK.PAGE)
+
+        p=document.add_paragraph(myRecords[1]["heading"],style="sortitle")
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        p=document.add_paragraph('NOTE: These items were not discussed by the Council',style='note')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        p.add_run("\n")
+        p.add_run("\n")
+
+        p=document.add_paragraph('',style='sorentry')
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+        for record in myRecords[1]["agendas"]:
+
+            p.add_run("[To be completed manually]")
+            p.add_run("\n")
+            run=p.add_run("See    ")
+            run.font.italic=True
+            run=p.add_run(record["subject"])
+            run.font.italic=False
+            p.add_run("\n")
+            p.add_run("\n")
+
+
+        return document
+
+    ### ECOSOC ##########
+
+    if (bodysession[0]=="E"):
+
+        p=document.add_paragraph("")
+        p.add_run("\n")
+        p.add_run("\n")
+
+        pformat = p.paragraph_format
+        pformat.right_indent = Inches(0)
         
-    ### SECOND RECORD ##########
-    p=document.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    # run = p.add_run()
-    # run.add_break(WD_BREAK.PAGE)
-
-    p=document.add_paragraph(myRecords[1]["heading"],style="sortitle")
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    p=document.add_paragraph('NOTE: These items were not discussed by the Council',style='note')
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    p.add_run("\n")
-    p.add_run("\n")
-
-    p=document.add_paragraph('',style='sorentry')
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-
-    for record in myRecords[1]["agendas"]:
-
-        p.add_run("[To be completed manually]")
-        p.add_run("\n")
-        run=p.add_run("See    ")
-        run.font.italic=True
-        run=p.add_run(record["subject"])
-        run.font.italic=False
-        p.add_run("\n")
-        p.add_run("\n")
+        for record in myRecords:  
+            # display management
+            
+ 
+            for myAgenda in record["agendas"]:
+                alreadyDisplay=False
+                for myText in myAgenda["text"]:
+                    
+                    for myAgendaText in myText["agendatext"]:
+                        if alreadyDisplay==False:
+                            run=p.add_run(myAgenda["agendanum"]+"."+"      "+myAgendaText["title"]+"\n")
+                            alreadyDisplay=True
+                        for mySubject in myAgendaText["subjects"]:
+                            run=p.add_run("\t"+mySubject.strip())
+                            run=p.add_run("\n")
+                        run=p.add_run("\n")
+            
 
 
-    return document
+        # Global formatting of the document
+
+        for paragraph in document.paragraphs:
+            for run in paragraph.runs:
+                font = run.font
+                font.name="Arial"
+                font.size= Pt(8)
+
+        sections = document.sections
+        for section in sections:
+            section.top_margin = Cm(3)
+            section.bottom_margin = Cm(0.5)
+            section.left_margin = Cm(3)
+            section.right_margin = Cm(1)
+    
+        return document
+
 
 def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
