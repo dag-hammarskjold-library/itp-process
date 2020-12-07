@@ -956,7 +956,36 @@ class Speech039_930(SpeechReport):
                 
         return results
     
+class Speech700g(SpeechReport):
+    def __init__(self):
+        SpeechReport.__init__(self)
         
+        self.name = '700_g'
+        self.title = '700 g'
+        self.description = 'Records with 700 $g'
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        
+        self.field_names = ['Bib ID', '791$a', 'Authority ID', '700$a', '700$g']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            Condition('039', {'a': Regex('^{}'.format(self.type_code))}),
+            Condition('700', {'g': Regex('^.')})
+        )
+        
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={'791': 1, '700': 1}):
+            results.append([bib.id, bib.get_value('791', 'a'), bib.get_xref('700', 'a'), bib.get_value('700', 'a'), bib.get_value('700', 'g')])
+            
+        return results
+    
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -1189,6 +1218,8 @@ class ReportList(object):
         SpeechMismatch('269', '992'), 
         # (17) Missing field - 856
         SpeechMissingField('856'),
+        # (18) 700 - g
+        Speech700g(),
                
         ################ voting category ############
 
