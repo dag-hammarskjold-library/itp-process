@@ -2441,7 +2441,9 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                     table.add_row()
                     table.add_row()
-                    nbrRecPerCol1=nbrRecPerCol1+2
+                    table.add_row()
+
+                    nbrRecPerCol1=nbrRecPerCol1+3
 
                 for meeting1 in year1["meetings"]:
 
