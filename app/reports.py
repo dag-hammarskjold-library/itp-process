@@ -2,6 +2,7 @@ import re
 from warnings import warn
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority, SelectAgendaAuthority
 from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition, Or
+from dlx.file import File, Identifier
 from bson.regex import Regex
 from natsort import natsorted
 from collections import Counter
@@ -357,6 +358,43 @@ class DuplicateAgenda(Report):
                         
         return results
 
+# Missing files
+
+class MissingFiles(Report):
+    def __init__(self):
+        self.name = self.type + '_missing_files'
+        self.title = "Missing files"
+        self.description = self.type.capitalize() + " records where the English version of the file was not found"
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.field_names = ['Symbol']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            Condition('930', {'a': Regex('^' + self.type_code)})
+        )
+        
+        results, seen = [], {}
+        
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1}):
+            symbol = bib.get_value(self.symbol_field, 'a')
+            # ignore "parts"
+            base_symbol = re.split('[\[ ][A-Z]\]?', symbol)[0]
+            
+            if base_symbol in seen:
+                continue
+            
+            if not next(File.find_by_identifier_language(Identifier('symbol', base_symbol), 'EN'), None):
+                results.append([symbol])
+                
+            seen[base_symbol] = True
+                
+        return results
+            
 ### Auth reports
 
 class AgendaList(Report):
@@ -961,7 +999,7 @@ class Speech700g(SpeechReport):
         SpeechReport.__init__(self)
         
         self.name = '700_g'
-        self.title = '700 g'
+        self.title = 'Records with subfield g'
         self.description = 'Records with 700 $g'
         
         self.form_class = SelectAuthority
@@ -985,7 +1023,12 @@ class Speech700g(SpeechReport):
             results.append([bib.id, bib.get_value('791', 'a'), bib.get_xref('700', 'a'), bib.get_value('700', 'a'), bib.get_value('700', 'g')])
             
         return results
-    
+
+class SpeechMissingFiles(SpeechReport, MissingFiles):
+    def __init__(self):
+        SpeechReport.__init__(self)
+        MissingFiles.__init__(self)
+
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -1028,7 +1071,7 @@ class VoteIncorrect992(VoteReport, Incorrect992):
 
 class Vote039_930(VoteReport):
     def __init__(self):
-        SpeechReport.__init__(self)
+        VoteReport.__init__(self)
         
         self.name = f'{self.type}_mismatch_039_930'
         self.title = f'Field mismatch - 039 & 930'
@@ -1058,6 +1101,11 @@ class Vote039_930(VoteReport):
                 
         return results
 
+class VoteMissingFiles(VoteReport, MissingFiles):
+    def __init__(self):
+        VoteReport.__init__(self)
+        MissingFiles.__init__(self)
+    
 ### "Other" reports
 
 class AnyMissingField(Report):
@@ -1136,7 +1184,7 @@ class AnyMissing930(Report):
             results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a'), '; '.join(bib.get_values('930', 'a'))])
             
         return results
-
+    
 ### For use by the main app to access the reports
      
 class ReportList(object):
@@ -1216,8 +1264,8 @@ class ReportList(object):
         SpeechIncorrect992(),
         # (16) Field mismatch - 269 & 992
         SpeechMismatch('269', '992'), 
-        # (17) Missing field - 856
-        SpeechMissingField('856'),
+        # (17) Missing files
+        SpeechMissingFiles(),
         # (18) 700 - g
         Speech700g(),
                
@@ -1241,8 +1289,8 @@ class ReportList(object):
         VoteIncorrect991(),
         # (9) Missing subfield - 991$d
         VoteMissingSubfield('991','d'),
-        # (10) Missing field - 856
-        VoteMissingField('856'),
+        # (10) Missing files
+        VoteMissingFiles(),
 
         #VoteMissingField('930'),
 
