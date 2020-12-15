@@ -3055,9 +3055,34 @@ def itpsor(bodysession):
 
         add_1['ordocno'] = '$495.a'
 
+        add_1['actualsession'] = {
+            '$let': {
+                'vars': {
+                    'sesh': {
+                        '$cond': {
+                            'if': {'$isArray': '$191'}, 
+                            'then': {'$split': [{'$arrayElemAt': ['$191.c', '$primary']}, '/']}, 
+                            'else': {'$split': ['$191.c', '/']}
+                        }
+                    }
+                }, 
+                'in': {
+                    '$cond': {
+                        'if': {'$in': [session, '$$sesh']}, 
+                        'then': 'current', 
+                        'else': 'other'
+                    }
+                }
+            }
+        }
+
         add_stage1 = {}
 
         add_stage1['$addFields'] = add_1
+
+        match_stage2 = {
+            '$match': {'actualsession': 'current'}
+        }
 
         transform = {}
 
@@ -3161,6 +3186,7 @@ def itpsor(bodysession):
 
         pipeline.append(match_stage)
         pipeline.append(add_stage1)
+        pipeline.append(match_stage2)
         pipeline.append(transform_stage)
         pipeline.append(add_stage2)
         pipeline.append(sort_stage)
