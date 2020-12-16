@@ -1242,6 +1242,8 @@ class ReportList(object):
         # SpeechIncompleteAuthority(),
         # (5) Incomplete authorities - subfield g
         SpeechIncompleteAuthSubfieldG(),
+        # (18) 700 - g
+        Speech700g(),
         # (7) Missing field - 991
         SpeechMissingField('991'),
         # (8) Agenda item missing indicator
@@ -1266,8 +1268,7 @@ class ReportList(object):
         SpeechMismatch('269', '992'), 
         # (17) Missing files
         SpeechMissingFiles(),
-        # (18) 700 - g
-        Speech700g(),
+        
                
         ################ voting category ############
 
