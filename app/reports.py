@@ -1,6 +1,6 @@
 import re
 from warnings import warn
-from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority, SelectAgendaAuthority
+from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority, SelectAgendaAuthority, SelectPVRangeAuthority
 from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition, Or
 from dlx.file import File, Identifier
 from bson.regex import Regex
@@ -178,21 +178,19 @@ class IncorrectSession(Report):
                     match = re.match(r'.*ES\-(\d+)', session)
                     if match:
                         session = match.group(1) + 'EMSP'
-                    
-                    #match = re.match(r'\d+\-S', field.get_value('c'))    
-                    #if match:
-                    #    session += 'S'
-                     
+                        
                     bs = body + session
-                    l = len(bs)
-
-                    if field.get_value('r')[0:l] != bs:
-                        row = [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')]
-                        row.insert(0, bib.id)
-                        results.append(row)
                 else:
-                    warn('Body and session not detected in ' + field.get_value('a'))
-                    
+                    # from the user input
+                    bs = body[0:-1] + session    
+                
+                l = len(bs)
+                
+                if field.get_value('r')[0:l] != bs:
+                    row = [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')]
+                    row.insert(0, bib.id)
+                    results.append(row)
+
         return results
 
 ##
@@ -259,11 +257,12 @@ class Incorrect991(Report):
                 found = 0
     
                 for sym in syms:
-                    try:
-                        body, session = _body_session_from_symbol(sym)
-                    except:
-                        warn('Body and session not detected in ' + field.get_value('a'))
-                
+                    if _body_session_from_symbol(sym):
+                        body, session =  _body_session_from_symbol(sym)
+                    else:
+                        # from the user input
+                        body = body[0:-1]
+
                     if aparts[0:2] == [body, session]:                
                         found += 1
         

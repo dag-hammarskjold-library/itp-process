@@ -73,6 +73,11 @@ class SelectAuthority(FlaskForm):
 class SelectAgendaAuthority(FlaskForm):
     authority = StringField('Series symbol or Document symbol (e.g. A/74 or A/74/251)', validators=[DataRequired()])
 
+class SelectPVRangeAuthority(FlaskForm):
+    authority = StringField('Authority number or Series symbol (e.g. 896399 or A/74)')
+    pv_min = StringField('Min PV')
+    pv_max = StringField('Max PV')
+
 class MissingSubfieldReportForm(FlaskForm):
     authority = StringField('Authority ID', validators=[DataRequired()])
     field = SelectField('Field',choices=[
