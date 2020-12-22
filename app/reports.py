@@ -173,13 +173,13 @@ class IncorrectSession(Report):
         for bib in bibset:      
             for field in bib.get_fields(self.symbol_field):
                 if _body_session_from_symbol(field.get_value('a')):
-                    body, session = _body_session_from_symbol(field.get_value('a'))
+                    xbody, xsession = _body_session_from_symbol(field.get_value('a'))
                     
                     match = re.match(r'.*ES\-(\d+)', session)
                     if match:
-                        session = match.group(1) + 'EMSP'
+                        xsession = match.group(1) + 'EMSP'
                         
-                    bs = body + session
+                    bs = xbody + session
                 else:
                     # from the user input
                     bs = body[0:-1] + session    
@@ -258,12 +258,12 @@ class Incorrect991(Report):
     
                 for sym in syms:
                     if _body_session_from_symbol(sym):
-                        body, session =  _body_session_from_symbol(sym)
+                        xbody, xsession =  _body_session_from_symbol(sym)
                     else:
                         # from the user input
-                        body = body[0:-1]
+                        xbody, xsession = body[0:-1], session
 
-                    if aparts[0:2] == [body, session]:                
+                    if aparts[0:2] == [xbody, xsession]:                
                         found += 1
         
                 if found == 0: # and bib.get_value(self.symbol_field, 'a')[:4] != 'S/PV':
