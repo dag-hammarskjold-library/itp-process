@@ -1150,13 +1150,13 @@ class AnyMissingField(Report):
         
         return list(map(lambda row: [row[0], row[1], row[2] + row[3]], results))
 
-class AnyMissing930(Report):
+class VoteAnyMissing930(Report):
     def __init__(self):
         self.name = 'any_missing_930'
         self.tag = '930'
         self.title = 'Missing field - ' + self.tag
         self.description = 'Any records from the given body/session that do not contain a value in 930$a starting with "UND", "ITS", or "VOT".'
-        self.category = "OTHER"
+        self.category = "VOTING"
         self.form_class = SelectAuthority
         
         self.expected_params = ['authority']    
@@ -1183,7 +1183,75 @@ class AnyMissing930(Report):
             results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a'), '; '.join(bib.get_values('930', 'a'))])
             
         return results
+
+class BibAnyMissing930(Report):
+    def __init__(self):
+        self.name = 'any_missing_930'
+        self.tag = '930'
+        self.title = 'Missing field - ' + self.tag
+        self.description = 'Any records from the given body/session that do not contain a value in 930$a starting with "UND", "ITS", or "VOT".'
+        self.category = "BIB"
+        self.form_class = SelectAuthority
+        
+        self.expected_params = ['authority']    
+        self.field_names = ['Record ID', 'Document Symbol', '930$a']
+        
+    def execute(self, args):
+        self.validate_args(args)
     
+        body,session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Or(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('791', {'b': body, 'c': session})
+            ),
+            Condition('040', {'a': 'NNUN'}),
+            Condition('040', {'a': 'DHC'}, modifier='not'),
+            Condition('930', {'a': Regex('^(UND|ITS|VOT)')}, modifier='not')
+        )
+
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={'191': 1, '791': 1, '930': 1}):
+            results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a'), '; '.join(bib.get_values('930', 'a'))])
+            
+        return results
+
+class SpeechAnyMissing930(Report):
+    def __init__(self):
+        self.name = 'any_missing_930'
+        self.tag = '930'
+        self.title = 'Missing field - ' + self.tag
+        self.description = 'Any records from the given body/session that do not contain a value in 930$a starting with "UND", "ITS", or "VOT".'
+        self.category = "SPEECH"
+        self.form_class = SelectAuthority
+        
+        self.expected_params = ['authority']    
+        self.field_names = ['Record ID', 'Document Symbol', '930$a']
+        
+    def execute(self, args):
+        self.validate_args(args)
+    
+        body,session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Or(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('791', {'b': body, 'c': session})
+            ),
+            Condition('040', {'a': 'NNUN'}),
+            Condition('040', {'a': 'DHC'}, modifier='not'),
+            Condition('930', {'a': Regex('^(UND|ITS|VOT)')}, modifier='not')
+        )
+
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={'191': 1, '791': 1, '930': 1}):
+            results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a'), '; '.join(bib.get_values('930', 'a'))])
+            
+        return results
+
 ### For use by the main app to access the reports
      
 class ReportList(object):
@@ -1207,18 +1275,20 @@ class ReportList(object):
         BibDuplicateAgenda(),
         # (7) Agenda item misisng indicator
         BibMissingAgendaIndicator(),
-        # (8) Incorrect field - 991
+        # (8) Missing field - 930
+        BibAnyMissing930(),
+        # (9) Incorrect field - 991
         BibIncorrect991(),
-        # (9) Missing subfield - 991$d
+        # (10) Missing subfield - 991$d
         #BibMissingSubfield991_d(),
         BibMissingSubfield('991', 'd'),
-        # (10) Missing field - 992
+        # (11) Missing field - 992
         BibMissingField('992'),
-        # (11) Incorrect field - 793 (Committees)
+        # (12) Incorrect field - 793 (Committees)
         BibIncorrect793Comm(),
-        # (12) Incorrect field - 793 (Plenary)
+        # (13) Incorrect field - 793 (Plenary)
         BibIncorrect793Plen(),
-        # (13) Missing subfield value - 991$f X27
+        # (14) Missing subfield value - 991$f X27
         BibMissingSubfieldValue('991', 'f', 'X27'),
         
         # Missing field - 793
@@ -1241,31 +1311,34 @@ class ReportList(object):
         # SpeechIncompleteAuthority(),
         # (5) Incomplete authorities - subfield g
         SpeechIncompleteAuthSubfieldG(),
-        # (18) 700 - g
+        # (6) 700 - g
         Speech700g(),
-        # (7) Missing field - 991
-        SpeechMissingField('991'),
-        # (8) Agenda item missing indicator
-        SpeechMissingAgendaIndicator(),
-        # (9) Incorrect field - 991
-        SpeechIncorrect991(),
-        # (10) Duplicate agenda item
-        SpeechDuplicateAgenda(),
-        # (11) Missing subfield - 991$d
-        SpeechMissingSubfield('991','d'),
-        #SpeechMissingField('930'),
-        # (12) Missing field - 039
+        # (7) Missing field - 039
         SpeechMissingField('039'),
-        # (13) Field mismatch - 039 & 930
+        # (8) Missing field - 930
+        SpeechAnyMissing930(),
+        # (9) Field mismatch - 039 & 930
         #SpeechMismatch('039', '930'),
         Speech039_930(),
-        # (14) Missing field - 992
+        # (10) Missing field - 991
+        SpeechMissingField('991'),
+        # (11) Agenda item missing indicator
+        SpeechMissingAgendaIndicator(),
+        # (12) Incorrect field - 991
+        SpeechIncorrect991(),
+        # (13) Duplicate agenda item
+        SpeechDuplicateAgenda(),
+        # (14) Missing subfield - 991$d
+        SpeechMissingSubfield('991','d'),
+        #SpeechMissingField('930'),
+        
+        # (15) Missing field - 992
         SpeechMissingField('992'),
-        # (15) Incorrect field - 992
+        # (16) Incorrect field - 992
         SpeechIncorrect992(),
-        # (16) Field mismatch - 269 & 992
+        # (17) Field mismatch - 269 & 992
         SpeechMismatch('269', '992'), 
-        # (17) Missing files
+        # (18) Missing files
         SpeechMissingFiles(),
         
                
@@ -1275,21 +1348,23 @@ class ReportList(object):
         VoteIncorrectSession(),
         # (2) Missing field - 039
         VoteMissingField('039'),
-        # (3) Field mismatch - 039 & 930
+        # (3) Missing field - 930
+        VoteAnyMissing930(),
+        # (4) Field mismatch - 039 & 930
         VoteMismatch('039', '930'),
-        # (4) Missing field - 992
+        # (5) Missing field - 992
         VoteMissingField('992'),
-        # (5) Incorrect field - 992
+        # (6) Incorrect field - 992
         VoteIncorrect992(),
-        # (6) Field mismatch - 269 & 992
+        # (7) Field mismatch - 269 & 992
         VoteMismatch('269', '992'),
-        # (7) Missing field - 991
+        # (8) Missing field - 991
         VoteMissingField('991'),
-        # (8) Incorrect field - 991
+        # (9) Incorrect field - 991
         VoteIncorrect991(),
-        # (9) Missing subfield - 991$d
+        # (10) Missing subfield - 991$d
         VoteMissingSubfield('991','d'),
-        # (10) Missing files
+        # (11) Missing files
         VoteMissingFiles(),
 
         #VoteMissingField('930'),
@@ -1298,8 +1373,7 @@ class ReportList(object):
         
         # (1) Agenda List
         AgendaList(), 
-        # (2) Missing field - 930
-        AnyMissing930(),
+        
         # Missing field - any
         # Missing subfield - any
     ]
