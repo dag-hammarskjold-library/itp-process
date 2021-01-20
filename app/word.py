@@ -1,3 +1,4 @@
+from __future__ import division
 from docx import Document
 from docx.shared import Inches
 from pymongo import MongoClient
@@ -24,10 +25,64 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_ROW_HEIGHT_RULE
 from docx.enum.section import WD_ORIENT
+from docx.enum.text import WD_LINE_SPACING
 import itertools
+import math
+
 
 s3_client = boto3.client('s3')
 
+def create_element(name):
+    return OxmlElement(name)
+
+
+def create_attribute(element, name, value):
+    element.set(qn(name), value)
+
+
+def add_page_number(paragraph):
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    page_run = paragraph.add_run()
+    t1 = create_element('w:t')
+    create_attribute(t1, 'xml:space', 'preserve')
+    t1.text = '-'
+    page_run._r.append(t1)
+
+    font = page_run.font
+    font.name="Arial"
+    font.size= Pt(8)
+
+    page_num_run = paragraph.add_run()
+
+    fldChar1 = create_element('w:fldChar')
+    create_attribute(fldChar1, 'w:fldCharType', 'begin')
+
+    instrText = create_element('w:instrText')
+    create_attribute(instrText, 'xml:space', 'preserve')
+    instrText.text = "PAGE"
+
+    fldChar2 = create_element('w:fldChar')
+    create_attribute(fldChar2, 'w:fldCharType', 'end')
+
+    page_num_run._r.append(fldChar1)
+    page_num_run._r.append(instrText)
+    page_num_run._r.append(fldChar2)
+    
+    font = page_num_run.font
+    font.name="Arial"
+    font.size= Pt(8)
+
+    of_run = paragraph.add_run()
+    t2 = create_element('w:t')
+    create_attribute(t2, 'xml:space', 'preserve')
+    t2.text = '-'
+    of_run._r.append(t2)
+
+    font = of_run.font
+    font.name="Arial"
+    font.size= Pt(8)
+    
 
 def add_hyperlink1(paragraph,text, url):
     # This gets access to the document.xml.rels file and gets a new relation id value
@@ -317,6 +372,7 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
             paragraph_format = p.paragraph_format
             paragraph_format.line_spacing =  1.5
 
+    add_page_number(document.sections[0].footer.paragraphs[0])
     return document
 
 
@@ -579,7 +635,11 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
         # Force a new line before next heading
         p2.add_run("\n")
 
+
+    add_page_number(document.sections[0].footer.paragraphs[0])
+
     return document
+
 
   
 def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
@@ -836,6 +896,7 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
         # Force a new line before next heading
         p2.add_run("\n")
   
+    add_page_number(document.sections[0].footer.paragraphs[0])
     return document    
 
 
@@ -1095,7 +1156,8 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
                 
         # Force a new line before next heading
         p2.add_run("\n")
- 
+    
+    add_page_number(document.sections[0].footer.paragraphs[0])
     return document  
 
 def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
@@ -1444,6 +1506,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
                     font.size= Pt(7)
 
     # Save the document
+    add_page_number(document.sections[0].footer.paragraphs[0])
     return document  
 
 def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
@@ -2030,6 +2093,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     # paragraph_format.keep_together = True
                     # paragraph_format.keep_with_next = True
 
+    add_page_number(document.sections[0].footer.paragraphs[0])
     return document    
 
 
@@ -2189,7 +2253,7 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
                 p3.add_run(doc)
                 p3.add_run("\n")
                     
-
+    add_page_number(document.sections[0].footer.paragraphs[0])
     return document
 
 def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
@@ -2359,7 +2423,8 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                         font = run.font
                         font.name="Arial"
                         font.size= Pt(8)
-
+        
+        add_page_number(document.sections[0].footer.paragraphs[0])
         return document
     
 
@@ -2540,6 +2605,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                             font.name="Arial"
                             font.size= Pt(8)
 
+        add_page_number(document.sections[0].footer.paragraphs[0])
         return document
 
     # if (bodysession[0]=="A"):
@@ -2747,7 +2813,7 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     styles = document.styles
     new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
-    new_heading_style.base_style = styles['Heading 1']
+    # new_heading_style.base_style = styles['Heading 1']
     
     # Font settings
     
@@ -2756,6 +2822,10 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     font.size = Pt(12)
     font.bold = True
     font.color.rgb = RGBColor(0, 0, 0)
+
+    # Adding the header to the document
+    
+    header=document.sections[0].header
     
 
     ################## SORTITLE ###############################################
@@ -2841,24 +2911,97 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Line spacing
     
     pfSorentry.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+
+    ################## see2 ###############################################
+    
+    stlSee = document.styles.add_style('see2', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSeeFont=stlSee.font
+    stlSeeFont.italic=True
+    stlSeeFont.name = 'Arial'
+    stlSeeFont.size = Pt(8)
+
+    pformat=stlSee.paragraph_format
+    pformat.space_after=Pt(5)
+    pformat.left_indent=Cm(1.52)
+    pformat.first_line_indent=Inches(-0.58)
+ 
+
+    ################## title2 ###############################################
+    
+    stlTitle2 = document.styles.add_style('title2', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name and size
+    
+    stlTitle2Font=stlTitle2.font
+    stlTitle2Font.name = 'Arial'
+    stlTitle2Font.size = Pt(8)
+
+    # others formatting
+    
+    pformat=stlTitle2.paragraph_format
+    pformat.space_before=Pt(0)
+    pformat.space_after=Pt(1)
+    pformat.left_indent=Cm(1.52)
+    pformat.first_line_indent=Inches(-0.30)
+
+    ################## subagenda2 ###############################################
+    
+    stlSubagenda2 = document.styles.add_style('subagenda2', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name and size
+    
+    stlSubagenda2Font=stlSubagenda2.font
+    stlSubagenda2Font.name = 'Arial'
+    stlSubagenda2Font.size = Pt(8)
+
+    # others formatting
+    
+    pformat=stlSubagenda2.paragraph_format
+    pformat.space_before=Pt(0)
+    pformat.space_after=Pt(2)
+    pformat.left_indent=Cm(2.29)
+    pformat.first_line_indent=Inches(-0.58)
+
+    ################## mysubject ###############################################
+    
+    stlMysubject2 = document.styles.add_style('mysubject2', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name and size
+    
+    stlMysubject2Font=stlMysubject2.font
+    stlMysubject2Font.name = 'Arial'
+    stlMysubject2Font.size = Pt(8)
+
+    # others formatting
+    
+    pformat=stlMysubject2.paragraph_format
+    pformat.space_before=Pt(0)
+    pformat.space_after=Pt(5)
+    pformat.left_indent=Cm(2.25)
+    pformat.first_line_indent=Inches(-0.58)
      
     ################## WRITING THE DOCUMENT ###############################################
     
     # Adding the Header to the document
     
-    myRecords=setOfData
 
-    p=document.add_paragraph(myTitle.upper(), style='New Heading')
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    section = document.sections[0]
-    sectPr = section._sectPr
-    cols = sectPr.xpath('./w:cols')[0]
-    cols.set(qn('w:num'),'1')
 
     ### SECURITY COUNCIL ##########
 
     if (bodysession[0]=="S"):
+
+        myRecords=setOfData
+
+        p=document.add_paragraph(myTitle.upper(), style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        section = document.sections[0]
+        sectPr = section._sectPr
+        cols = sectPr.xpath('./w:cols')[0]
+        cols.set(qn('w:num'),'1')
         
         p1=document.add_paragraph("", style='sornotetitle')
         p1.add_run("The Council's practice is to adopt at each meeting, on the basis of a provisional agenda circulated in advance, the agenda for that meeting. At subsequent meetings an item may appear in its original form or with the addition of such sub-items as the Council may decide to include. Once included in the agenda, an item remains on the list of matters of which the Council is seized, until the Council agrees to its removal.")
@@ -2929,56 +3072,113 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
             p.add_run("\n")
             p.add_run("\n")
 
-
+        add_page_number(document.sections[0].footer.paragraphs[0])
         return document
 
-    ### ECOSOC ##########
+    ########## ECOSOC ##########
 
     if (bodysession[0]=="E"):
 
-        p=document.add_paragraph("")
-        p.add_run("\n")
-        p.add_run("\n")
+        myRecords=setOfData
 
-        pformat = p.paragraph_format
-        pformat.right_indent = Inches(0)
-        
+        p=header.add_paragraph(myTitle.upper(), style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        section = document.sections[0]
+        sectPr = section._sectPr
+        cols = sectPr.xpath('./w:cols')[0]
+        cols.set(qn('w:num'),'1')
 
         for record in myRecords:  
-            # display management
+      
+            # Display management
             
+            if record["heading"]=="AGENDA":
+
+                # Selection of the agenda object
+                for myAgenda in record["agendas"]:
+
+                    # Selection of the agendanum value
+                    myAgendaNum=myAgenda["agendanum"]
+
+                    # Selection of the text object
+                    alreadyDisplayText=False
+                    alreadyDisplayNum=False
+                    alreadyDisplaySee=False
+                    for myText in myAgenda["text"]:
+
+                        # Selection of the subagenda value
+                        if myText["subagenda"]:
+                            mySubAgenda=myText["subagenda"].strip()
+
+                        # Selection of the agendatext value
+                        for myAgendaText in myText["agendatext"]:
+
+                            # Selection of the title value
+                            if myAgendaText["title"]:
+                                myTitle=myAgendaText["title"].strip()
+
+                            if alreadyDisplayNum==False:
+                                if int(myAgendaNum)<10 :
+                                    p=document.add_paragraph(myAgendaNum+"."+"       ",style="title2")
+                                else:
+                                    p=document.add_paragraph(myAgendaNum+"."+"     ",style="title2")    
+                                run=p.add_run(myTitle)
+                                alreadyDisplayNum=True
+                                
+                            else:
+
+                                if len(myAgenda["text"])!=1:
+                                    p=document.add_paragraph("         ("+  mySubAgenda    +")     ",style="subagenda2")   
+                                    run=p.add_run(myTitle)
+
+                            
+                            # Selection of the subject value
+                            alreadyDisplayMultipleSee=False
+                            for mySubject in myAgendaText["subjects"]:
+                                if mySubject:
+                                    if alreadyDisplaySee==False:
+                                        if len(myAgenda["text"])==1:
+                                            p=document.add_paragraph("\t"+"See:  ",style='see2') 
+                                            run=p.add_run(mySubject.strip())
+                                            run.font.italic=False
+                                            alreadyDisplaySee=True
  
-            for myAgenda in record["agendas"]:
-                alreadyDisplay=False
-                for myText in myAgenda["text"]:
-                    
-                    for myAgendaText in myText["agendatext"]:
-                        if alreadyDisplay==False:
-                            run=p.add_run(myAgenda["agendanum"]+"."+"      "+myAgendaText["title"]+"\n")
-                            alreadyDisplay=True
-                        for mySubject in myAgendaText["subjects"]:
-                            run=p.add_run("\t"+mySubject.strip())
-                            run=p.add_run("\n")
-                        run=p.add_run("\n")
-            
+                                        else:
+                                            # here see + () header
+                                            p=document.add_paragraph("                   See:  ",style="see2")
+                                            run=p.add_run(mySubject.strip()) 
+                                            run.font.italic=False
+                                            alreadyDisplaySee=True
+                                    
+                                    else:
+                                        
+                                        # normal scenario
+                                        if len(myAgenda["text"])==1:
+                                            ####### yls
+                                            p=document.add_paragraph("                   "+mySubject.strip(),style="mysubject2")  
+                                            
+                                        else :
+                                            # here see + () contents
+                                            if alreadyDisplayMultipleSee==False :
+                                                p=document.add_paragraph("                            See:   ",style="see2")
+                                                run=p.add_run(mySubject.strip()) # 17 spaces
+                                                run.font.italic=False
+                                                alreadyDisplayMultipleSee=True
 
+                                            else: 
+                                                p=document.add_paragraph("                             "+mySubject.strip(),style="mysubject2")
 
-        # Global formatting of the document
-
-        for paragraph in document.paragraphs:
-            for run in paragraph.runs:
-                font = run.font
-                font.name="Arial"
-                font.size= Pt(8)
 
         sections = document.sections
         for section in sections:
             section.top_margin = Cm(3)
-            section.bottom_margin = Cm(0.5)
+            section.bottom_margin = Cm(3)
             section.left_margin = Cm(3)
             section.right_margin = Cm(1)
-    
-        return document
+
+    add_page_number(document.sections[0].footer.paragraphs[0])
+    return document
 
 
 def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
@@ -3254,4 +3454,5 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
             myCol = myCol + 1
 
+    add_page_number(document.sections[0].footer.paragraphs[0])
     return document
