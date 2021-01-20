@@ -46,7 +46,7 @@ def add_page_number(paragraph):
     page_run = paragraph.add_run()
     t1 = create_element('w:t')
     create_attribute(t1, 'xml:space', 'preserve')
-    t1.text = '-'
+    t1.text = '- '
     page_run._r.append(t1)
 
     font = page_run.font
@@ -76,7 +76,7 @@ def add_page_number(paragraph):
     of_run = paragraph.add_run()
     t2 = create_element('w:t')
     create_attribute(t2, 'xml:space', 'preserve')
-    t2.text = '-'
+    t2.text = ' -'
     of_run._r.append(t2)
 
     font = of_run.font
