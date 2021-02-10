@@ -1646,14 +1646,14 @@ def itpage(bodysession):
 
         bs = bodysession.split("/")
         body = bs[0]
-        session = bs[1]
+        #session = bs[1]
 
-        if body == "A":
-            match_criteria = "A/" + session + "/251"
+        # if body == "A":
+        #     match_criteria = "A/" + session + "/251"
         
-        if body == "E":
-            year = session.split("-")
-            match_criteria = "E/" + year[0] + "/100"
+        # if body == "E":
+        #     year = session.split("-")
+        #     match_criteria = "E/" + year[0] + "/100"
         
         if body == "S":
             match_stage1 = {
@@ -1755,45 +1755,42 @@ def itpage(bodysession):
             match_stage1 = {
                 '$match': {
                     'bodysession': bodysession, 
-                    '$or': [
-                        {'record_type': {'$eq': 'ITS'}}, 
-                        {'record_type': {'$eq': 'BIB'}}
-                    ]
-                }
+                    'record_type': 'AUTH'
+                    }     
             }
 
-            unwind_stage = {'$unwind': '$991'}
+            # unwind_stage = {'$unwind': '$991'}
 
-            match_stage2 = {
-                '$match': {
-                    '991.a': match_criteria
-                }
-            }
+            # match_stage2 = {
+            #     '$match': {
+            #         '991.a': match_criteria
+            #     }
+            # }
 
             add_1 = {}
 
             add_1['agendaitem'] = {
                 '$cond': {
-                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
-                    'then': '$991.b', 
-                    'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+                    'if': {'$eq': [{'$indexOfCP': ['$191.b', '[']}, -1]}, 
+                    'then': '$191.b', 
+                    'else': {'$substrCP': ['$191.b', 0, {'$indexOfCP': ['$191.b', '[']}]}
                 }
             }
 
             add_1['agendatitle'] = {
                 '$cond': {
-                    'if': '$991.c', 
-                    'then': '$991.c', 
+                    'if': '$191.c', 
+                    'then': '$191.c', 
                     'else': ''
                 }
             }
 
             add_1['agendasubject'] = {
                 '$cond': {
-                    'if': '$991.d', 
+                    'if': '$191.d', 
                     'then': {
                         '$replaceAll': {
-                            'input': '$991.d', 
+                            'input': '$191.d', 
                             'find': '--', 
                             'replacement': '—'
                         }
@@ -1881,7 +1878,19 @@ def itpage(bodysession):
             
             transform['sortkey2'] = '$_id.b'
 
-            transform['sortkey3'] = '$_id.d'
+            transform['sortkey3'] = {
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': '$_id.d', 
+                            'find': '. ', 
+                            'replacement': ' .'
+                        }
+                    }, 
+                    'find': '—', 
+                    'replacement': ' $'
+                }
+            }
 
             transform_stage = {}
             transform_stage['$project'] = transform
@@ -1889,7 +1898,8 @@ def itpage(bodysession):
             sort_stage = {
                 '$sort': {
                     'sortkey1': 1, 
-                    'sortkey2': 1
+                    'sortkey2': 1,
+                    'sortkey3': 1
                 }
             }
         
@@ -1898,8 +1908,8 @@ def itpage(bodysession):
             }
 
             pipeline.append(match_stage1)
-            pipeline.append(unwind_stage)
-            pipeline.append(match_stage2)
+            #pipeline.append(unwind_stage)
+            #pipeline.append(match_stage2)
             pipeline.append(add_stage1)
             pipeline.append(add_stage2)
             pipeline.append(add_stage3)
