@@ -1638,6 +1638,7 @@ def itpage(bodysession):
         outputCollection.delete_many({ "section" : "itpage", "bodysession" : bodysession } )
         
         pipeline = []
+        pipeline2 = []
 
         collation={
             'locale': 'en', 
@@ -1646,14 +1647,14 @@ def itpage(bodysession):
 
         bs = bodysession.split("/")
         body = bs[0]
-        #session = bs[1]
+        session = bs[1]
 
-        # if body == "A":
-        #     match_criteria = "A/" + session + "/251"
+        if body == "A":
+            match_criteria = "A/" + session + "/251"
         
-        # if body == "E":
-        #     year = session.split("-")
-        #     match_criteria = "E/" + year[0] + "/100"
+        if body == "E":
+            year = session.split("-")
+            match_criteria = "E/" + year[0] + "/100"
         
         if body == "S":
             match_stage1 = {
@@ -1752,20 +1753,14 @@ def itpage(bodysession):
             group_itpage_S("itpage", bodysession)
 
         else: #A or E
+            #### Insert Agenda records from AUTHs for records without []
             match_stage1 = {
                 '$match': {
                     'bodysession': bodysession, 
-                    'record_type': 'AUTH'
+                    'record_type': 'AUTH',
+                    '191.b': {'$not': {'$regex': '\\['}}
                     }     
             }
-
-            # unwind_stage = {'$unwind': '$991'}
-
-            # match_stage2 = {
-            #     '$match': {
-            #         '991.a': match_criteria
-            #     }
-            # }
 
             add_1 = {}
 
@@ -1908,8 +1903,6 @@ def itpage(bodysession):
             }
 
             pipeline.append(match_stage1)
-            #pipeline.append(unwind_stage)
-            #pipeline.append(match_stage2)
             pipeline.append(add_stage1)
             pipeline.append(add_stage2)
             pipeline.append(add_stage3)
@@ -1917,8 +1910,77 @@ def itpage(bodysession):
             pipeline.append(transform_stage)
             pipeline.append(sort_stage)
             pipeline.append(merge_stage)
-
+            
+            #print(pipeline)
             inputCollection.aggregate(pipeline, collation=collation)
+
+            #### Insert Agenda records from BIBSs for records with []
+
+            match_stage1 = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    'record_type': 'BIB'
+                    }     
+            }
+
+            unwind_stage = {'$unwind': '$991'}
+
+            match_stage2 = {
+                '$match': {
+                    '991.a': match_criteria,
+                    '991.b': {'$regex': '\\['}
+                }
+            }
+
+            add_1 = {}
+
+            add_1['agendaitem'] = {
+                '$cond': {
+                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                    'then': '$191.b', 
+                    'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+                }
+            }
+
+            add_1['agendatitle'] = {
+                '$cond': {
+                    'if': '$991.c', 
+                    'then': '$991.c', 
+                    'else': ''
+                }
+            }
+
+            add_1['agendasubject'] = {
+                '$cond': {
+                    'if': '$991.d', 
+                    'then': {
+                        '$replaceAll': {
+                            'input': '$991.d', 
+                            'find': '--', 
+                            'replacement': '—'
+                        }
+                    }, 
+                    'else': ''
+                }
+            }
+
+            add_stage1 = {}
+
+            add_stage1['$addFields'] = add_1
+
+            pipeline2.append(match_stage1)
+            pipeline2.append(unwind_stage)
+            pipeline2.append(match_stage2)
+            pipeline2.append(add_stage1)
+            pipeline2.append(add_stage2)
+            pipeline2.append(add_stage3)
+            pipeline2.append(group_stage)
+            pipeline2.append(transform_stage)
+            pipeline2.append(sort_stage)
+            pipeline2.append(merge_stage)
+
+            #print(pipeline2)
+            inputCollection.aggregate(pipeline2, collation=collation)
             group_itpage_AE("itpage", bodysession)
 
             #print(pipeline)
@@ -2596,6 +2658,8 @@ def itpmeet(bodysession):
 
         group_itpmeet("itpmeet", bodysession)
 
+        return "itpmeet completed successfully"
+
     except Exception as e:
         return e
 
@@ -2607,33 +2671,148 @@ def itpreps(bodysession):
     Builds the aggregation query and inserts the results into another collection.
     """ 
     try: 
+        outputCollection.delete_many({ "section" : "itpreps", "bodysession" : bodysession } )
+        
         pipeline = []
 
         bs = bodysession.split("/")
         body = bs[0]
+        session = bs[1]
 
-        match_stage = {}
-        unwind_stage = {}
+        collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
+
+        match_stage1 = {
+            '$match': {
+                'bodysession': bodysession, 
+                'record_type': 'BIB', 
+                '089.b': 'B04'
+                }
+        }
         
+        unwind_stage1 = {'$unwind': '$191'}
+
+        unwind_stage2 = {'$unwind': '$991'}
+        
+        match_stage2 = {
+            '$match': {
+                '191.b': body + '/', 
+                '191.c': session, 
+                '$or': [
+                    {'191.9': 'G09'}, 
+                    {'191.9': 'G1A'}, 
+                    {'191.9': 'G11'}, 
+                    {'191.9': 'G14'}, 
+                    {'191.9': 'G22'}, 
+                    {'191.9': 'G33'}, 
+                    {'191.9': 'G55'}, 
+                    {'191.9': 'G66'}
+                ]
+            }
+        }
+
         transform = {}
         transform['_id'] = 0
         transform['record_id'] = 1
         transform['section'] = "itpreps"
         transform['bodysession'] = 1
 
+        transform['docsymbol'] = '$191.a'
+        
+        transform['subject'] = {
+            '$replaceAll': {
+                'input': '$991.d', 
+                'find': '--', 
+                'replacement': '–'
+            }
+        }
+
+        transform['committee'] = {
+            '$switch': {
+                'branches': [
+                    {'case': {'$eq': ['$191.9', 'G09']}, 
+                        'then': 'CREDENTIALS COMMITTEE'}, 
+                    {'case': {'$eq': ['$191.9', 'G1A']}, 
+                        'then': 'GENERAL COMMITTEE'}, 
+                    {'case': {'$eq': ['$191.9', 'G11']}, 
+                        'then': 'DISARMAMENT AND INTERNATIONAL SECURITY COMMITTEE (FIRST COMMITTEE)'}, 
+                    {'case': {'$eq': ['$191.9', 'G14']}, 
+                        'then': 'SPECIAL POLITICAL AND DECOLONIZATION COMMITTEE (FOURTH COMMITTEE)'}, 
+                    {'case': {'$eq': ['$191.9', 'G22']}, 
+                        'then': 'ECONOMIC AND FINANCIAL COMMITTEE (SECOND COMMITTEE)'}, 
+                    {'case': {'$eq': ['$191.9', 'G33']}, 
+                        'then': 'SOCIAL, HUMANITARIAN AND CULTURAL COMMITTEE (THIRD COMMITTEE)'}, 
+                    {'case': {'$eq': ['$191.9', 'G55']}, 
+                        'then': 'ADMINISTRATIVE AND BUDGETARY COMMITTEE (FIFTH COMMITTEE)'}, 
+                    {'case': {'$eq': ['$191.9', 'G66']}, 
+                        'then': 'LEGAL COMMITTEE (SIXTH COMMITTEE)'}
+                ], 
+                'default': 'Not found'
+            }
+        }
+
+        transform['sortkey1'] = {
+            '$switch': {
+                'branches': [
+                    {'case': {'$eq': ['$191.9', 'G09']}, 'then': '01'}, 
+                    {'case': {'$eq': ['$191.9', 'G1A']}, 'then': '02'}, 
+                    {'case': {'$eq': ['$191.9', 'G11']}, 'then': '03'}, 
+                    {'case': {'$eq': ['$191.9', 'G14']}, 'then': '04'}, 
+                    {'case': {'$eq': ['$191.9', 'G22']}, 'then': '05'}, 
+                    {'case': {'$eq': ['$191.9', 'G33']}, 'then': '06'}, 
+                    {'case': {'$eq': ['$191.9', 'G55']}, 'then': '07'}, 
+                    {'case': {'$eq': ['$191.9', 'G66']}, 'then': '08'}
+                ], 
+                'default': 'Not found'
+            }
+        }
+
+        transform['sortkey2'] = {
+            '$replaceAll': {
+                'input': {
+                    '$replaceAll': {
+                        'input': '$991.d', 
+                        'find': '. ', 
+                        'replacement': ' .'
+                    }
+                }, 
+                'find': '--', 
+                'replacement': ' $'
+            }
+        }
+
+        transform['sortkey3'] = '$191.a'
+
         transform_stage = {}
         transform_stage['$project'] = transform
+
+        sort_stage = {
+            '$sort': {
+                'sortkey1': 1, 
+                'sortkey2': 1, 
+                'sortkey3': 1
+            }
+        }
 
         merge_stage = {
             '$merge': { 'into': editorOutput}
         }
 
-        pipeline.append(match_stage)
-        pipeline.append(unwind_stage)
+        pipeline.append(match_stage1)
+        pipeline.append(unwind_stage1)
+        pipeline.append(unwind_stage2)
+        pipeline.append(match_stage2)
         pipeline.append(transform_stage)
+        pipeline.append(sort_stage)
         pipeline.append(merge_stage)
 
-        inputCollection.aggregate(pipeline)
+        inputCollection.aggregate(pipeline, collation=collation)
+
+        group_itpreps("itpreps", bodysession)
+
+        return "itpreps completed successfully"
 
     except Exception as e:
         return e
@@ -2865,6 +3044,8 @@ def itpvot(bodysession):
         copyPipeline.append(copyMerge_stage)
 
         outputCollection.aggregate(copyPipeline)
+
+        return "itpvot completed successfully"
 
     except Exception as e:
         return e
@@ -3250,7 +3431,8 @@ def process_section(bodysession, section):
     Executes sections based on input.
 
     """ 
-    
+    bs = bodysession.split("/")
+    body = bs[0]
 
     if section == "itpsubj" : 
         s = itpsubj(bodysession) #subject index 
@@ -3268,14 +3450,14 @@ def process_section(bodysession, section):
         s = itpmeet(bodysession) #meeting
     elif section == "itpres" : 
         s = itpres(bodysession) #list of resolutions
-    elif section == "itpvot" : 
+    elif section == "itpvot" and body != "E": 
         s = itpvot(bodysession) #vote
-    elif section == "itpsor" : 
+    elif section == "itpsor" and body != "S": 
         s = itpsor(bodysession) #suppliments to official records
-    elif section == "itpreps": 
+    elif section == "itpreps" and body == "A": 
         s = itpreps(bodysession) #reports
     else: 
-        s = "No Section Selected"
+        s = section + ": This section cannot be executed for this body (" + body + ")."
 
     print(section, ": " , s)
 
@@ -3898,6 +4080,14 @@ def group_itpage_AE(section, bodysession):
         }
     }
 
+    sort_stage0 = {
+        '$sort': {
+            'sortkey1': 1, 
+            'sortkey2': 1, 
+            'sortkey3': 1
+        }
+    }
+
     group_stage1 = {
         '$group': {
             '_id': {
@@ -3978,11 +4168,19 @@ def group_itpage_AE(section, bodysession):
         }
     }
 
+    ##
+    sort_stage3 = {
+        '$sort': {
+            'heading': 1
+        }
+    }
+
     merge_stage = {
         '$merge': { 'into': wordOutput}
     }
     
     pipeline.append(match_stage)
+    pipeline.append(sort_stage0)
     pipeline.append(group_stage1)
     pipeline.append(group_stage2)
     pipeline.append(sort_stage1)
@@ -3990,9 +4188,102 @@ def group_itpage_AE(section, bodysession):
     pipeline.append(sort_stage2)
     pipeline.append(group_stage4)
     pipeline.append(project_stage)
+    pipeline.append(sort_stage3)
     pipeline.append(merge_stage)
 
     outputCollection.aggregate(pipeline, collation=collation)
+
+def group_itpreps(section, bodysession):
+    
+    clear_section(section, bodysession)
+
+    pipeline = []
+
+    match_stage = {
+        '$match': {
+            'bodysession': bodysession, 
+            'section': section
+        }
+    }
+
+    sort_stage1 = {
+        '$sort': {
+            'sortkey1': 1, 
+            'sortkey2': 1, 
+            'sortkey3': 1
+        }
+    }
+
+    group_stage1 = {
+        '$group': {
+            '_id': {
+                'committee': '$committee', 
+                'subject': '$subject', 
+                'sortkey1': '$sortkey1', 
+                'sortkey2': '$sortkey2'
+            }, 
+            'docsymbols': {
+                '$push': '$docsymbol'
+            }
+        }
+    } 
+    
+    sort_stage2 = {
+        '$sort': {
+            '_id.sortkey1': 1, 
+            '_id.sortkey2': 1
+        }
+    }
+    
+    group_stage2 = {
+        '$group': {
+            '_id': {
+                'committee': '$_id.committee', 
+                'sortkey1': '$_id.sortkey1'
+            }, 
+            'subjects': {
+                '$push': {
+                    'subject': '$_id.subject', 
+                    'docsymbols': '$docsymbols'
+                }
+            }
+        }
+    } 
+    
+    sort_stage3 = {
+        '$sort': {
+            '_id.sortkey1': 1
+        }
+    } 
+    
+    project_stage = {
+        '$project': {
+            '_id': 0, 
+            'committee': '$_id.committee', 
+            'subjects': 1,
+            'bodysession': bodysession, 
+            'section': section,
+        }
+    }
+
+    merge_stage = {
+        '$merge': { 'into': wordOutput}
+    }
+
+    pipeline.append(match_stage)
+    pipeline.append(sort_stage1)
+    pipeline.append(group_stage1)
+    pipeline.append(sort_stage2)
+    pipeline.append(group_stage2)
+    pipeline.append(sort_stage3)
+    pipeline.append(project_stage)
+    pipeline.append(merge_stage)
+
+    outputCollection.aggregate(pipeline, collation={
+            'locale': 'en', 
+            'numericOrdering': True,
+        })
+
 
 def insert_itpsor(section, bodysession):
     pipeline = []
