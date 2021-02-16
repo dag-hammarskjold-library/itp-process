@@ -1638,6 +1638,7 @@ def itpage(bodysession):
         outputCollection.delete_many({ "section" : "itpage", "bodysession" : bodysession } )
         
         pipeline = []
+        pipeline2 = []
 
         collation={
             'locale': 'en', 
@@ -1646,14 +1647,14 @@ def itpage(bodysession):
 
         bs = bodysession.split("/")
         body = bs[0]
-        #session = bs[1]
+        session = bs[1]
 
-        # if body == "A":
-        #     match_criteria = "A/" + session + "/251"
+        if body == "A":
+            match_criteria = "A/" + session + "/251"
         
-        # if body == "E":
-        #     year = session.split("-")
-        #     match_criteria = "E/" + year[0] + "/100"
+        if body == "E":
+            year = session.split("-")
+            match_criteria = "E/" + year[0] + "/100"
         
         if body == "S":
             match_stage1 = {
@@ -1752,20 +1753,14 @@ def itpage(bodysession):
             group_itpage_S("itpage", bodysession)
 
         else: #A or E
+            #### Insert Agenda records from AUTHs for records without []
             match_stage1 = {
                 '$match': {
                     'bodysession': bodysession, 
-                    'record_type': 'AUTH'
+                    'record_type': 'AUTH',
+                    '191.b': {'$not': {'$regex': '\\['}}
                     }     
             }
-
-            # unwind_stage = {'$unwind': '$991'}
-
-            # match_stage2 = {
-            #     '$match': {
-            #         '991.a': match_criteria
-            #     }
-            # }
 
             add_1 = {}
 
@@ -1908,8 +1903,6 @@ def itpage(bodysession):
             }
 
             pipeline.append(match_stage1)
-            #pipeline.append(unwind_stage)
-            #pipeline.append(match_stage2)
             pipeline.append(add_stage1)
             pipeline.append(add_stage2)
             pipeline.append(add_stage3)
@@ -1917,8 +1910,77 @@ def itpage(bodysession):
             pipeline.append(transform_stage)
             pipeline.append(sort_stage)
             pipeline.append(merge_stage)
-
+            
+            #print(pipeline)
             inputCollection.aggregate(pipeline, collation=collation)
+
+            #### Insert Agenda records from BIBSs for records with []
+
+            match_stage1 = {
+                '$match': {
+                    'bodysession': bodysession, 
+                    'record_type': 'BIB'
+                    }     
+            }
+
+            unwind_stage = {'$unwind': '$991'}
+
+            match_stage2 = {
+                '$match': {
+                    '991.a': match_criteria,
+                    '991.b': {'$regex': '\\['}
+                }
+            }
+
+            add_1 = {}
+
+            add_1['agendaitem'] = {
+                '$cond': {
+                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                    'then': '$191.b', 
+                    'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+                }
+            }
+
+            add_1['agendatitle'] = {
+                '$cond': {
+                    'if': '$991.c', 
+                    'then': '$991.c', 
+                    'else': ''
+                }
+            }
+
+            add_1['agendasubject'] = {
+                '$cond': {
+                    'if': '$991.d', 
+                    'then': {
+                        '$replaceAll': {
+                            'input': '$991.d', 
+                            'find': '--', 
+                            'replacement': '—'
+                        }
+                    }, 
+                    'else': ''
+                }
+            }
+
+            add_stage1 = {}
+
+            add_stage1['$addFields'] = add_1
+
+            pipeline2.append(match_stage1)
+            pipeline2.append(unwind_stage)
+            pipeline2.append(match_stage2)
+            pipeline2.append(add_stage1)
+            pipeline2.append(add_stage2)
+            pipeline2.append(add_stage3)
+            pipeline2.append(group_stage)
+            pipeline2.append(transform_stage)
+            pipeline2.append(sort_stage)
+            pipeline2.append(merge_stage)
+
+            #print(pipeline2)
+            inputCollection.aggregate(pipeline2, collation=collation)
             group_itpage_AE("itpage", bodysession)
 
             #print(pipeline)
@@ -3899,6 +3961,14 @@ def group_itpage_AE(section, bodysession):
         }
     }
 
+    sort_stage0 = {
+        '$sort': {
+            'sortkey1': 1, 
+            'sortkey2': 1, 
+            'sortkey3': 1
+        }
+    }
+
     group_stage1 = {
         '$group': {
             '_id': {
@@ -3991,6 +4061,7 @@ def group_itpage_AE(section, bodysession):
     }
     
     pipeline.append(match_stage)
+    pipeline.append(sort_stage0)
     pipeline.append(group_stage1)
     pipeline.append(group_stage2)
     pipeline.append(sort_stage1)
