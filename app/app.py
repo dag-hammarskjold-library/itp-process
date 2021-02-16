@@ -1768,17 +1768,14 @@ def selectSection():
     else :
          # Calling the logic to generate the section      
         
-        process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
-        
+        msg = process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
+
         # Returning the view
         results = section_summary()
-        return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
 
-        """
-            results = section_summary()
-            #print(results)
-            return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
-        """
+        flash(msg)
+        
+        return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
 
     
 @app.route("/wordGeneration",methods=["POST","GET"])

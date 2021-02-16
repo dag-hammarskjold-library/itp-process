@@ -3250,7 +3250,8 @@ def process_section(bodysession, section):
     Executes sections based on input.
 
     """ 
-    
+    bs = bodysession.split("/")
+    body = bs[0]
 
     if section == "itpsubj" : 
         s = itpsubj(bodysession) #subject index 
@@ -3268,14 +3269,14 @@ def process_section(bodysession, section):
         s = itpmeet(bodysession) #meeting
     elif section == "itpres" : 
         s = itpres(bodysession) #list of resolutions
-    elif section == "itpvot" : 
+    elif section == "itpvot" and body != "E": 
         s = itpvot(bodysession) #vote
-    elif section == "itpsor" : 
+    elif section == "itpsor" and body != "S": 
         s = itpsor(bodysession) #suppliments to official records
-    elif section == "itpreps": 
+    elif section == "itpreps" and body == "A": 
         s = itpreps(bodysession) #reports
     else: 
-        s = "No Section Selected"
+        s = section + ": This section cannot be executed for this body (" + body + ")."
 
     print(section, ": " , s)
 
@@ -3978,6 +3979,13 @@ def group_itpage_AE(section, bodysession):
         }
     }
 
+    ##
+    sort_stage3 = {
+        '$sort': {
+            'heading': 1
+        }
+    }
+
     merge_stage = {
         '$merge': { 'into': wordOutput}
     }
@@ -3990,6 +3998,7 @@ def group_itpage_AE(section, bodysession):
     pipeline.append(sort_stage2)
     pipeline.append(group_stage4)
     pipeline.append(project_stage)
+    pipeline.append(sort_stage3)
     pipeline.append(merge_stage)
 
     outputCollection.aggregate(pipeline, collation=collation)
