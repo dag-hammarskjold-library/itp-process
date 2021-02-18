@@ -3412,8 +3412,6 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                                                     p=document.add_paragraph("                             "+mySubject.strip(),style="mysubject2")
                                                 preventDoubleValue=mySubject
 
-                                                
-
                                         if len(myText["agendatext"])==2 and myText["agendatext"][0]["title"]!="" and myText["agendatext"][1]["title"]=="" and myText["subagenda"]=="" and myText["agendatext"][0]["subjects"][0]!="":
                                             if alreadyDisplaySeeAlso==False:
                                                 p=document.add_paragraph("                   See also:   ",style="see2")
@@ -3439,7 +3437,8 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
 
                                 else : # no subject
                                     if len(myAgenda["text"])==1:
-                                        run=p.add_run("\n")
+                                        #run=p.add_run("\n")
+                                        p.paragraph_format.space_after = Pt(5)
                                     #pass
 
             if record["heading"]=="OTHER MATTERS INCLUDED IN THE INDEX":   
