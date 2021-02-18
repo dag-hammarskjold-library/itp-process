@@ -3381,6 +3381,7 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                                                 run=p.add_run(mySubject.strip()) 
                                                 run.font.italic=False
                                                 alreadyDisplaySee=True
+
                                             
                                             if myText["subagenda"]=="":
                                                 p=document.add_paragraph("                   See:  ",style="see2")
@@ -3437,8 +3438,9 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                                             continue
 
                                 else : # no subject
-                                    # run=p.add_run("\n")
-                                    pass
+                                    if len(myAgenda["text"])==1:
+                                        run=p.add_run("\n")
+                                    #pass
 
             if record["heading"]=="OTHER MATTERS INCLUDED IN THE INDEX":   
 
