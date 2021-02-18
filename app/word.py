@@ -32,6 +32,25 @@ import math
 
 s3_client = boto3.client('s3')
 
+
+global globaltotalLines
+global totalLinesAvailableOne
+global totalLinesAvailableTwo
+global titleTotalLength
+global subtitleTotalLength
+global entryTotalLength
+global actualColumn
+global lastTitle
+
+globaltotalLines=60
+totalLinesAvailableOne=60
+totalLinesAvailableTwo=60
+titleTotalLength=48
+subtitleTotalLength=37
+entryTotalLength=44
+actualColumn="One"
+lastTitle=""
+
 def create_element(name):
     return OxmlElement(name)
 
@@ -375,7 +394,6 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
     add_page_number(document.sections[0].footer.paragraphs[0])
     return document
 
-
 def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
     # Setting some Variables
@@ -522,7 +540,177 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Line spacing
     
     pfdocsymbol.line_spacing_rule =  WD_LINE_SPACING.SINGLE
-    
+
+    ################## Variables to manage the flow of writing ###########################
+
+
+
+    def getNumberOfLine(charNumber,option):
+        
+        if option=="Title" :
+            return math.ceil(charNumber/titleTotalLength)
+
+        if option=="SubTitle":
+            return math.ceil(charNumber/subtitleTotalLength)
+
+        if option=="Entry":
+            return math.ceil(charNumber/entryTotalLength)
+
+    def updateNumberLineAvailable(numberLine,actualColumn,totalLinesAvailableOne,totalLinesAvailableTwo):
+        
+        if actualColumn=="One":
+            recup=totalLinesAvailableOne-numberLine
+        else : 
+            recup=totalLinesAvailableTwo-numberLine
+        return recup
+
+
+    def writeData(myActualColumn,myText,myTextoption):
+        
+        if myActualColumn=="One":
+
+            x = getNumberOfLine(len(myText),myTextoption)
+
+            if x <= totalLinesAvailableOne :
+
+                # reset the number of line Two just in case 
+                totalLinesAvailableTwo=60
+
+                # update the number of line left
+                if actualColumn=="One":
+                    totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                else :
+                    totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    
+
+                if myTextoption=="Title":
+                    p=document.add_paragraph(myText,style=stlItsHead)
+                    lastTitle=itshead
+
+                if myTextoption=="SubTitle":
+                    p=document.add_paragraph(myText,style=stlItssubHead)
+
+                if myTextoption=="Entry":
+                    p=document.add_paragraph(myText,style=stlitsentry)    
+
+            else : # x > totalLinesAvailableOne
+
+                # break creation
+                p=document.add_paragraph()
+                run = p.add_run()
+                myBreak = run.add_break(WD_BREAK.COLUMN)
+
+                # change actual column
+                myActualColumn="Two"
+
+                # reset the number of line One 
+                totalLinesAvailableOne=60
+                
+                # update the number of line left
+                if actualColumn=="One":
+                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                else :
+                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                        
+
+                if myTextoption=="Title":
+                    p=document.add_paragraph(myText,style=stlItsHead)
+                    if actualColumn=="One":
+                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    else :
+                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    
+                    lastTitle=itshead
+
+                if myTextoption=="SubTitle":
+                    p=document.add_paragraph(lastTitle + " (Continued) ",style=stlItsHead)
+                    run = p.add_run("\n")
+                    p=document.add_paragraph(myText,style=stlItssubHead)
+                    if actualColumn=="One":
+                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    else :
+                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+
+                if myTextoption=="Entry":
+                    p=document.add_paragraph(lastTitle + " (Continued) ",style=stlItsHead)
+                    run = p.add_run("\n")
+                    p=document.add_paragraph(myText,style=stlitsentry) 
+                    if actualColumn=="One":
+                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    else :
+                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+  
+
+        if myActualColumn=="Two":
+
+            print("i came here!!!")
+
+            x = getNumberOfLine(len(myText),myTextoption)
+
+            if (x <= totalLinesAvailableTwo):
+
+                # reset the number of line Two just in case 
+                totalLinesAvailableOne=60
+
+                # update the number of line left
+                if actualColumn=="One":
+                    totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                else :
+                    totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+
+                if myTextoption=="Title":
+                    p=document.add_paragraph(myText,style=stlItsHead)
+                    lastTitle=itshead
+
+                if myTextoption=="SubTitle":
+                    p=document.add_paragraph(myText,style=stlItssubHead)
+
+                if myTextoption=="Entry":
+                    p=document.add_paragraph(myText,style=stlitsentry)    
+
+            else : # x > totalLinesAvailableTwo
+                
+                # now we need to break the page not the column ....
+
+                # break creation
+                p=document.add_paragraph()
+                run = p.add_run()
+                myBreak = run.add_break(WD_BREAK.PAGE)
+
+                # change actual column
+                myActualColumn="One"
+
+                # reset the number of line One and Two
+                totalLinesAvailableOne=60
+                totalLinesAvailableTwo=60
+
+                if myTextoption=="Title":
+                    p=document.add_paragraph(myText,style=stlItsHead)
+                    if actualColumn=="One":
+                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    else :
+                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    lastTitle=itshead
+
+                if myTextoption=="SubTitle":
+                    p=document.add_paragraph(lastTitle + " (Continued) ",style=stlItsHead)
+                    run = p.add_run("\n")
+                    p=document.add_paragraph(myText,style=stlItssubHead)
+                    if actualColumn=="One":
+                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    else :
+                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+
+                if myTextoption=="Entry":
+                    p=document.add_paragraph(lastTitle + " (Continued) ",style=stlItsHead)
+                    run = p.add_run("\n")
+                    p=document.add_paragraph(myText,style=stlitsentry) 
+                    if actualColumn=="One":
+                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+                    else :
+                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+
+ 
     ################## WRITING THE DOCUMENT ###############################################
     
     # Adding the Header to the document
@@ -553,15 +741,20 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
             itshead= record['itshead']
         except :
             itshead=""
-        
-        # Adding itshead content
-        p=document.add_paragraph(itshead,style=stlItsHead)
+
+  
+        # write the data
+        writeData(actualColumn,itshead,"Title",totalLinesAvailableOne)
 
         # Breaks management
         paragraph_format = p.paragraph_format
         # last update
         paragraph_format.space_after = Pt(3)
-               
+        if actualColumn=="One":
+            totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+        else :
+            totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
+
         # Breaks management
         paragraph_format.keep_together = True
         paragraph_format.keep_with_next = True
@@ -572,8 +765,10 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
                      
             itssubhead=mysubhead["itssubhead"]
 
+
             # Adding itssubhead content
-            p1=document.add_paragraph(itssubhead,style=stlItssubHead)
+            #p1=document.add_paragraph(itssubhead,style=stlItssubHead)
+            writeData(actualColumn,itssubhead,"SubTitle",totalLinesAvailableOne)
             
             # Breaks management
             paragraph_format = p1.paragraph_format
@@ -593,55 +788,52 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
                 except : 
                     itsentry="Symbol not used."
 
+                writeData(actualColumn,itsentry,"Entry",totalLinesAvailableOne)
+
                 # Adding itssubhead content
-                p2=document.add_paragraph(itsentry,style=stlitsentry)
+                # p2=document.add_paragraph(itsentry,style=stlitsentry)
                 
-                # Breaks management
-                paragraph_format = p2.paragraph_format
-                paragraph_format.space_after = Pt(0)
+                # # Breaks management
+                # paragraph_format = p2.paragraph_format
+                # paragraph_format.space_after = Pt(0)
                 
-                # Breaks management
-                paragraph_format.keep_together = True
-                paragraph_format.keep_with_next = True
+                # # Breaks management
+                # paragraph_format.keep_together = True
+                # paragraph_format.keep_with_next = True
 
-                # retrieve docsymbol value
-                docsymbols=itsentrie["docsymbols"]
+                # # retrieve docsymbol value
+                # docsymbols=itsentrie["docsymbols"]
                 
-                # adding separator
-                p2.add_run(" - ")
+                # # adding separator
+                # p2.add_run(" - ")
 
-                # retrieving size of the list
-                mySize=len(docsymbols)
+                # # retrieving size of the list
+                # mySize=len(docsymbols)
 
-                current=1
+                # current=1
 
-                for docsymbol in docsymbols:
+                # for docsymbol in docsymbols:
 
-                    add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
+                #     add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
                     
-                    # Breaks management
-                    paragraph_format = p2.paragraph_format
-                    paragraph_format.space_after = Pt(0)
+                #     # Breaks management
+                #     paragraph_format = p2.paragraph_format
+                #     paragraph_format.space_after = Pt(0)
                     
-                    # Breaks management
-                    paragraph_format.keep_together = True
+                #     # Breaks management
+                #     paragraph_format.keep_together = True
 
-                    # Add the ';' and a space 
-                    if mySize>1 and current<mySize:
-                        p2.add_run("; ")
+                #     # Add the ';' and a space 
+                #     if mySize>1 and current<mySize:
+                #         p2.add_run("; ")
 
-                    current+=1
+                #     current+=1
                 
         # Force a new line before next heading
-        p2.add_run("\n")
-
-
-    add_page_number(document.sections[0].footer.paragraphs[0])
+        p.add_run("\n")
 
     return document
 
-
-  
 def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     
     # Setting some Variables
@@ -2858,6 +3050,33 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     ################## see ###############################################
     
+    see = document.styles.add_style('see3', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSorentryFont=see.font
+    stlSorentryFont.name = 'Arial'
+    stlSorentryFont.size = Pt(8)
+    stlSorentryFont.italic=True
+
+    pformat=see.paragraph_format
+    pformat.space_after=Pt(5)
+    pformat.left_indent=Cm(2)
+    pformat.first_line_indent=Inches(-0.58)
+
+    ################## see ###############################################
+    
+    see = document.styles.add_style('see4', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font name
+    
+    stlSorentryFont=see.font
+    stlSorentryFont.name = 'Arial'
+    stlSorentryFont.size = Pt(8)
+    stlSorentryFont.italic=True
+
+    ################## see ###############################################
+    
     see = document.styles.add_style('see', WD_STYLE_TYPE.PARAGRAPH)
     
     # Font name
@@ -2980,8 +3199,8 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     pformat=stlMysubject2.paragraph_format
     pformat.space_before=Pt(0)
     pformat.space_after=Pt(5)
-    pformat.left_indent=Cm(2.25)
-    pformat.first_line_indent=Inches(-0.58)
+    pformat.left_indent=Cm(2.50)
+    pformat.first_line_indent=Inches(-0.68)
      
     ################## WRITING THE DOCUMENT ###############################################
     
@@ -3080,20 +3299,21 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     if (bodysession[0]=="E"):
 
         myRecords=setOfData
-
-        p=header.add_paragraph(myTitle.upper(), style='New Heading')
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-        section = document.sections[0]
-        sectPr = section._sectPr
-        cols = sectPr.xpath('./w:cols')[0]
-        cols.set(qn('w:num'),'1')
+        preventDoubleValue=""
 
         for record in myRecords:  
       
             # Display management
             
             if record["heading"]=="AGENDA":
+
+                p=header.add_paragraph(myTitle.upper(), style='New Heading')
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                section = document.sections[0]
+                sectPr = section._sectPr
+                cols = sectPr.xpath('./w:cols')[0]
+                cols.set(qn('w:num'),'1')
 
                 # Selection of the agenda object
                 for myAgenda in record["agendas"]:
@@ -3105,6 +3325,10 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                     alreadyDisplayText=False
                     alreadyDisplayNum=False
                     alreadyDisplaySee=False
+                    alreadyDisplaySeeAlso=False
+                    alreadyDisplaySeeAlso1=False
+                    saveTitle=""
+                    seeAlso1=False
                     for myText in myAgenda["text"]:
 
                         # Selection of the subagenda value
@@ -3115,7 +3339,8 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                         for myAgendaText in myText["agendatext"]:
 
                             # Selection of the title value
-                            if myAgendaText["title"]:
+
+                            if myAgendaText["title"]!="":
                                 myTitle=myAgendaText["title"].strip()
 
                             if alreadyDisplayNum==False:
@@ -3127,14 +3352,19 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                                 alreadyDisplayNum=True
                                 
                             else:
+                                ##
 
                                 if len(myAgenda["text"])!=1:
-                                    p=document.add_paragraph("         ("+  mySubAgenda    +")     ",style="subagenda2")   
-                                    run=p.add_run(myTitle)
-
+                                    if saveTitle!=myTitle:
+                                        p=document.add_paragraph("         ("+  mySubAgenda    +")     ",style="subagenda2")   
+                                        run=p.add_run(myTitle)
+                                        saveTitle=myTitle
+                                        seeAlso1=True
                             
                             # Selection of the subject value
                             alreadyDisplayMultipleSee=False
+                            alreadyDisplayMultipleb=False
+                            index=0
                             for mySubject in myAgendaText["subjects"]:
                                 if mySubject:
                                     if alreadyDisplaySee==False:
@@ -3145,40 +3375,221 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                                             alreadyDisplaySee=True
  
                                         else:
-                                            # here see + () header
-                                            p=document.add_paragraph("                   See:  ",style="see2")
-                                            run=p.add_run(mySubject.strip()) 
-                                            run.font.italic=False
-                                            alreadyDisplaySee=True
+                                            # here see + () header under the header level
+                                            if myText["subagenda"]!="":
+                                                p=document.add_paragraph("                            See:  ",style="see2")
+                                                run=p.add_run(mySubject.strip()) 
+                                                run.font.italic=False
+                                                alreadyDisplaySee=True
+                                            
+                                            if myText["subagenda"]=="":
+                                                p=document.add_paragraph("                   See:  ",style="see2")
+                                                run=p.add_run(mySubject.strip()) 
+                                                run.font.italic=False
+                                                alreadyDisplaySee=True                                           
+                                            
                                     
                                     else:
                                         
                                         # normal scenario
-                                        if len(myAgenda["text"])==1:
+                                        if len(myAgenda["text"])==1 and myText["agendatext"][0]["subjects"][0]=="":
                                             ####### yls
                                             p=document.add_paragraph("                   "+mySubject.strip(),style="mysubject2")  
-                                            
-                                        else :
-                                            # here see + () contents
-                                            if alreadyDisplayMultipleSee==False :
-                                                p=document.add_paragraph("                            See:   ",style="see2")
-                                                run=p.add_run(mySubject.strip()) # 17 spaces
-                                                run.font.italic=False
-                                                alreadyDisplayMultipleSee=True
+                                            alreadyDisplayMultipleb=True
+                                                
+                                        if len(myAgenda["text"])!=1 :
+                                            # here see + () contents inside the contents
+                                            if preventDoubleValue!=mySubject:
+                                                if alreadyDisplayMultipleSee==False:
+                                                    p=document.add_paragraph("                            See:   ",style="see2")
+                                                    run=p.add_run(mySubject.strip()) # 17 spaces
+                                                    run.font.italic=False
+                                                    alreadyDisplayMultipleSee=True
+                                                    preventDoubleValue=mySubject
 
-                                            else: 
-                                                p=document.add_paragraph("                             "+mySubject.strip(),style="mysubject2")
+                                                else:
+                                                    p=document.add_paragraph("                             "+mySubject.strip(),style="mysubject2")
+                                                preventDoubleValue=mySubject
+
+                                                
+
+                                        if len(myText["agendatext"])==2 and myText["agendatext"][0]["title"]!="" and myText["agendatext"][1]["title"]=="" and myText["subagenda"]=="" and myText["agendatext"][0]["subjects"][0]!="":
+                                            if alreadyDisplaySeeAlso==False:
+                                                p=document.add_paragraph("                   See also:   ",style="see2")
+                                                run=p.add_run(mySubject.strip()) # 17 spaces
+                                                run.font.italic=False 
+                                                alreadyDisplaySeeAlso=True
+                                            else:
+                                                p=document.add_paragraph("                                     ",style="see2")
+                                                run=p.add_run(mySubject.strip()) # 17 spaces
+                                                run.font.italic=False 
+ 
+                                            continue
+
+                                        if len(myText["agendatext"])==2 and myText["agendatext"][0]["title"]!="" and myText["agendatext"][1]["title"]=="" and myText["subagenda"]!="" and myText["agendatext"][0]["subjects"][0]!="":
+                                            if alreadyDisplaySeeAlso==False:
+                                                p=document.add_paragraph("                            See also:   ",style="see2")
+                                                run=p.add_run(myText["agendatext"][1]["subjects"][0].strip()) # 17 spaces
+                                                run.font.italic=False 
+                                                alreadyDisplaySeeAlso=True
+                                                preventDoubleValue=myText["agendatext"][1]["subjects"][0]
+ 
+                                            continue
+
+                                else : # no subject
+                                    # run=p.add_run("\n")
+                                    pass
+
+            if record["heading"]=="OTHER MATTERS INCLUDED IN THE INDEX":   
+
+                myBreak = p.add_run().add_break(WD_BREAK.PAGE)
+
+                paragraph = header.paragraphs[0]
+
+                # Choosing the top most sectin of the page 
+                section = document.sections[0] 
+                
+                # Selecting the header 
+                header = section.header 
+                
+                # Selecting the paragraph already present in 
+                # the header section 
+                header_para = header.paragraphs[0] 
+
+                # Selection of the agenda object
+                for myAgenda in record["agendas"]:
+
+                    for myText in myAgenda["text"]:
+
+                        for myAgendaText in myText["agendatext"]:
+
+                            for mySubject in myAgendaText["subjects"]:
+
+                                p=document.add_paragraph(mySubject,style="title2")    
+
+
+                
+
 
 
         sections = document.sections
         for section in sections:
-            section.top_margin = Cm(3)
-            section.bottom_margin = Cm(3)
-            section.left_margin = Cm(3)
+            section.top_margin = Cm(1)
+            section.bottom_margin = Cm(1)
+            section.left_margin = Cm(1)
             section.right_margin = Cm(1)
 
     add_page_number(document.sections[0].footer.paragraphs[0])
     return document
+
+
+    # ########## GENERAL ASSEMBLY ##########
+
+    # if (bodysession[0]=="A"):
+
+    #     myRecords=setOfData
+
+    #     p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    #     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    #     section = document.sections[0]
+    #     sectPr = section._sectPr
+    #     cols = sectPr.xpath('./w:cols')[0]
+    #     cols.set(qn('w:num'),'2')
+
+    #     for record in myRecords:  
+      
+    #         # Display management
+            
+    #         if record["heading"]=="AGENDA":
+
+    #             # Selection of the agenda object
+    #             for myAgenda in record["agendas"]:
+
+    #                 # Selection of the agendanum value
+    #                 myAgendaNum=myAgenda["agendanum"]
+
+    #                 # Selection of the text object
+    #                 alreadyDisplayText=False
+    #                 alreadyDisplayNum=False
+    #                 alreadyDisplaySee=False
+    #                 for myText in myAgenda["text"]:
+
+    #                     # Selection of the subagenda value
+    #                     if myText["subagenda"]:
+    #                         mySubAgenda=myText["subagenda"].strip()
+
+    #                     # Selection of the agendatext value
+    #                     for myAgendaText in myText["agendatext"]:
+
+    #                         # Selection of the title value
+    #                         if myAgendaText["title"]:
+    #                             myTitle=myAgendaText["title"].strip()
+
+    #                         if alreadyDisplayNum==False:
+    #                             if len(myAgendaNum)<2 :
+    #                                 p=document.add_paragraph(myAgendaNum+"."+"       ",style="title2")
+    #                             else:
+    #                                 p=document.add_paragraph(myAgendaNum+"."+"     ",style="title2")    
+    #                             run=p.add_run(myTitle)
+    #                             alreadyDisplayNum=True
+                                
+    #                         else:
+
+    #                             if len(myAgenda["text"])!=1:
+    #                                 p=document.add_paragraph("         ("+  mySubAgenda    +")     ",style="subagenda2")   
+    #                                 run=p.add_run(myTitle)
+
+                            
+    #                         # Selection of the subject value
+    #                         alreadyDisplayMultipleSee=False
+    #                         for mySubject in myAgendaText["subjects"]:
+    #                             if mySubject:
+    #                                 if alreadyDisplaySee==False:
+    #                                     if len(myAgenda["text"])==1:
+    #                                         # p=document.add_paragraph("\t"+"See:  ",style='see3') 
+    #                                         p=document.add_paragraph("            See:  ",style='see3') 
+    #                                         run=p.add_run(mySubject.strip())
+    #                                         run.font.italic=False
+    #                                         alreadyDisplaySee=True
+ 
+    #                                     else:
+    #                                         # here see + () header
+    #                                         p=document.add_paragraph("               See:  ",style="see3")
+    #                                         run=p.add_run(mySubject.strip()) 
+    #                                         run.font.italic=False
+    #                                         alreadyDisplaySee=True
+                                    
+    #                                 else:
+                                        
+    #                                     # normal scenario
+    #                                     if len(myAgenda["text"])==1:
+    #                                         ####### yls
+    #                                         p=document.add_paragraph("                   "+mySubject.strip(),style="mysubject2")  
+                                            
+    #                                     else :
+    #                                         # here see + () contents
+    #                                         if alreadyDisplayMultipleSee==False :
+    #                                             p=document.add_paragraph("                        See:   ",style="see3")
+    #                                             run=p.add_run(mySubject.strip()) # 17 spaces
+    #                                             run.font.italic=False
+    #                                             alreadyDisplayMultipleSee=True
+
+    #                                         else: 
+    #                                             p=document.add_paragraph("                             "+mySubject.strip(),style="mysubject2")
+
+
+    #     sections = document.sections
+    #     for section in sections:
+    #         section.top_margin = Cm(3)
+    #         section.bottom_margin = Cm(3)
+    #         section.left_margin = Cm(1)
+    #         section.right_margin = Cm(1)
+
+    #     add_page_number(document.sections[0].footer.paragraphs[0])
+    #     return document
+
+
 
 
 def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
