@@ -540,177 +540,7 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Line spacing
     
     pfdocsymbol.line_spacing_rule =  WD_LINE_SPACING.SINGLE
-
-    ################## Variables to manage the flow of writing ###########################
-
-
-
-    def getNumberOfLine(charNumber,option):
-        
-        if option=="Title" :
-            return math.ceil(charNumber/titleTotalLength)
-
-        if option=="SubTitle":
-            return math.ceil(charNumber/subtitleTotalLength)
-
-        if option=="Entry":
-            return math.ceil(charNumber/entryTotalLength)
-
-    def updateNumberLineAvailable(numberLine,actualColumn,totalLinesAvailableOne,totalLinesAvailableTwo):
-        
-        if actualColumn=="One":
-            recup=totalLinesAvailableOne-numberLine
-        else : 
-            recup=totalLinesAvailableTwo-numberLine
-        return recup
-
-
-    def writeData(myActualColumn,myText,myTextoption):
-        
-        if myActualColumn=="One":
-
-            x = getNumberOfLine(len(myText),myTextoption)
-
-            if x <= totalLinesAvailableOne :
-
-                # reset the number of line Two just in case 
-                totalLinesAvailableTwo=60
-
-                # update the number of line left
-                if actualColumn=="One":
-                    totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                else :
-                    totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    
-
-                if myTextoption=="Title":
-                    p=document.add_paragraph(myText,style=stlItsHead)
-                    lastTitle=itshead
-
-                if myTextoption=="SubTitle":
-                    p=document.add_paragraph(myText,style=stlItssubHead)
-
-                if myTextoption=="Entry":
-                    p=document.add_paragraph(myText,style=stlitsentry)    
-
-            else : # x > totalLinesAvailableOne
-
-                # break creation
-                p=document.add_paragraph()
-                run = p.add_run()
-                myBreak = run.add_break(WD_BREAK.COLUMN)
-
-                # change actual column
-                myActualColumn="Two"
-
-                # reset the number of line One 
-                totalLinesAvailableOne=60
-                
-                # update the number of line left
-                if actualColumn=="One":
-                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                else :
-                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                        
-
-                if myTextoption=="Title":
-                    p=document.add_paragraph(myText,style=stlItsHead)
-                    if actualColumn=="One":
-                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    else :
-                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    
-                    lastTitle=itshead
-
-                if myTextoption=="SubTitle":
-                    p=document.add_paragraph(lastTitle + " (Continued) ",style=stlItsHead)
-                    run = p.add_run("\n")
-                    p=document.add_paragraph(myText,style=stlItssubHead)
-                    if actualColumn=="One":
-                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    else :
-                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-
-                if myTextoption=="Entry":
-                    p=document.add_paragraph(lastTitle + " (Continued) ",style=stlItsHead)
-                    run = p.add_run("\n")
-                    p=document.add_paragraph(myText,style=stlitsentry) 
-                    if actualColumn=="One":
-                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    else :
-                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-  
-
-        if myActualColumn=="Two":
-
-            print("i came here!!!")
-
-            x = getNumberOfLine(len(myText),myTextoption)
-
-            if (x <= totalLinesAvailableTwo):
-
-                # reset the number of line Two just in case 
-                totalLinesAvailableOne=60
-
-                # update the number of line left
-                if actualColumn=="One":
-                    totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                else :
-                    totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-
-                if myTextoption=="Title":
-                    p=document.add_paragraph(myText,style=stlItsHead)
-                    lastTitle=itshead
-
-                if myTextoption=="SubTitle":
-                    p=document.add_paragraph(myText,style=stlItssubHead)
-
-                if myTextoption=="Entry":
-                    p=document.add_paragraph(myText,style=stlitsentry)    
-
-            else : # x > totalLinesAvailableTwo
-                
-                # now we need to break the page not the column ....
-
-                # break creation
-                p=document.add_paragraph()
-                run = p.add_run()
-                myBreak = run.add_break(WD_BREAK.PAGE)
-
-                # change actual column
-                myActualColumn="One"
-
-                # reset the number of line One and Two
-                totalLinesAvailableOne=60
-                totalLinesAvailableTwo=60
-
-                if myTextoption=="Title":
-                    p=document.add_paragraph(myText,style=stlItsHead)
-                    if actualColumn=="One":
-                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    else :
-                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    lastTitle=itshead
-
-                if myTextoption=="SubTitle":
-                    p=document.add_paragraph(lastTitle + " (Continued) ",style=stlItsHead)
-                    run = p.add_run("\n")
-                    p=document.add_paragraph(myText,style=stlItssubHead)
-                    if actualColumn=="One":
-                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    else :
-                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-
-                if myTextoption=="Entry":
-                    p=document.add_paragraph(lastTitle + " (Continued) ",style=stlItsHead)
-                    run = p.add_run("\n")
-                    p=document.add_paragraph(myText,style=stlitsentry) 
-                    if actualColumn=="One":
-                        totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-                    else :
-                        totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-
- 
+    
     ################## WRITING THE DOCUMENT ###############################################
     
     # Adding the Header to the document
@@ -741,20 +571,15 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
             itshead= record['itshead']
         except :
             itshead=""
-
-  
-        # write the data
-        writeData(actualColumn,itshead,"Title",totalLinesAvailableOne)
+        
+        # Adding itshead content
+        p=document.add_paragraph(itshead,style=stlItsHead)
 
         # Breaks management
         paragraph_format = p.paragraph_format
         # last update
         paragraph_format.space_after = Pt(3)
-        if actualColumn=="One":
-            totalLinesAvailableOne=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-        else :
-            totalLinesAvailableTwo=updateNumberLineAvailable(x,myActualColumn,totalLinesAvailableOne,totalLinesAvailableTwo)
-
+               
         # Breaks management
         paragraph_format.keep_together = True
         paragraph_format.keep_with_next = True
@@ -765,10 +590,8 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
                      
             itssubhead=mysubhead["itssubhead"]
 
-
             # Adding itssubhead content
-            #p1=document.add_paragraph(itssubhead,style=stlItssubHead)
-            writeData(actualColumn,itssubhead,"SubTitle",totalLinesAvailableOne)
+            p1=document.add_paragraph(itssubhead,style=stlItssubHead)
             
             # Breaks management
             paragraph_format = p1.paragraph_format
@@ -788,49 +611,47 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
                 except : 
                     itsentry="Symbol not used."
 
-                writeData(actualColumn,itsentry,"Entry",totalLinesAvailableOne)
-
                 # Adding itssubhead content
-                # p2=document.add_paragraph(itsentry,style=stlitsentry)
+                p2=document.add_paragraph(itsentry,style=stlitsentry)
                 
-                # # Breaks management
-                # paragraph_format = p2.paragraph_format
-                # paragraph_format.space_after = Pt(0)
+                # Breaks management
+                paragraph_format = p2.paragraph_format
+                paragraph_format.space_after = Pt(0)
                 
-                # # Breaks management
-                # paragraph_format.keep_together = True
-                # paragraph_format.keep_with_next = True
+                # Breaks management
+                paragraph_format.keep_together = True
+                paragraph_format.keep_with_next = True
 
-                # # retrieve docsymbol value
-                # docsymbols=itsentrie["docsymbols"]
+                # retrieve docsymbol value
+                docsymbols=itsentrie["docsymbols"]
                 
-                # # adding separator
-                # p2.add_run(" - ")
+                # adding separator
+                p2.add_run(" - ")
 
-                # # retrieving size of the list
-                # mySize=len(docsymbols)
+                # retrieving size of the list
+                mySize=len(docsymbols)
 
-                # current=1
+                current=1
 
-                # for docsymbol in docsymbols:
+                for docsymbol in docsymbols:
 
-                #     add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
+                    add_hyperlink(p2,docsymbol,Config.url_prefix+docsymbol)
                     
-                #     # Breaks management
-                #     paragraph_format = p2.paragraph_format
-                #     paragraph_format.space_after = Pt(0)
+                    # Breaks management
+                    paragraph_format = p2.paragraph_format
+                    paragraph_format.space_after = Pt(0)
                     
-                #     # Breaks management
-                #     paragraph_format.keep_together = True
+                    # Breaks management
+                    paragraph_format.keep_together = True
 
-                #     # Add the ';' and a space 
-                #     if mySize>1 and current<mySize:
-                #         p2.add_run("; ")
+                    # Add the ';' and a space 
+                    if mySize>1 and current<mySize:
+                        p2.add_run("; ")
 
-                #     current+=1
+                    current+=1
                 
         # Force a new line before next heading
-        p.add_run("\n")
+        p2.add_run("\n")
 
     return document
 
@@ -2450,8 +2271,6 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
 
 def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
 
-    
-
     # Function to keep the header visible for the table
 
     def set_repeat_table_header(row):
@@ -2800,190 +2619,105 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         add_page_number(document.sections[0].footer.paragraphs[0])
         return document
 
-    # if (bodysession[0]=="A"):
+    if (bodysession[0]=="A"):
         
-    #     datas=setOfData
-    #     datas1=setOfData1
+        # retrieving the data
+        datas=setOfData
+        datas1=setOfData1
 
-    #     p=header.add_paragraph(myTitle.upper(), style='New Heading')
-    #     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    #     p.add_run("\n")
+        # definition of the header
+        p=header.add_paragraph(myTitle.upper(), style='New Heading')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run("\n")
+        p.add_run("\n")
+        p.add_run("\n")
+
+        ###########################################################################################
+        # Process
+        ###########################################################################################
         
-    #     p=header.add_paragraph("(Symbol: " + datas[0]["symbol"] +")", style='itssubhead')
-    #     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    #     p.add_run("\n")
-    #     p.add_run("\n")
+        # 0- Settings
 
-    #     ###########################################################################################
-    #     # Process
-    #     ###########################################################################################
-        
-    #     # 0- Settings
+        section = document.sections[0]
+        sectPr = section._sectPr
+        cols = sectPr.xpath('./w:cols')[0]
+        cols.set(qn('w:num'),'3')
 
-    #     section = document.sections[0]
-    #     sectPr = section._sectPr
-    #     cols = sectPr.xpath('./w:cols')[0]
-    #     cols.set(qn('w:num'),'3')
+        for data1 in datas1:
+            
+            nbrRecPerCol1=0
+            nbrRecPerCol2=0
+            nbrRecPerCol3=0
+            myCommittee1=data1["committee1"]
+            myCommittee2=data1["committee2"]
+            mySymbol=data1["symbol"]
+            nbMeeting=0
+            print("-------------------------")
+            print("le committee 1 est : "+ myCommittee1)
+            print("le committee 2 est : "+ myCommittee2)
+            print("le symbole est : "+ mySymbol)
 
-    #     nbRecords=0
-    #     nbYears=0
-    #     nbMeetings=0
-    #     nbMeeting=1
+            for year in data1["years"]:
+                nbMeeting+=len(year["meetings"])
 
-    #     # 1- Count the number of records
+            print("le nombre de records est  : "+ str(nbMeeting))
+            
+            if nbMeeting>9 :
 
-    #     for data in datas:
-    #         nbRecords=nbRecords+1
-    #         for year in data["years"]:
-    #             nbYears=nbYears+1
-    #             for meeting in year["meetings"]:
-    #                 nbMeetings=nbMeetings+1
-
-    #     # 2- Define the number of records per cols
-
-    #     if nbMeetings>9 :
-
-    #         nbrRecPerCol1= round(nbMeetings / 3)
-    #         nbrRecPerCol2= round(nbMeetings / 3)
-    #         nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol2)
-
-    #     else :
-
-    #         nbrRecPerCol1= nbMeetings
-
-
-    #     # 3- Define a closure feature
-
-    #     # 4- Display the record after check of the date a new date should call the closure function
-
-    #     startGroup=False
-
-    #     for data1 in datas1:
-    #         for year1 in data1["years"]:
-
-    #             if startGroup==True:
-
-    #                 hdr_cells = table.rows[nbMeeting].cells
-    #                 hdr_cells[1].text=" "
-    #                 nbMeeting=nbMeeting+1
-
-    #                 hdr_cells = table.rows[nbMeeting].cells
-    #                 hdr_cells[1].text="Date, "+ year1["year"]
-    #                 paragraphs = hdr_cells[1].paragraphs
-    #                 for paragraph in paragraphs:
-    #                     for run in paragraph.runs:
-    #                         font = run.font
-    #                         font.underline=True
-    #                 nbMeeting=nbMeeting+1
-
-    #                 hdr_cells = table.rows[nbMeeting].cells
-    #                 hdr_cells[1].text=" "
-    #                 nbMeeting=nbMeeting+1
-
-
-    #             for meeting1 in year1["meetings"]:
-
-    #                 if (nbMeeting<=nbrRecPerCol1):
-
-    #                     if nbMeeting==1:
-
-    #                         p=document.add_paragraph()
-    #                         run = p.add_run()
-                            
-    #                         table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
-
-    #                         # align the table according the number of record
-    #                         if nbMeetings <= 9 :
-    #                             table.alignment = WD_TABLE_ALIGNMENT.CENTER
-                        
-    #                         # set the header visible
-    #                         set_repeat_table_header(table.rows[0])
-
-    #                         # Retrieve the first line
-    #                         hdr_cells = table.rows[0].cells
-    #                         myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-    #                         myRun.underline=True
-    #                         myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+year1["year"])
-    #                         hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-    #                         myRun.underline=True
-    #                         myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-    #                         #nbMeeting=nbMeeting+1
-    #                         hdr_cells = table.rows[nbMeeting].cells
-    #                         hdr_cells[0].text=meeting1["meetingnum"]
-    #                         hdr_cells[1].text=meeting1["meetingdate"]
-                            
-    #                     else :
-
-    #                         # fill the cell of the table
-    #                         hdr_cells = table.rows[nbMeeting].cells
-    #                         hdr_cells[0].text=meeting1["meetingnum"]
-    #                         hdr_cells[1].text=meeting1["meetingdate"]
-
-
-    #                 if (nbMeeting>nbrRecPerCol1 and nbMeeting<=2*nbrRecPerCol2):
-
-    #                     print("i was inside")
-
-    #                     if nbMeeting==nbrRecPerCol1+1:
-
-    #                         print("i was inside 1")
-
-    #                         # column break
-    #                         p=document.add_paragraph()
-    #                         run = p.add_run()
-    #                         myBreak = run.add_break(WD_BREAK.COLUMN)
+                nbrRecPerCol1= round(nbMeeting / 3)
+                nbrRecPerCol2= round(nbMeeting / 3)
+                nbrRecPerCol3= nbMeeting - (nbrRecPerCol1+nbrRecPerCol2)
 
 
 
-    #                         table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
-                        
-    #                         # set the header visible
-    #                         set_repeat_table_header(table.rows[0])
+            else :
 
-    #                         # Retrieve the first line
-    #                         hdr_cells = table.rows[0].cells
-    #                         myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-    #                         myRun.underline=True
-    #                         myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+year1["year"])
-    #                         hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-    #                         myRun.underline=True
-    #                         myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-    #                         print(nbMeeting)
-    #                         nbMeeting=1
-    #                         hdr_cells = table.rows[nbMeeting].cells
-    #                         hdr_cells[0].text=meeting1["meetingnum"]
-    #                         hdr_cells[1].text=meeting1["meetingdate"]
-                            
-    #                     else :
-
-    #                         # fill the cell of the table
-    #                         hdr_cells = table.rows[nbMeeting].cells
-    #                         hdr_cells[0].text=meeting1["meetingnum"]
-    #                         hdr_cells[1].text=meeting1["meetingdate"]
-
-                    
-    #                 nbMeeting=nbMeeting+1
+                nbrRecPerCol1= nbMeeting
                 
-    #             startGroup=True
+                # build the table with one column
+                table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
+
+                # Retrieve the first line
+                hdr_cells = table.rows[0].cells
+                myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+                myRun.underline=True
+                myRun=hdr_cells[1].paragraphs[0].add_run('Date, ')
+                hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                myRun.underline=True
+                myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+
+                for meeting in data1["years"]["meetings"]:
+
+                    # fill the cell of the table
+                    hdr_cells = table.rows[nbMeeting].cells
+                    hdr_cells[0].text=meeting["meetingnum"]
+                    hdr_cells[1].text=meeting["meetingdate"]
 
 
-    #     # Apply the font
-    #     for table in document.tables:
-    #         for row in table.rows:
-    #             for cell in row.cells:
-    #                 paragraphs = cell.paragraphs
-    #                 for paragraph in paragraphs:
-    #                     # Adding styling
-    #                     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    #                     paragraph_format = paragraph.paragraph_format
-    #                     paragraph_format.space_after = Pt(0)
-    #                     for run in paragraph.runs:
-    #                         font = run.font
-    #                         font.name="Arial"
-    #                         font.size= Pt(8)
+
+    
 
 
-    #     return document
+
+
+
+        # # Apply the font
+        # for table in document.tables:
+        #     for row in table.rows:
+        #         for cell in row.cells:
+        #             paragraphs = cell.paragraphs
+        #             for paragraph in paragraphs:
+        #                 # Adding styling
+        #                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        #                 paragraph_format = paragraph.paragraph_format
+        #                 paragraph_format.space_after = Pt(0)
+        #                 for run in paragraph.runs:
+        #                     font = run.font
+        #                     font.name="Arial"
+        #                     font.size= Pt(8)
+
+
+        return document
 
 
 def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
@@ -3205,7 +2939,163 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     ################## WRITING THE DOCUMENT ###############################################
     
     # Adding the Header to the document
-    
+
+    ########### GENERAL ASSEMBLY ##########
+
+    if (bodysession[0]=="A"):
+
+        myRecords=setOfData
+        preventDoubleValue=""
+
+        for record in myRecords:  
+      
+            # Display management
+            
+            if record["heading"]=="AGENDA":
+
+                p=header.add_paragraph(myTitle.upper(), style='New Heading')
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                section = document.sections[0]
+                sectPr = section._sectPr
+                cols = sectPr.xpath('./w:cols')[0]
+                cols.set(qn('w:num'),'2')
+
+                # Selection of the agenda object
+                for myAgenda in record["agendas"]:
+
+                    # Selection of the agendanum value
+                    myAgendaNum=myAgenda["agendanum"]
+
+                    # Selection of the text object
+                    alreadyDisplayText=False
+                    alreadyDisplayNum=False
+                    alreadyDisplaySee=False
+                    alreadyDisplaySeeAlso=False
+                    alreadyDisplaySeeAlso1=False
+                    saveTitle=""
+                    seeAlso1=False
+                    for myText in myAgenda["text"]:
+
+                        # Selection of the subagenda value
+                        if myText["subagenda"]:
+                            mySubAgenda=myText["subagenda"].strip()
+
+                        # Selection of the agendatext value
+                        for myAgendaText in myText["agendatext"]:
+
+                            # Selection of the title value
+
+                            if myAgendaText["title"]!="":
+                                myTitle=myAgendaText["title"].strip()
+
+                            if alreadyDisplayNum==False:
+                                if len(myAgendaNum)==1 :
+                                    p=document.add_paragraph(myAgendaNum+"."+"       ",style="title2")
+                                else:
+                                    p=document.add_paragraph(myAgendaNum+"."+"     ",style="title2")    
+                                run=p.add_run(myTitle)
+                                alreadyDisplayNum=True
+                                
+                            else:
+                                ##
+
+                                if len(myAgenda["text"])!=1:
+                                    if saveTitle!=myTitle:
+                                        p=document.add_paragraph("         ("+  mySubAgenda    +")     ",style="subagenda2")   
+                                        run=p.add_run(myTitle)
+                                        saveTitle=myTitle
+                                        seeAlso1=True
+                            
+                            # Selection of the subject value
+                            alreadyDisplayMultipleSee=False
+                            alreadyDisplayMultipleb=False
+                            index=0
+                            for mySubject in myAgendaText["subjects"]:
+                                if mySubject:
+                                    if alreadyDisplaySee==False:
+                                        if len(myAgenda["text"])==1:
+                                            p=document.add_paragraph("\t"+"See:  ",style='see2') 
+                                            run=p.add_run(mySubject.strip())
+                                            run.font.italic=False
+                                            alreadyDisplaySee=True
+ 
+                                        else:
+                                            # here see + () header under the header level
+                                            if myText["subagenda"]!="":
+                                                p=document.add_paragraph("                            See:  ",style="see2")
+                                                run=p.add_run(mySubject.strip()) 
+                                                run.font.italic=False
+                                                alreadyDisplaySee=True
+
+                                            
+                                            if myText["subagenda"]=="":
+                                                p=document.add_paragraph("                   See:  ",style="see2")
+                                                run=p.add_run(mySubject.strip()) 
+                                                run.font.italic=False
+                                                alreadyDisplaySee=True                                           
+                                            
+                                    
+                                    else:
+                                        
+                                        # normal scenario
+                                        if len(myAgenda["text"])==1 and myText["agendatext"][0]["subjects"][0]=="":
+                                            ####### yls
+                                            p=document.add_paragraph("                   "+mySubject.strip(),style="mysubject2")  
+                                            alreadyDisplayMultipleb=True
+                                                
+                                        if len(myAgenda["text"])!=1 :
+                                            # here see + () contents inside the contents
+                                            if preventDoubleValue!=mySubject:
+                                                if alreadyDisplayMultipleSee==False:
+                                                    p=document.add_paragraph("                            See:   ",style="see2")
+                                                    run=p.add_run(mySubject.strip()) # 17 spaces
+                                                    run.font.italic=False
+                                                    alreadyDisplayMultipleSee=True
+                                                    preventDoubleValue=mySubject
+
+                                                else:
+                                                    p=document.add_paragraph("                             "+mySubject.strip(),style="mysubject2")
+                                                preventDoubleValue=mySubject
+
+                                        if len(myText["agendatext"])==2 and myText["agendatext"][0]["title"]!="" and myText["agendatext"][1]["title"]=="" and myText["subagenda"]=="" and myText["agendatext"][0]["subjects"][0]!="":
+                                            if alreadyDisplaySeeAlso==False:
+                                                p=document.add_paragraph("                   See also:   ",style="see2")
+                                                run=p.add_run(mySubject.strip()) # 17 spaces
+                                                run.font.italic=False 
+                                                alreadyDisplaySeeAlso=True
+                                            else:
+                                                p=document.add_paragraph("                                     ",style="see2")
+                                                run=p.add_run(mySubject.strip()) # 17 spaces
+                                                run.font.italic=False 
+ 
+                                            continue
+
+                                        if len(myText["agendatext"])==2 and myText["agendatext"][0]["title"]!="" and myText["agendatext"][1]["title"]=="" and myText["subagenda"]!="" and myText["agendatext"][0]["subjects"][0]!="":
+                                            if alreadyDisplaySeeAlso==False:
+                                                p=document.add_paragraph("                            See also:   ",style="see2")
+                                                run=p.add_run(myText["agendatext"][1]["subjects"][0].strip()) # 17 spaces
+                                                run.font.italic=False 
+                                                alreadyDisplaySeeAlso=True
+                                                preventDoubleValue=myText["agendatext"][1]["subjects"][0]
+ 
+                                            continue
+
+                                else : # no subject
+                                    if len(myAgenda["text"])==1:
+                                        #run=p.add_run("\n")
+                                        p.paragraph_format.space_after = Pt(5)
+                                    #pass 
+
+        sections = document.sections
+        for section in sections:
+            section.top_margin = Cm(1)
+            section.bottom_margin = Cm(1)
+            section.left_margin = Cm(1)
+            section.right_margin = Cm(1)
+
+    # add_page_number(document.sections[0].footer.paragraphs[0])
+    # return document
 
 
     ### SECURITY COUNCIL ##########
@@ -3291,8 +3181,8 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
             p.add_run("\n")
             p.add_run("\n")
 
-        add_page_number(document.sections[0].footer.paragraphs[0])
-        return document
+        # add_page_number(document.sections[0].footer.paragraphs[0])
+        # return document
 
     ########## ECOSOC ##########
 
@@ -3468,11 +3358,6 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
 
                                 p=document.add_paragraph(mySubject,style="title2")    
 
-
-                
-
-
-
         sections = document.sections
         for section in sections:
             section.top_margin = Cm(1)
@@ -3482,115 +3367,6 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     add_page_number(document.sections[0].footer.paragraphs[0])
     return document
-
-
-    # ########## GENERAL ASSEMBLY ##########
-
-    # if (bodysession[0]=="A"):
-
-    #     myRecords=setOfData
-
-    #     p=header.add_paragraph(myTitle.upper(), style='New Heading')
-    #     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    #     section = document.sections[0]
-    #     sectPr = section._sectPr
-    #     cols = sectPr.xpath('./w:cols')[0]
-    #     cols.set(qn('w:num'),'2')
-
-    #     for record in myRecords:  
-      
-    #         # Display management
-            
-    #         if record["heading"]=="AGENDA":
-
-    #             # Selection of the agenda object
-    #             for myAgenda in record["agendas"]:
-
-    #                 # Selection of the agendanum value
-    #                 myAgendaNum=myAgenda["agendanum"]
-
-    #                 # Selection of the text object
-    #                 alreadyDisplayText=False
-    #                 alreadyDisplayNum=False
-    #                 alreadyDisplaySee=False
-    #                 for myText in myAgenda["text"]:
-
-    #                     # Selection of the subagenda value
-    #                     if myText["subagenda"]:
-    #                         mySubAgenda=myText["subagenda"].strip()
-
-    #                     # Selection of the agendatext value
-    #                     for myAgendaText in myText["agendatext"]:
-
-    #                         # Selection of the title value
-    #                         if myAgendaText["title"]:
-    #                             myTitle=myAgendaText["title"].strip()
-
-    #                         if alreadyDisplayNum==False:
-    #                             if len(myAgendaNum)<2 :
-    #                                 p=document.add_paragraph(myAgendaNum+"."+"       ",style="title2")
-    #                             else:
-    #                                 p=document.add_paragraph(myAgendaNum+"."+"     ",style="title2")    
-    #                             run=p.add_run(myTitle)
-    #                             alreadyDisplayNum=True
-                                
-    #                         else:
-
-    #                             if len(myAgenda["text"])!=1:
-    #                                 p=document.add_paragraph("         ("+  mySubAgenda    +")     ",style="subagenda2")   
-    #                                 run=p.add_run(myTitle)
-
-                            
-    #                         # Selection of the subject value
-    #                         alreadyDisplayMultipleSee=False
-    #                         for mySubject in myAgendaText["subjects"]:
-    #                             if mySubject:
-    #                                 if alreadyDisplaySee==False:
-    #                                     if len(myAgenda["text"])==1:
-    #                                         # p=document.add_paragraph("\t"+"See:  ",style='see3') 
-    #                                         p=document.add_paragraph("            See:  ",style='see3') 
-    #                                         run=p.add_run(mySubject.strip())
-    #                                         run.font.italic=False
-    #                                         alreadyDisplaySee=True
- 
-    #                                     else:
-    #                                         # here see + () header
-    #                                         p=document.add_paragraph("               See:  ",style="see3")
-    #                                         run=p.add_run(mySubject.strip()) 
-    #                                         run.font.italic=False
-    #                                         alreadyDisplaySee=True
-                                    
-    #                                 else:
-                                        
-    #                                     # normal scenario
-    #                                     if len(myAgenda["text"])==1:
-    #                                         ####### yls
-    #                                         p=document.add_paragraph("                   "+mySubject.strip(),style="mysubject2")  
-                                            
-    #                                     else :
-    #                                         # here see + () contents
-    #                                         if alreadyDisplayMultipleSee==False :
-    #                                             p=document.add_paragraph("                        See:   ",style="see3")
-    #                                             run=p.add_run(mySubject.strip()) # 17 spaces
-    #                                             run.font.italic=False
-    #                                             alreadyDisplayMultipleSee=True
-
-    #                                         else: 
-    #                                             p=document.add_paragraph("                             "+mySubject.strip(),style="mysubject2")
-
-
-    #     sections = document.sections
-    #     for section in sections:
-    #         section.top_margin = Cm(3)
-    #         section.bottom_margin = Cm(3)
-    #         section.left_margin = Cm(1)
-    #         section.right_margin = Cm(1)
-
-    #     add_page_number(document.sections[0].footer.paragraphs[0])
-    #     return document
-
-
 
 
 def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
@@ -3866,5 +3642,252 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
             myCol = myCol + 1
 
+    add_page_number(document.sections[0].footer.paragraphs[0])
+    return document
+
+
+def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
+    
+    # Function to keep the header visible for the table
+
+    def set_repeat_table_header(row):
+
+        tr = row._tr
+        trPr = tr.get_or_add_trPr()
+        tblHeader = OxmlElement('w:tblHeader')
+        tblHeader.set(qn('w:val'), "true")
+        trPr.append(tblHeader)
+        return row
+
+    # Setting some Variables
+
+    myMongoURI=Config.connect_string
+    myClient = MongoClient(myMongoURI)
+    myDatabase=myClient.undlFiles
+    myCollection=myDatabase['itp_sample_output_copy']
+    myTitle=paramTitle
+    mySubTitle1=paramSubTitle
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
+    
+    # Creation of the word document
+    document = Document()
+    
+    ################## HEADER ###############################################
+    
+    styles = document.styles
+    new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
+    new_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    
+    font = new_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(12)
+    font.bold = True
+    font.color.rgb = RGBColor(0, 0, 0)
+    
+    # Adding the header to the document
+    
+    header=document.sections[0].header
+    
+    ################## SUBHEADER ###############################################
+    
+    new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
+    # new_sub_heading_style.base_style = styles['Heading 1']
+    
+    # Font settings
+    pformat= new_sub_heading_style.paragraph_format
+    pformat.alignment=WD_ALIGN_PARAGRAPH.CENTER
+    pformat.space_before = Pt(0)
+    pformat.space_after = Pt(0)
+    
+    font = new_sub_heading_style.font
+    font.name = 'Arial'
+    font.size = Pt(7)
+    font.italic = True
+    font.color.rgb = RGBColor(0, 0, 0)
+
+    ################## COMMITTEE ###############################################
+    
+    committee_style = styles.add_style('committee', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font settings
+    pformat= committee_style.paragraph_format
+    pformat.alignment=WD_ALIGN_PARAGRAPH.CENTER
+
+    
+    font = committee_style.font
+    font.name = 'Arial'
+    font.size = Pt(9)
+    font.bold = True
+    font.color.rgb = RGBColor(0, 0, 0)
+
+    ################## SUBJECT ###############################################
+    
+    subject_style = styles.add_style('subject', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font settings
+    pformat= subject_style.paragraph_format
+    pformat.alignment=WD_ALIGN_PARAGRAPH.LEFT
+    pformat.space_after=Inches(0.05)
+
+    
+    font = subject_style.font
+    font.name = 'Arial'
+    font.size = Pt(8)
+    font.color.rgb = RGBColor(0, 0, 0)
+
+    ################## DOCSYMBOL ###############################################
+    
+    docsymbol_style = styles.add_style('docsymbol', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font settings
+    pformat= docsymbol_style.paragraph_format
+    pformat.alignment=WD_ALIGN_PARAGRAPH.RIGHT
+    pformat.space_after=Inches(0.05)
+
+    
+    font = docsymbol_style.font
+    font.name = 'Arial'
+    font.size = Pt(8)
+    font.color.rgb = RGBColor(0, 0, 0)
+
+    ################## WRITING THE DOCUMENT ###############################################
+    
+    # Header Generation
+    
+    p=header.add_paragraph(myTitle.upper(), style='New Heading')
+    #p=header.add_paragraph(myTitle, style='New Heading')
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER    
+    run=p.add_run("\n")
+
+    # First line generation
+
+    p=document.add_paragraph("The Committees discuss agenda items allocated to them by the Assembly.",style='New sub Heading')
+    p=document.add_paragraph("The Committees report to the Assembly on the discussions held on each",style='New sub Heading')
+    p=document.add_paragraph("item and forward recommendations for action in plenary",style='New sub Heading') 
+
+    # Definition of the column names
+    myRecords=setOfData
+
+    # create some space with the header
+    p.add_run("\n")
+    p.add_run("\n")
+    
+    def getDocSymbols(myList):
+        if len(myList)==1:
+            add_hyperlink(row.cells[1].paragraphs[0],myList[0], Config.url_prefix+myList[0])
+
+        else:
+            myFinalResult=[]
+            # storage for the root(s)
+            myRoot=[]
+            # storage for the Add(s)
+            myAdd=[]
+            # Storage for the Corr(s)
+            myCorr=[]
+
+            for myListElem in myList:
+                recup=myListElem.split("/")
+
+                # retrieving the root(s)
+                if len(recup)==3 :
+                    myRoot.append(myListElem)
+
+                # retrieving the add(s)
+                if len(recup)==4 and recup[3].startswith("Add"):
+                    myAdd.append(myListElem)
+
+                # retrieving the Corr(s)
+                if len(recup)==4 and recup[3].startswith("Corr"):
+                    myCorr.append(myListElem)
+
+            myLink=""
+            firstAdd=True
+            firstCorr=True
+            myLen=0 
+            for root in myRoot:
+
+                # generation of the root link
+                # row.cells[1].paragraphs[0]=add_hyperlink(row.cells[1].paragraphs[0],root, Config.url_prefix+root)
+                add_hyperlink(row.cells[1].paragraphs[0],root, Config.url_prefix+root)
+
+                #adding of the Add if there is some values
+                if len(myAdd)!=0:
+                   
+                   for add in myAdd:
+                        if add.startswith(root):
+                            if firstAdd==True:
+                                # adding the '+' sign
+                                myParagraph = row.cells[1].paragraphs[0]
+                                myParagraph.add_run("+")
+                                add_hyperlink(row.cells[1].paragraphs[0],"Add"+add[-1], Config.url_prefix+add)
+                                # row.cells[1].paragraphs[0].text=" + "
+                                # row.cells[1].paragraphs[0]=add_hyperlink(row.cells[1].paragraphs[0],"Add"+add[-1], Config.url_prefix+add)
+                                firstAdd=False
+                            else:
+                                myParagraph = row.cells[1].paragraphs[0]
+                                myParagraph.add_run("-")    
+                                add_hyperlink(row.cells[1].paragraphs[0],add[-1], Config.url_prefix+add)
+
+                # adding of the Corr if there is some values
+                if len(myCorr)!=0:
+                   for corr in myCorr:
+                        if corr.startswith(root):                
+                            # adding the '+' sign
+                            myParagraph = row.cells[1].paragraphs[0]
+                            myParagraph.add_run(",")
+                            add_hyperlink(row.cells[1].paragraphs[0],corr, Config.url_prefix+corr)
+
+                # adding sign , when you have a new record
+                myLen+=1
+                if myLen<len(myRoot):
+                    myParagraph = row.cells[1].paragraphs[0]
+                    myParagraph.add_run(",") 
+
+    for record in myRecords:
+        
+        # creation of the table
+        table = document.add_table(rows=1, cols=2)
+
+        # paragraph=table.rows[0].cells[0].paragraphs[0]
+        paragraph=table.rows[0].cells[0].merge(table.rows[0].cells[-1]).paragraphs[0]
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        paragraph.text= record["committee"]
+        paragraph.style = document.styles['committee']
+
+        # writing the subjects
+        for subject in record["subjects"]:
+
+            # add a new row inside the table
+            row = table.add_row()
+
+            # add the content for the subject
+            row.cells[0].paragraphs[0].text=subject['subject']
+            row.cells[0].paragraphs[0].style = document.styles['subject']
+
+            # add the content for the document symbol
+
+            #add_hyperlink(row.cells[1].paragraphs[0],getDocSymbols(subject["docsymbols"]), Config.url_prefix+getDocSymbols(subject["docsymbols"]))
+            #row.cells[1].paragraphs[0].text= getDocSymbols(subject["docsymbols"])
+            getDocSymbols(subject["docsymbols"])
+            row.cells[1].paragraphs[0].style = document.styles['docsymbol']
+
+
+    widths = (Inches(22), Inches(2.00))
+    for row in table.rows:
+        # sizing the rows
+        row.height = Cm(0.2)
+        for idx, width in enumerate(widths):
+            row.cells[idx].width = width
+
+    sections = document.sections
+    for section in sections:
+        section.top_margin = Cm(1)
+        section.bottom_margin = Cm(1)
+        section.left_margin = Cm(1.5)
+        section.right_margin = Cm(1.5)
+
+    # Save the document
     add_page_number(document.sections[0].footer.paragraphs[0])
     return document
