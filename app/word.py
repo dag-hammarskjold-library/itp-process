@@ -2467,7 +2467,6 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         nbRecords=0
         nbYears=0
         nbMeetings=0
-        
 
         # 1- Count the number of records
 
@@ -2652,46 +2651,126 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
             myCommittee2=data1["committee2"]
             mySymbol=data1["symbol"]
             nbMeeting=0
-            print("-------------------------")
-            print("le committee 1 est : "+ myCommittee1)
-            print("le committee 2 est : "+ myCommittee2)
-            print("le symbole est : "+ mySymbol)
+
+            startGroup=False
 
             for year in data1["years"]:
                 nbMeeting+=len(year["meetings"])
 
-            print("le nombre de records est  : "+ str(nbMeeting))
-            
             if nbMeeting>9 :
 
                 nbrRecPerCol1= round(nbMeeting / 3)
                 nbrRecPerCol2= round(nbMeeting / 3)
                 nbrRecPerCol3= nbMeeting - (nbrRecPerCol1+nbrRecPerCol2)
 
+                ######################################################################
 
+                table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
+
+                # Retrieve the first line
+                for year in data1["years"]:
+                    hdr_cells = table.rows[0].cells
+                    myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+                    myRun.underline=True
+                    myRun=hdr_cells[1].paragraphs[0].add_run('Date,'+year["year"])
+                    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    myRun.underline=True
+
+                    myRow=0
+                    for meeting in year["meetings"]:
+
+                        if myRow<nbrRecPerCol1:
+                            if myRow==0:
+
+                                # column break
+                                p=document.add_paragraph()
+                                run = p.add_run()
+                                myBreak = run.add_break(WD_BREAK.COLUMN)
+
+                                # myRow should be reseted
+                                myRow=1
+
+                                # create the table
+                                table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
+
+                            else:
+                                hdr_cells = table.rows[myRow].cells
+                                hdr_cells[0].text=meeting["meetingnum"]
+                                hdr_cells[1].text=meeting["meetingdate"]
+
+                        if myRow>=nbrRecPerCol1 and 2*nbrRecPerCol1:
+                            if myRow==nbrRecPerCol1:
+
+                                # column break
+                                p=document.add_paragraph()
+                                run = p.add_run()
+                                myBreak = run.add_break(WD_BREAK.COLUMN)
+
+                                # myRow should be reseted
+                                myRow=1
+
+                                # create the table
+                                table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
+
+                            else:
+
+                                hdr_cells = table.rows[myRow].cells
+                                hdr_cells[0].text=meeting["meetingnum"]
+                                hdr_cells[1].text=meeting["meetingdate"]
+
+                        if myRow>2*nbrRecPerCol1:
+                            if myRow==2*nbrRecPerCol1:
+
+                                # column break
+                                p=document.add_paragraph()
+                                run = p.add_run()
+                                myBreak = run.add_break(WD_BREAK.COLUMN)
+
+                                # myRow should be reseted
+                                myRow=1
+
+                                # create the table
+                                table = document.add_table(rows=nbrRecPerCol3+1,cols=2)
+
+                            else:
+                                hdr_cells = table.rows[myRow].cells
+                                hdr_cells[0].text=meeting["meetingnum"]
+                                hdr_cells[1].text=meeting["meetingdate"]
+
+                        myRow+=1
+
+                ######################################################################
 
             else :
 
                 nbrRecPerCol1= nbMeeting
                 
-                # build the table with one column
+                # build and align the table with one column
+                p=document.add_paragraph()
+                run = p.add_run("\n")
+                run = p.add_run("\n")
+                run = p.add_run("\n")
+
                 table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
 
                 # Retrieve the first line
-                hdr_cells = table.rows[0].cells
-                myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-                myRun.underline=True
-                myRun=hdr_cells[1].paragraphs[0].add_run('Date, ')
-                hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                myRun.underline=True
-                myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+                for year in data1["years"]:
+                    hdr_cells = table.rows[0].cells
+                    myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+                    myRun.underline=True
+                    myRun=hdr_cells[1].paragraphs[0].add_run('Date,'+year["year"])
+                    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                    myRun.underline=True
 
-                for meeting in data1["years"]["meetings"]:
+                    myRow=1
+                    for meeting in year["meetings"]:
 
-                    # fill the cell of the table
-                    hdr_cells = table.rows[nbMeeting].cells
-                    hdr_cells[0].text=meeting["meetingnum"]
-                    hdr_cells[1].text=meeting["meetingdate"]
+                        if myRow<=nbMeeting:
+                            hdr_cells = table.rows[myRow].cells
+                            hdr_cells[0].text=meeting["meetingnum"]
+                            hdr_cells[1].text=meeting["meetingdate"]
+
+                        myRow+=1
 
 
 
@@ -3836,14 +3915,14 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
                         if corr.startswith(root):                
                             # adding the '+' sign
                             myParagraph = row.cells[1].paragraphs[0]
-                            myParagraph.add_run(",")
+                            myParagraph.add_run(", ")
                             add_hyperlink(row.cells[1].paragraphs[0],corr, Config.url_prefix+corr)
 
                 # adding sign , when you have a new record
                 myLen+=1
                 if myLen<len(myRoot):
                     myParagraph = row.cells[1].paragraphs[0]
-                    myParagraph.add_run(",") 
+                    myParagraph.add_run(", ") 
 
     for record in myRecords:
         
