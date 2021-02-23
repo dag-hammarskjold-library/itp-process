@@ -2620,15 +2620,16 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     if (bodysession[0]=="A"):
         
-        # retrieving the data
         datas=setOfData
         datas1=setOfData1
 
-        # definition of the header
         p=header.add_paragraph(myTitle.upper(), style='New Heading')
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.add_run("\n")
         p.add_run("\n")
+        
+        p=header.add_paragraph("(Symbol: " + datas[0]["symbol"] +")", style='itssubhead')
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.add_run("\n")
 
         ###########################################################################################
@@ -2643,157 +2644,61 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         cols.set(qn('w:num'),'3')
 
         for data1 in datas1:
-            
-            nbrRecPerCol1=0
-            nbrRecPerCol2=0
-            nbrRecPerCol3=0
-            myCommittee1=data1["committee1"]
-            myCommittee2=data1["committee2"]
-            mySymbol=data1["symbol"]
-            nbMeeting=0
 
-            startGroup=False
+            nbRecords=0
+            nbYears=0
+            nbMeetings=0
 
-            for year in data1["years"]:
-                nbMeeting+=len(year["meetings"])
+            # # 1- Count the number of records
 
-            if nbMeeting>9 :
-
-                nbrRecPerCol1= round(nbMeeting / 3)
-                nbrRecPerCol2= round(nbMeeting / 3)
-                nbrRecPerCol3= nbMeeting - (nbrRecPerCol1+nbrRecPerCol2)
-
-                ######################################################################
-
-                table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
-
-                # Retrieve the first line
-                for year in data1["years"]:
-                    hdr_cells = table.rows[0].cells
-                    myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-                    myRun.underline=True
-                    myRun=hdr_cells[1].paragraphs[0].add_run('Date,'+year["year"])
-                    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    myRun.underline=True
-
-                    myRow=0
+            for data in data1:
+                nbRecords=nbRecords+1
+                for year in data["years"]:
+                    nbYears=nbYears+1
                     for meeting in year["meetings"]:
-
-                        if myRow<nbrRecPerCol1:
-                            if myRow==0:
-
-                                # column break
-                                p=document.add_paragraph()
-                                run = p.add_run()
-                                myBreak = run.add_break(WD_BREAK.COLUMN)
-
-                                # myRow should be reseted
-                                myRow=1
-
-                                # create the table
-                                table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
-
-                            else:
-                                hdr_cells = table.rows[myRow].cells
-                                hdr_cells[0].text=meeting["meetingnum"]
-                                hdr_cells[1].text=meeting["meetingdate"]
-
-                        if myRow>=nbrRecPerCol1 and 2*nbrRecPerCol1:
-                            if myRow==nbrRecPerCol1:
-
-                                # column break
-                                p=document.add_paragraph()
-                                run = p.add_run()
-                                myBreak = run.add_break(WD_BREAK.COLUMN)
-
-                                # myRow should be reseted
-                                myRow=1
-
-                                # create the table
-                                table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
-
-                            else:
-
-                                hdr_cells = table.rows[myRow].cells
-                                hdr_cells[0].text=meeting["meetingnum"]
-                                hdr_cells[1].text=meeting["meetingdate"]
-
-                        if myRow>2*nbrRecPerCol1:
-                            if myRow==2*nbrRecPerCol1:
-
-                                # column break
-                                p=document.add_paragraph()
-                                run = p.add_run()
-                                myBreak = run.add_break(WD_BREAK.COLUMN)
-
-                                # myRow should be reseted
-                                myRow=1
-
-                                # create the table
-                                table = document.add_table(rows=nbrRecPerCol3+1,cols=2)
-
-                            else:
-                                hdr_cells = table.rows[myRow].cells
-                                hdr_cells[0].text=meeting["meetingnum"]
-                                hdr_cells[1].text=meeting["meetingdate"]
-
-                        myRow+=1
-
-                ######################################################################
-
-            else :
-
-                nbrRecPerCol1= nbMeeting
-                
-                # build and align the table with one column
-                p=document.add_paragraph()
-                run = p.add_run("\n")
-                run = p.add_run("\n")
-                run = p.add_run("\n")
-
-                table = document.add_table(rows=nbrRecPerCol1+1,cols=2)
-
-                # Retrieve the first line
-                for year in data1["years"]:
-                    hdr_cells = table.rows[0].cells
-                    myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-                    myRun.underline=True
-                    myRun=hdr_cells[1].paragraphs[0].add_run('Date,'+year["year"])
-                    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                    myRun.underline=True
-
-                    myRow=1
-                    for meeting in year["meetings"]:
-
-                        if myRow<=nbMeeting:
-                            hdr_cells = table.rows[myRow].cells
-                            hdr_cells[0].text=meeting["meetingnum"]
-                            hdr_cells[1].text=meeting["meetingdate"]
-
-                        myRow+=1
+                        nbMeetings=nbMeetings+1
 
 
+            # 2- Define the number of records per cols
+            # nbMeeting=1
+            # nbrRecPerCol0= round(nbMeetings / 3)
+            # nbrRecPerCol1= round(nbMeetings / 3)
+            # nbrRecPerCol2= round(nbMeetings / 3)
+            # nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol2)
 
-    
+            # creation of the table for the first iteration
+            table = document.add_table(rows=nbMeetings+1,cols=2)
+
+            index=0
+
+            for year1 in data1["years"]:
+
+                myDate=year1["year"]
+
+                for meeting in year1["meetings"]:
+
+                    # fill the cell of the table
+                    hdr_cells = table.rows[index].cells
+                    hdr_cells[0].text=meeting["meetingnum"]
+                    hdr_cells[1].text=meeting["meetingdate"]
+
+                    index+=1
 
 
-
-
-
-        # # Apply the font
-        # for table in document.tables:
-        #     for row in table.rows:
-        #         for cell in row.cells:
-        #             paragraphs = cell.paragraphs
-        #             for paragraph in paragraphs:
-        #                 # Adding styling
-        #                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        #                 paragraph_format = paragraph.paragraph_format
-        #                 paragraph_format.space_after = Pt(0)
-        #                 for run in paragraph.runs:
-        #                     font = run.font
-        #                     font.name="Arial"
-        #                     font.size= Pt(8)
+        # Apply the font
+        for table in document.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    paragraphs = cell.paragraphs
+                    for paragraph in paragraphs:
+                        # Adding styling
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        paragraph_format = paragraph.paragraph_format
+                        paragraph_format.space_after = Pt(0)
+                        for run in paragraph.runs:
+                            font = run.font
+                            font.name="Arial"
+                            font.size= Pt(8)
 
 
         return document
@@ -3793,6 +3698,8 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Font settings
     pformat= committee_style.paragraph_format
     pformat.alignment=WD_ALIGN_PARAGRAPH.CENTER
+    pformat.space_after=Inches(0)
+
 
     
     font = committee_style.font
@@ -3831,6 +3738,15 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
     font.size = Pt(8)
     font.color.rgb = RGBColor(0, 0, 0)
 
+    ################## PSPACE ###############################################
+    
+    pspace_style = styles.add_style('pspace', WD_STYLE_TYPE.PARAGRAPH)
+    
+    # Font settings
+    pformat= pspace_style.paragraph_format
+    pformat.space_after=Inches(0)
+    pformat.space_before=Inches(0)
+
     ################## WRITING THE DOCUMENT ###############################################
     
     # Header Generation
@@ -3844,14 +3760,10 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     p=document.add_paragraph("The Committees discuss agenda items allocated to them by the Assembly.",style='New sub Heading')
     p=document.add_paragraph("The Committees report to the Assembly on the discussions held on each",style='New sub Heading')
-    p=document.add_paragraph("item and forward recommendations for action in plenary",style='New sub Heading') 
+    p=document.add_paragraph("item and forward recommendations for action in plenary.",style='New sub Heading') 
 
     # Definition of the column names
     myRecords=setOfData
-
-    # create some space with the header
-    p.add_run("\n")
-    p.add_run("\n")
     
     def getDocSymbols(myList):
         if len(myList)==1:
@@ -3926,8 +3838,14 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     for record in myRecords:
         
+        # create a new paragraph
+        p=document.add_paragraph("",style="pspace")
+
         # creation of the table
         table = document.add_table(rows=1, cols=2)
+
+        # set the header visible
+        set_repeat_table_header(table.rows[0])
 
         # paragraph=table.rows[0].cells[0].paragraphs[0]
         paragraph=table.rows[0].cells[0].merge(table.rows[0].cells[-1]).paragraphs[0]
@@ -3946,26 +3864,23 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
             row.cells[0].paragraphs[0].style = document.styles['subject']
 
             # add the content for the document symbol
-
-            #add_hyperlink(row.cells[1].paragraphs[0],getDocSymbols(subject["docsymbols"]), Config.url_prefix+getDocSymbols(subject["docsymbols"]))
-            #row.cells[1].paragraphs[0].text= getDocSymbols(subject["docsymbols"])
             getDocSymbols(subject["docsymbols"])
             row.cells[1].paragraphs[0].style = document.styles['docsymbol']
 
 
-    widths = (Inches(22), Inches(2.00))
-    for row in table.rows:
-        # sizing the rows
-        row.height = Cm(0.2)
-        for idx, width in enumerate(widths):
-            row.cells[idx].width = width
+        widths = (Inches(15), Inches(5.00))
+        for row in table.rows:
+            # sizing the rows
+            row.height = Cm(0.2)
+            for idx, width in enumerate(widths):
+                row.cells[idx].width = width
 
-    sections = document.sections
-    for section in sections:
-        section.top_margin = Cm(1)
-        section.bottom_margin = Cm(1)
-        section.left_margin = Cm(1.5)
-        section.right_margin = Cm(1.5)
+        sections = document.sections
+        for section in sections:
+            section.top_margin = Cm(1)
+            section.bottom_margin = Cm(1)
+            section.left_margin = Cm(2) #3
+            section.right_margin = Cm(2) #1.5
 
     # Save the document
     add_page_number(document.sections[0].footer.paragraphs[0])
