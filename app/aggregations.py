@@ -2709,7 +2709,9 @@ def itpreps(bodysession):
                     {'191.9': 'G33'}, 
                     {'191.9': 'G55'}, 
                     {'191.9': 'G66'}
-                ]
+                ],
+                '991.b': {'$not': {'$regex': '\\['}},
+                '991.d': {'$exists': True}
             }
         }
 
@@ -2775,11 +2777,11 @@ def itpreps(bodysession):
                     '$replaceAll': {
                         'input': '$991.d', 
                         'find': '. ', 
-                        'replacement': ' .'
+                        'replacement': ' $'
                     }
                 }, 
                 'find': '--', 
-                'replacement': ' $'
+                'replacement': ' .'
             }
         }
 
@@ -4278,6 +4280,8 @@ def group_itpreps(section, bodysession):
     pipeline.append(sort_stage3)
     pipeline.append(project_stage)
     pipeline.append(merge_stage)
+
+    #print(pipeline)
 
     outputCollection.aggregate(pipeline, collation={
             'locale': 'en', 
