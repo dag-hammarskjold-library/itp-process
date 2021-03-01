@@ -4389,7 +4389,21 @@ def lookup_code(lookup_field):
     """
     Returns code from lookup table
     """
-    return lookupCollection.find({'lookup_field': lookup_field, 'implemented': "Y"}, {'_id': 0, 'code': 1})
+    filter={
+        'lookup_field': 'section', 
+        'implemented': 'Y'
+    }
+
+    project={
+        '_id': 0, 
+        'code': 1
+    }
+
+    sort=list({
+        'code': 1
+    }.items())
+
+    return lookupCollection.find(filter=filter, projection=project, sort=sort)
 
 def lookup_snapshots():
     """
