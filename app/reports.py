@@ -151,7 +151,7 @@ class IncorrectSession(Report):
         self.title = 'Incorrect session - {}'.format(self.symbol_field)
         self.description = ''
         
-        self.form_class = SelectAuthority
+        self.form_class = SelectPVRangeAuthority
         self.expected_params = ['authority']
         
         self.field_names = ['Record ID', *['{}${}'.format(self.symbol_field, x) for x in ('a', 'b', 'c', 'q', 'r')]]
@@ -163,33 +163,31 @@ class IncorrectSession(Report):
         bibset = BibSet.from_query(
             QueryDocument(
                 Condition(self.symbol_field, {'b': body, 'c': session}),
-                Condition('930', {'a': Regex('^{}'.format(self.type_code))}),
+                Condition('930', {'a': Regex(f'^{self.type_code}')}),
             ),
             projection={self.symbol_field: 1}
         )
         
         results = []
-        
+
         for bib in bibset:      
             for field in bib.get_fields(self.symbol_field):
-                if _body_session_from_symbol(field.get_value('a')):
-                    xbody, xsession = _body_session_from_symbol(field.get_value('a'))
-                    
-                    match = re.match(r'.*ES\-(\d+)', session)
-                    if match:
-                        xsession = match.group(1) + 'EMSP'
-                        
-                    bs = xbody + session
-                else:
-                    # from the user input
-                    bs = body[0:-1] + session    
+                symbol = field.get_value('a')
                 
-                l = len(bs)
+                bs = field.get_value('b')[0:-1] + field.get_value('c')
+                sym_bs = ''.join(_body_session_from_symbol(symbol))
                 
-                if field.get_value('r')[0:l] != bs:
-                    row = [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')]
-                    row.insert(0, bib.id)
-                    results.append(row)
+                if sym_bs != bs:
+                    match = re.search('/(PV\.|Agenda/)(\d+)', symbol)
+                
+                    if match and (args['pv_min'] or args['pv_max']):
+                        pv = match.group(2)
+                 
+                        if pv < args['pv_min'] or pv > args['pv_max']:      
+                            results.append([bib.id] + [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')])                        
+                                    
+                    else:
+                        results.append([bib.id] + [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')])
 
         return results
 
@@ -245,7 +243,7 @@ class Incorrect991(Report):
         
         query = QueryDocument(
             Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^{}'.format(self.type_code))})
+            Condition('930', {'a': Regex('^{s'.format(self.type_code))})
         )
         
         results = []
@@ -257,9 +255,9 @@ class Incorrect991(Report):
                 found = 0
     
                 for sym in syms:
-                    if _body_session_from_symbol(sym):
-                        xbody, xsession =  _body_session_from_symbol(sym)
-                    else:
+                    xbody, xsession =  _body_session_from_symbol(sym)
+                    
+                    if not xsession:
                         # from the user input
                         xbody, xsession = body[0:-1], session
 
@@ -1086,14 +1084,12 @@ class Vote039_930(VoteReport):
         body, session = _get_body_session(args['authority'])
         
         query = QueryDocument(
-            Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('039', {'a': Regex('^{}'.format(self.type_code))})
+            Condition(self.symbol_field, {'b': body, 'c': session})
         )
         
         results = []
         
         for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '039': 1, '930': 1}):
-            
             if self.type_code in bib.get_values('039', 'a'):
                 if self.type_code not in bib.get_values('930', 'a'):
                     results.append([bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_value('039', 'a'), bib.get_value('930', 'a')])
@@ -1351,7 +1347,8 @@ class ReportList(object):
         # (3) Missing field - 930
         VoteAnyMissing930(),
         # (4) Field mismatch - 039 & 930
-        VoteMismatch('039', '930'),
+        #VoteMismatch('039', '930'),
+        Vote039_930(),
         # (5) Missing field - 992
         VoteMissingField('992'),
         # (6) Incorrect field - 992
@@ -1429,6 +1426,14 @@ def _body_session_from_symbol(symbol):
     if body == 'A':
         if sparts[1][0:1] == 'C' or sparts[1] in ['RES', 'INF', 'BUR', 'DEC']: 
             session = sparts[2]
+            
+            if 'ES-' in session:
+                match = re.match(r'.*ES\-(\d+)', session)
+                session = match.group(1) + 'emsp'
+                
+        elif 'ES-' in sparts[1]:
+            match = re.match(r'.*ES\-(\d+)', sparts[1])
+            session = match.group(1) + 'emsp'
         else:
             session = sparts[1]
     elif body == 'S':
@@ -1440,20 +1445,21 @@ def _body_session_from_symbol(symbol):
         elif re.match(r'\d\d\d\d$', sparts[1]):
             year = sparts[1]
         else:
-            return
+            warn('could not read ' + symbol)
+            return [body, '']
         
         try:
             session = _sc_convert(year)
         except(ValueError):
             warn('could not read ' + symbol)
-            return       
+            return [body, '']      
     elif body == 'E':
         if sparts[1]== 'RES': 
             session = sparts[2]
         else:
             session = sparts[1]
     else:
-        return
+        return [body, '']
         
     return [body, session]
 
