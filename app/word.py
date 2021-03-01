@@ -3677,8 +3677,7 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
     ################## SUBHEADER ###############################################
     
     new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
-    # new_sub_heading_style.base_style = styles['Heading 1']
-    
+   
     # Font settings
     pformat= new_sub_heading_style.paragraph_format
     pformat.alignment=WD_ALIGN_PARAGRAPH.CENTER
@@ -3700,8 +3699,6 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
     pformat.alignment=WD_ALIGN_PARAGRAPH.CENTER
     pformat.space_after=Inches(0)
 
-
-    
     font = committee_style.font
     font.name = 'Arial'
     font.size = Pt(9)
@@ -3716,6 +3713,7 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
     pformat= subject_style.paragraph_format
     pformat.alignment=WD_ALIGN_PARAGRAPH.LEFT
     pformat.space_after=Inches(0.05)
+    pformat.first_line_indent=Inches(-0.07)
 
     
     font = subject_style.font
@@ -3798,9 +3796,6 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
             firstCorr=True
             myLen=0 
             for root in myRoot:
-
-                # generation of the root link
-                # row.cells[1].paragraphs[0]=add_hyperlink(row.cells[1].paragraphs[0],root, Config.url_prefix+root)
                 add_hyperlink(row.cells[1].paragraphs[0],root, Config.url_prefix+root)
 
                 #adding of the Add if there is some values
@@ -3812,9 +3807,7 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
                                 # adding the '+' sign
                                 myParagraph = row.cells[1].paragraphs[0]
                                 myParagraph.add_run("+")
-                                add_hyperlink(row.cells[1].paragraphs[0],"Add"+add[-1], Config.url_prefix+add)
-                                # row.cells[1].paragraphs[0].text=" + "
-                                # row.cells[1].paragraphs[0]=add_hyperlink(row.cells[1].paragraphs[0],"Add"+add[-1], Config.url_prefix+add)
+                                add_hyperlink(row.cells[1].paragraphs[0],"Add."+add[-1], Config.url_prefix+add)
                                 firstAdd=False
                             else:
                                 myParagraph = row.cells[1].paragraphs[0]
