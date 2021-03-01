@@ -30,7 +30,7 @@ jmespath==0.9.4
 jsonschema==3.1.1
 kappa==0.6.0
 lambda-packages==0.20.0
-lxml==4.5.0
+lxml==4.6.2
 MarkupSafe==1.1.1
 mongoengine==0.18.2
 mongomock==3.18.0
