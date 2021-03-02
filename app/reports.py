@@ -177,6 +177,11 @@ class IncorrectSession(Report):
                 bs = field.get_value('b')[0:-1] + field.get_value('c')
                 sym_bs = ''.join(_body_session_from_symbol(symbol))
                 
+                if bs[0] == 'E' and bs[-2] == '-':
+                    bs = bs.replace('-', '')
+                    
+                    print(bs)
+                
                 if sym_bs != bs:
                     match = re.search('/(PV\.|Agenda/)(\d+)', symbol)
                 
@@ -243,21 +248,22 @@ class Incorrect991(Report):
         
         query = QueryDocument(
             Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^{s'.format(self.type_code))})
+            Condition('930', {'a': Regex(f'^{self.type_code}')}),
+            Condition('991', modifier='exists')
         )
-        
+
         results = []
         
-        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '991': 1}):
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '991': 1}): 
             for field in bib.get_fields('991'):
                 aparts = field.get_value('a').split('/')
                 syms = bib.get_values(self.symbol_field, 'a')
                 found = 0
     
                 for sym in syms:
-                    xbody, xsession =  _body_session_from_symbol(sym)
-                    
-                    if not xsession:
+                    if _body_session_from_symbol(sym):
+                        xbody, xsession =  _body_session_from_symbol(sym)
+                    else:
                         # from the user input
                         xbody, xsession = body[0:-1], session
 
@@ -271,7 +277,7 @@ class Incorrect991(Report):
                     results.append(row)
                 
         return results
-        
+
 ### Incorrect 992
 
 class Incorrect992(Report):
@@ -1458,9 +1464,10 @@ def _body_session_from_symbol(symbol):
             session = sparts[2]
         else:
             session = sparts[1]
+        
     else:
         return [body, '']
-        
+    
     return [body, session]
 
 def _sc_convert(year):
