@@ -3803,16 +3803,25 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
                    
                    for add in myAdd:
                         if add.startswith(root):
+                            recup1=add.split("/")
                             if firstAdd==True:
                                 # adding the '+' sign
                                 myParagraph = row.cells[1].paragraphs[0]
                                 myParagraph.add_run("+")
-                                add_hyperlink(row.cells[1].paragraphs[0],"Add."+add[-1], Config.url_prefix+add)
+                                if len(recup1[3])==5:
+                                    add_hyperlink(row.cells[1].paragraphs[0],"Add."+add[-1], Config.url_prefix+add)
+                                if len(recup1[3])==6: 
+                                    xxx=add[-2]+add[-1]
+                                    add_hyperlink(row.cells[1].paragraphs[0],"Add."+xxx, Config.url_prefix+add)
                                 firstAdd=False
                             else:
                                 myParagraph = row.cells[1].paragraphs[0]
-                                myParagraph.add_run("-")    
-                                add_hyperlink(row.cells[1].paragraphs[0],add[-1], Config.url_prefix+add)
+                                myParagraph.add_run("-")
+                                if len(recup1[3])==5:    
+                                    add_hyperlink(row.cells[1].paragraphs[0],add[-1], Config.url_prefix+add)
+                                if len(recup1[3])==6:    
+                                    xxx=add[-2]+add[-1]
+                                    add_hyperlink(row.cells[1].paragraphs[0],xxx, Config.url_prefix+add)    
 
                 # adding of the Corr if there is some values
                 if len(myCorr)!=0:
