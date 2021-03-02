@@ -180,7 +180,7 @@ class IncorrectSession(Report):
                 if bs[0] == 'E' and bs[-2] == '-':
                     bs = bs.replace('-', '')
                     
-                    print(bs)
+                    sym_bs += bs[-1]
                 
                 if sym_bs != bs:
                     match = re.search('/(PV\.|Agenda/)(\d+)', symbol)
