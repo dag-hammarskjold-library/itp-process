@@ -1181,7 +1181,7 @@ def itpsubj(bodysession):
         add_2['publicationdate'] = { 
             '$let': {'vars': {
                 'testMonth': {'$arrayElemAt': [{'$split': ['$269.a', '-']}, 1]},
-                'testDate': {'$arrayElemAt': [{'$split': ['$269.a', '-']}, 2]},
+                'testDate': {'$ltrim': { 'input': {'$arrayElemAt': [{'$split': [ '$269.a', '-']}, 2]}, 'chars': '0' }},
                 'testYear': {'$arrayElemAt': [{'$split': ['$269.a', '-']}, 0]}},
                 'in': {
                     '$switch': {
