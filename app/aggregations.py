@@ -1531,7 +1531,18 @@ def itpsubj(bodysession):
                                                     '. – ', 
                                                     '$summarynote'
                                                 ]}, 
-                                            'else': '.'
+                                            'else': {
+                                                '$cond': {
+                                                    'if': {'$ne': ['$numberingnote', '']}, 
+                                                    'then': {
+                                                        '$concat': [
+                                                            '. – ', 
+                                                            '$numberingnote'
+                                                        ]
+                                                    }, 
+                                                    'else': '.'
+                                                }
+                                            }
                                         }
                                     }
                                 ]
