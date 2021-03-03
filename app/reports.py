@@ -1032,6 +1032,41 @@ class SpeechMissingFiles(SpeechReport, MissingFiles):
         SpeechReport.__init__(self)
         MissingFiles.__init__(self)
 
+class SpeechMissingFields_700_710(SpeechReport):
+    def __init__(self, tags=['700', '710']):
+        SpeechReport.__init__(self)
+         
+        self.name = '{}_missing_fields_{}'.format(self.type, '+'.join(tags))
+        self.title = 'Missing fields - {}'.format(' + '.join(tags))
+        #self.description = '{} records from the given body/session that don\'t have a {} field.'.format(self.type.title(),tag)
+        self.description = ''
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.tags = tags
+
+        self.field_names = ['Record ID', f'{self.symbol_field}$a', '700', '710']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        
+        body,session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition(self.symbol_field, ('b', body), ('c', session)),
+            Condition('930', ('a', Regex('^' + self.type_code))),
+        )
+        
+        query.add_condition(Or(*[Condition(tag, modifier='exists') for tag in self.tags]))
+
+        results = []
+        
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '930': 1, '700': 1, '710': 1}):
+            if not bib.get_value('700', 'a') or not bib.get_value('710', 'a'):
+                results.append([bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_values('700'), bib.get_values('710')])
+            
+        return results    
+
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -1306,7 +1341,9 @@ class ReportList(object):
         # (2) Incorrect session - 791
         SpeechIncorrectSession791(),
         # (3) Missing fields - 700 + 710
-        SpeechMissingFields(['700', '710']),
+        #SpeechMissingFields(['700', '710']),
+        SpeechMissingFields_700_710(),
+        
         # (4) Incomplete authorities - mother record
         SpeechIncompleteAuthMother(),
         # Incomplete authorities # *** split into two reports below as per VW
@@ -1342,7 +1379,6 @@ class ReportList(object):
         SpeechMismatch('269', '992'), 
         # (18) Missing files
         SpeechMissingFiles(),
-        
                
         ################ voting category ############
 
