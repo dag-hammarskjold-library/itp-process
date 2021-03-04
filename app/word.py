@@ -2056,18 +2056,19 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                 # We have some separators between docsymbole
                 try:
-                    result=entry["docsymbol"].find(" ")
-                    if result > 0 :
-                        myEntry=entry["docsymbol"].split(" ")
-                        add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                    
+                    # result=entry["docsymbol"].find(" ")
+                    # if result > 0 :
+                    #     myEntry=entry["docsymbol"].split(" ")
+                    #     add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
                         
-                        p2.add_run(" ")
-                        p2.add_run(myEntry[1])
+                    #     p2.add_run(" ")
+                    #     p2.add_run(myEntry[1])
 
                     
-                    else :
+                    # else :
                         
-                        add_hyperlink1(p2,str(entry["docsymbol"]),Config.url_prefix+entry["docsymbol"])          
+                    add_hyperlink1(p2,str(entry["docsymbol"]),Config.url_prefix+entry["docsymbol"])          
                 
                 except:
                     pass
@@ -2642,63 +2643,72 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         sectPr = section._sectPr
         cols = sectPr.xpath('./w:cols')[0]
         cols.set(qn('w:num'),'3')
+        test=0
+        numRecord=0
+        nbMeetings=0
 
-        for data1 in datas1:
-
-            nbRecords=0
-            nbYears=0
-            nbMeetings=0
-
-            # # 1- Count the number of records
-
-            for data in data1:
-                nbRecords=nbRecords+1
-                for year in data["years"]:
-                    nbYears=nbYears+1
-                    for meeting in year["meetings"]:
-                        nbMeetings=nbMeetings+1
-
-
-            # 2- Define the number of records per cols
-            # nbMeeting=1
-            # nbrRecPerCol0= round(nbMeetings / 3)
-            # nbrRecPerCol1= round(nbMeetings / 3)
-            # nbrRecPerCol2= round(nbMeetings / 3)
-            # nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol2)
-
-            # creation of the table for the first iteration
-            table = document.add_table(rows=nbMeetings+1,cols=2)
+        for data1 in datas:
 
             index=0
+            for years in data1["years"]:
+                                   
+                # 1- Count the number of meeting per records
+                nbMeetings=len(years["meetings"])
+                print(nbMeetings)
 
-            for year1 in data1["years"]:
-
-                myDate=year1["year"]
-
-                for meeting in year1["meetings"]:
-
-                    # fill the cell of the table
-                    hdr_cells = table.rows[index].cells
-                    hdr_cells[0].text=meeting["meetingnum"]
-                    hdr_cells[1].text=meeting["meetingdate"]
-
-                    index+=1
+                for meeting in years["meetings"]:
 
 
-        # Apply the font
-        for table in document.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    paragraphs = cell.paragraphs
-                    for paragraph in paragraphs:
-                        # Adding styling
-                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                        paragraph_format = paragraph.paragraph_format
-                        paragraph_format.space_after = Pt(0)
-                        for run in paragraph.runs:
-                            font = run.font
-                            font.name="Arial"
-                            font.size= Pt(8)
+                    # 2- Define the number of records per cols
+                    if nbMeetings>=9:
+                        nbrRecPerCol1= round(nbMeetings / 3)
+                        nbrRecPerCol2= round(nbMeetings / 3)
+                        nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol2)
+                    else :
+                        nbrRecPerCol1=nbMeetings
+            
+                    if nbMeetings<9:
+
+                        if index==0:
+
+                            # table creation
+                            table = document.add_table(rows=nbMeetings+1,cols=2)
+
+                            table.alignment=WD_TABLE_ALIGNMENT.CENTER
+
+                            # display header
+                            hdr_cells = table.rows[0].cells
+                            myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+                            myRun.underline=True
+                            myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+years["year"])
+                            hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                            myRun.underline=True
+                            myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+                            index+=1
+
+                        # fill the cell of the table
+                        hdr_cells = table.rows[index].cells
+                        hdr_cells[0].text=meeting["meetingnum"]
+                        hdr_cells[1].text=meeting["meetingdate"]
+                        index+=1
+
+            # increment nunber of records
+            numRecord+=1
+
+        # # Apply the font
+        # for table in document.tables:
+        #     for row in table.rows:
+        #         for cell in row.cells:
+        #             paragraphs = cell.paragraphs
+        #             for paragraph in paragraphs:
+        #                 # Adding styling
+        #                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        #                 paragraph_format = paragraph.paragraph_format
+        #                 paragraph_format.space_after = Pt(0)
+        #                 for run in paragraph.runs:
+        #                     font = run.font
+        #                     font.name="Arial"
+        #                     font.size= Pt(8)
 
 
         return document
