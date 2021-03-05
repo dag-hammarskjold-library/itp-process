@@ -1720,8 +1720,14 @@ def list_files():
                     sub_li[j]= sub_li[j + 1] 
                     sub_li[j + 1]= tempo 
         return sub_li 
+    
 
-    # retrieving and building list of records 
+    from dateutil import tz
+
+    def datetime_to_utc(date):
+        """yls comment: the tz can be used as a parameter"""
+        return date.astimezone(tz.gettz('America/New York')).replace(tzinfo=None) if date.tzinfo else date
+
     for obj in myList:
         #myRecord.clear()
         myRecord=[]
@@ -1729,6 +1735,8 @@ def list_files():
         myRecord.append(myName)
 
         myLastModified=obj["LastModified"]
+        myLastModified=datetime_to_utc(myLastModified)
+        myLastModified=myLastModified.strftime("%m-%d-%Y, %H:%M")
         myRecord.append(myLastModified)
 
         mySize=obj["Size"]
