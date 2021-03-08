@@ -8,6 +8,8 @@ from dlx.marc import Bib, Auth, BibSet, AuthSet, QueryDocument,Condition,Or
 import pymongo
 from pymongo import MongoClient, ReplaceOne
 import time
+from datetime import datetime, timezone
+from tzlocal import get_localzone
 from app.models import Itpp_itp, Itpp_section, Itpp_rule#, list_all_sections
 from mongoengine import connect,disconnect
 
@@ -34,7 +36,7 @@ class Snapshot(object):
         #self.snapshot_len = None
         self.replace_list_recs=[]
         self.snapshots_list=[]
-
+        self.TIME="%Y-%m-%d %H:%M"
 
     def fields_to_extract(self):
         itp_bib_fields=[]
@@ -201,8 +203,8 @@ class Snapshot(object):
             bib_dict["record_id"]=bib.id
             bib_dict["bodysession"]=self.body+'/'+self.session
             bib_dict["snapshot_id"]=str(bib.id)+self.body+self.session
-            named_tuple = time.localtime() # get struct_time
-            time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
+            dt = datetime.now(timezone.utc)
+            time_string = dt.strftime(self.TIME)
             bib_dict["snapshottime"]=time_string
 
             for itpp_field_subfields in itpp_bib_fields:
@@ -236,8 +238,9 @@ class Snapshot(object):
             auth_dict["record_id"]=auth.id
             auth_dict["bodysession"]=self.body+'/'+self.session
             auth_dict["snapshot_id"]=str(auth.id)+self.body+self.session
-            named_tuple = time.localtime() # get struct_time
-            time_string = time.strftime("%Y-%m-%d %H:%M:%S", named_tuple)
+            dt = datetime.now(timezone.utc)
+            #time_string = dt.strftime("%Y-%m-%d %H:%M - %Z")
+            time_string = dt.strftime(self.TIME)
             auth_dict["snapshottime"]=time_string
 
             for itpp_field_subfields in itpp_auth_fields:
@@ -299,12 +302,22 @@ class Snapshot(object):
     ''' listing snapshots in display snapshot'''
     def list(self):
         snapshots=snapshot_coll.distinct("bodysession")
+        print(f"snapshots are{snapshots}")
         for sh in snapshots:
             #self.snapshots_list.append((sh,snapshot_coll.find_one({'bodysession':sh},sort=[( '_id', pymongo.DESCENDING )])['_id'].generation_time.strftime("%Y-%m-%d %H:%M:%S")))
             try:
-                self.snapshots_list.append((sh, snapshot_coll.find_one({'bodysession':sh},sort=[('snapshottime', -1)])['snapshottime']))
+                snapshottime_str=snapshot_coll.find_one({'bodysession':sh},sort=[('snapshottime', -1)])['snapshottime']
+                #get the time for the distinct bodysession
+                mdt=datetime.strptime(snapshottime_str,self.TIME)
+                #create datetime from the snapshottime
+                snapshot_tm = mdt.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime(self.TIME)
+                #convert to local time zone
+                snapshot_tpl=(sh, snapshot_tm) #create tuple to display
+                self.snapshots_list.append(snapshot_tpl) #append the lsit of tuples
+                print (f"sh is {sh} snapshot_time is {snapshot_tm}")
             except:
-                self.snapshots_list.append((sh,snapshot_coll.find_one({'bodysession':sh},sort=[( '_id', pymongo.DESCENDING )])['_id'].generation_time.strftime("%Y-%m-%d %H:%M:%S")))
-
+                #except when the snapshot does not contain time zone
+                self.snapshots_list.append((sh, snapshot_coll.find_one({'bodysession':sh},sort=[('snapshottime', -1)])['snapshottime'])) 
+        print(f"snapshot list is:{self.snapshots_list}")
         return sorted(self.snapshots_list,key=lambda x: x[1], reverse = True)
         #return sorted(self.snapshots_list, reverse = True)
