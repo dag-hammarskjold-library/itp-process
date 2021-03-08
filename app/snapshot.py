@@ -9,7 +9,6 @@ import pymongo
 from pymongo import MongoClient, ReplaceOne
 import time
 from datetime import datetime, timezone
-#from tzlocal import get_localzone
 from app.models import Itpp_itp, Itpp_section, Itpp_rule#, list_all_sections
 from mongoengine import connect,disconnect
 
