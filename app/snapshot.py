@@ -8,7 +8,7 @@ from dlx.marc import Bib, Auth, BibSet, AuthSet, QueryDocument,Condition,Or
 import pymongo
 from pymongo import MongoClient, ReplaceOne
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from app.models import Itpp_itp, Itpp_section, Itpp_rule#, list_all_sections
 from mongoengine import connect,disconnect
 
@@ -309,7 +309,12 @@ class Snapshot(object):
                 #get the time for the distinct bodysession
                 mdt=datetime.strptime(snapshottime_str,self.TIME)
                 #create datetime from the snapshottime
-                snapshot_tm = mdt.replace(tzinfo=timezone.utc).astimezone(tz=None).strftime(self.TIME)
+                # 5 hours ahead - > utc is -5 hours 
+                est_time_delta    = timedelta(hours=-5)
+                #create tz object
+                tz_object        = timezone(est_time_delta, name="EST")
+                #generate date time string:1) replace UTC to EST time by adjusting to 5 hours difference using timezone object
+                snapshot_tm = mdt.replace(tzinfo=timezone.utc).astimezone(tz=tz_object).strftime(self.TIME)
                 #convert to local time zone
                 snapshot_tpl=(sh, snapshot_tm) #create tuple to display
                 self.snapshots_list.append(snapshot_tpl) #append the lsit of tuples
