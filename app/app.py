@@ -1736,7 +1736,7 @@ def list_files():
 
         myLastModified=obj["LastModified"]
         myLastModified=datetime_to_utc(myLastModified)
-        myLastModified=myLastModified.strftime("%m-%d-%Y, %H:%M")
+        myLastModified=myLastModified.strftime("%Y-%m-%d %H:%M")
         myRecord.append(myLastModified)
 
         mySize=obj["Size"]
@@ -1746,8 +1746,6 @@ def list_files():
 
         # Add the record to the dataList
         myData.append(myRecord)
-        
-        print(myData)
 
     return render_template('generatedfiles.html',myData=Sort(myData),myFilesNumber=myFilesNumber)
 
