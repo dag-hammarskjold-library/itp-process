@@ -11,7 +11,7 @@
     }
 </style>
 <script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
-<div class="container customize1 shadow">
+<div class="container customize1 shadow" id="results">
     <h3>List of word files generated <span class="badge badge-pill badge-primary">{{myFilesNumber}}</span></h3>
     <hr>
     <div>
@@ -27,6 +27,8 @@
         {% endif %} {% endwith %}
     </div>
     <div class="div-scroll table-responsive">
+        <p>Filter by Body/Session and section: <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Ex. A73-itpmeet"></p>
+
         <table class="table table-striped sortable">
             <thead>
                 <tr>
@@ -55,4 +57,33 @@
 
 
 </div>
+
+<script type="text/javascript">
+    function loading() {
+         $("#loading").show();
+   }
+ 
+   function myFunction() {
+   // Declare variables
+   var input, filter, table, tr, td, i, txtValue;
+   input = document.getElementById("myInput");
+   filter = input.value.toUpperCase();
+   table = document.getElementById("results");
+   tr = table.getElementsByTagName("tr");
+ 
+   // Loop through all table rows, and hide those who don't match the search query
+   for (i = 0; i < tr.length; i++) {
+     td = tr[i].getElementsByTagName("td")[0];
+     if (td) {
+       txtValue = td.textContent || td.innerText;
+       if (txtValue.toUpperCase().indexOf(filter) > -1) {
+         tr[i].style.display = "";
+       } else {
+         tr[i].style.display = "none";
+       }
+     }
+   }
+ }
+ </script>
+
 {% endblock %}
