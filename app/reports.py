@@ -1073,7 +1073,6 @@ class SpeechParens700(SpeechReport):
         
         self.name = '700_parens'
         self.title = '700 with  parentheses'
-        #self.description = '{} records from the given body/session that don\'t have a {} field.'.format(self.type.title(),tag)
         self.description = ''
         
         self.form_class = SelectAuthority
@@ -1406,7 +1405,7 @@ class ReportList(object):
         SpeechMismatch('269', '992'), 
         # (18) Missing files
         SpeechMissingFiles(),
-        # (New Report) Speeches with parenthesis in 700 field
+        # (New Report) Speeches with parentheses in 700 field
         SpeechParens700(),
         
         ################ voting category ############
