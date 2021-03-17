@@ -190,7 +190,10 @@ class IncorrectSession(Report):
                             results.append([bib.id] + [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')])                        
                                     
                     else:
-                        results.append([bib.id] + [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')])
+                        results.append(
+                            [bib.id, ';'.join(bib.get_values(self.symbol_field, 'a'))] + \
+                            [field.get_value(x) for x in ('b', 'c', 'q', 'r')]
+                        )
 
         return results
 
