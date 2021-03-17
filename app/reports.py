@@ -237,8 +237,8 @@ class Incorrect991(Report):
         self.title = "Incorrect field - 991"
         self.description = ""
         
-        self.form_class = SelectAuthority
-        self.expected_params = ['authority']
+        self.form_class = SelectAgendaAuthority
+        self.expected_params = ['authority', 'agenda_number']
     
         self.field_names = ['Record ID', self.symbol_field + '$a', '991$a', '991$b', '991$c', '991$d', '991$e']
         
@@ -251,17 +251,20 @@ class Incorrect991(Report):
             Condition('930', {'a': Regex(f'^{self.type_code}')}),
             Condition('991', modifier='exists')
         )
-
+        
         results = []
         
-        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '991': 1}): 
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '991': 1}):
             for field in bib.get_fields('991'):
                 aparts = field.get_value('a').split('/')
                 syms = bib.get_values(self.symbol_field, 'a')
                 found = 0
     
                 for sym in syms:
-                    if _body_session_from_symbol(sym):
+                    if args['agenda_number']:
+                        xbody = _body_session_from_symbol(sym)[0]
+                        xsession = args['agenda_number']
+                    elif _body_session_from_symbol(sym):
                         xbody, xsession =  _body_session_from_symbol(sym)
                     else:
                         # from the user input
@@ -269,7 +272,7 @@ class Incorrect991(Report):
 
                     if aparts[0:2] == [xbody, xsession]:                
                         found += 1
-        
+
                 if found == 0: # and bib.get_value(self.symbol_field, 'a')[:4] != 'S/PV':
                     row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
                     row.insert(0, '; '.join(syms))
