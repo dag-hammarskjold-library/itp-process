@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_mongoengine.wtf import model_form
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, SelectMultipleField
+from wtforms import StringField, IntegerField, PasswordField, BooleanField, SubmitField, SelectField, SelectMultipleField
 from wtforms.fields import SelectFieldBase
 from wtforms.validators import DataRequired
 #from app.models import Itpp_itp, Itpp_section, Itpp_rule, Itpp_snapshot
@@ -72,6 +72,7 @@ class SelectAuthority(FlaskForm):
 
 class SelectAgendaAuthority(FlaskForm):
     authority = StringField('Series symbol or Document symbol (e.g. A/74 or A/74/251)', validators=[DataRequired()])
+    agenda_number = IntegerField('The agenda document number')
 
 class SelectPVRangeAuthority(FlaskForm):
     authority = StringField('Authority number or Series symbol (e.g. 896399 or A/74)')
