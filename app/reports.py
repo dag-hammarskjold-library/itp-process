@@ -1065,7 +1065,33 @@ class SpeechMissingFields_700_710(SpeechReport):
             if not bib.get_value('700', 'a') or not bib.get_value('710', 'a'):
                 results.append([bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_values('700'), bib.get_values('710')])
             
-        return results    
+        return results
+        
+class SpeechParens700(SpeechReport):
+    def __init__(self):
+        SpeechReport.__init__(self)
+        
+        self.name = '700_parens'
+        self.title = '700 with  parentheses'
+        self.description = ''
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        
+        self.field_names = ['Record ID', f'{self.symbol_field}$a', '700$a']
+        
+    def execute(self, args):
+        self.validate_args(args)
+        
+        body,session = _get_body_session(args['authority'])
+        
+        query = QueryDocument(
+            Condition(self.symbol_field, ('b', body), ('c', session)),
+            Condition('930', ('a', Regex('^' + self.type_code))),
+            Condition('700', ('a', Regex(r'\(')))
+        )
+
+        return [[bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_value('700', 'a')] for bib in BibSet.from_query(query)]
 
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
@@ -1379,7 +1405,9 @@ class ReportList(object):
         SpeechMismatch('269', '992'), 
         # (18) Missing files
         SpeechMissingFiles(),
-               
+        # (New Report) Speeches with parentheses in 700 field
+        SpeechParens700(),
+        
         ################ voting category ############
 
         # (1) Incorrect session - 791
