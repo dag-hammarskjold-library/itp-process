@@ -177,22 +177,23 @@ class IncorrectSession(Report):
                 bs = field.get_value('b')[0:-1] + field.get_value('c')
                 sym_bs = ''.join(_body_session_from_symbol(symbol))
                 
-                if bs[0] == 'E' and bs[-2] == '-':
-                    bs = bs.replace('-', '')
-                    
-                    sym_bs += bs[-1]
+                if bs[0] == 'E' and bs[-2:] == '-S':
+                    bs = bs.replace('-S', '')
                 
                 if sym_bs != bs:
-                    match = re.search('/(PV\.|Agenda/)(\d+)', symbol)
+                    match = re.search('/(PV\.|SR\.|Agenda/)(\d+)', symbol)
                 
                     if match and (args['pv_min'] or args['pv_max']):
                         pv = match.group(2)
-                 
+                        
                         if pv < args['pv_min'] or pv > args['pv_max']:      
                             results.append([bib.id] + [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')])                        
                                     
                     else:
-                        results.append([bib.id] + [field.get_value(x) for x in ('a', 'b', 'c', 'q', 'r')])
+                        results.append(
+                            [bib.id, ';'.join(bib.get_values(self.symbol_field, 'a'))] + \
+                            [field.get_value(x) for x in ('b', 'c', 'q', 'r')]
+                        )
 
         return results
 
