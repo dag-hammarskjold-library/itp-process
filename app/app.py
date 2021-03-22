@@ -33,6 +33,7 @@ from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
 
+
 ###############################################################################################
 # Create FLASK APPLICATION
 ###############################################################################################
