@@ -23,7 +23,7 @@ rules = request.form.get('rules')
 
 class SectionForm(FlaskForm):
     
-    name = StringField(validators=[DataRequired])
+    name = StringField(validators=[DataRequired()])
     section_order = StringField()
     data_source = SelectField(choices=[])
     rules = SelectMultipleField(choices=[])
