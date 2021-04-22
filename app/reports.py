@@ -1094,23 +1094,18 @@ class SpeechParens700(SpeechReport):
             Condition('930', ('a', Regex('^' + self.type_code))),
             Or (
                 Condition('700', ('a', Regex(r'\('))),
-                Condition('700', ('g', Regex(r'\(')))
+                #Condition('700', ('g', Regex(r'\(')))
             )
         )
         
         results = []
         
         for bib in BibSet.from_query(query):
-            if bib.id == 563637:
-                print(bib.get_values('700', 'a'))
-        
             for field in bib.get_fields('700'):
-                if '(' in field.get_value('g')  or '(' in field.get_value('g'):
+                if '(' in field.get_value('a'): #  or '(' in field.get_value('g'):
                     results.append([bib.id, bib.get_value(self.symbol_field, 'a'), field.get_value('a') + ' ' + field.get_value('g')])
                     
         return results
-        
-        #return [[bib.id, bib.get_value(self.symbol_field, 'a'), bib.get_value('700', 'a')] for bib in BibSet.from_query(query)]
 
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
