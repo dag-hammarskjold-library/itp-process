@@ -3717,10 +3717,81 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
     setOfData1=myCollection.find({'bodysession': bodysession,'section': paramSection})
     setOfData2=myCollection.find({'bodysession': bodysession,'section': paramSection})
-
+    lstVotes=list(setOfData)
     # Creation of the word document
 
     document = Document()
+
+
+
+    def set_cell_border(cell, **kwargs):
+        '''
+        Set cell`s border
+        Usage:
+
+        set_cell_border(
+            cell,
+            top={"sz": 12, "val": "single", "color": "#FF0000", "space": "0"},
+            bottom={"sz": 12, "color": "#00FF00", "val": "single"},
+            start={"sz": 24, "val": "dashed", "shadow": "true"},
+            end={"sz": 12, "val": "dashed"},
+        )
+        '''
+        tc = cell._tc
+        tcPr = tc.get_or_add_tcPr()
+
+        # check for tag existnace, if none found, then create one
+        tcBorders = tcPr.first_child_found_in("w:tcBorders")
+        if tcBorders is None:
+            tcBorders = OxmlElement('w:tcBorders')
+            tcPr.append(tcBorders)
+
+        # list over all available tags
+        for edge in ('start', 'top', 'end', 'bottom', 'insideH', 'insideV'):
+            edge_data = kwargs.get(edge)
+            if edge_data:
+                tag = 'w:{}'.format(edge)
+
+                # check for tag existnace, if none found, then create one
+                element = tcBorders.find(qn(tag))
+                if element is None:
+                    element = OxmlElement(tag)
+                    tcBorders.append(element)
+
+                # looks like order of attributes is important
+                for key in ["sz", "val", "color", "space", "shadow"]:
+                    if key in edge_data:
+                        element.set(qn('w:{}'.format(key)), str(edge_data[key]))
+
+    def set_cell_margins(cell, **kwargs):
+        '''
+        cell:  actual cell instance you want to modify
+
+        usage:
+
+            set_cell_margins(cell, top=50, start=50, bottom=50, end=50)
+
+        provided values are in twentieths of a point (1/1440 of an inch).
+        read more here: http://officeopenxml.com/WPtableCellMargins.php
+        '''
+        tc = cell._tc
+        tcPr = tc.get_or_add_tcPr()
+        tcMar = OxmlElement('w:tcMar')
+
+        for m in [
+            "top",
+            "start",
+            "bottom",
+            "end",
+        ]:
+            if m in kwargs:
+                node = OxmlElement("w:{}".format(m))
+                node.set(qn('w:w'), str(kwargs.get(m)))
+                node.set(qn('w:type'), 'dxa')
+                tcMar.append(node)
+
+        tcPr.append(tcMar)
+
 
     def set_repeat_table_header(row):
 
@@ -3798,9 +3869,9 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     # Adding the Header to the document
     
-    myRecords=setOfData
-    myRecords1=setOfData1
-    myRecords2=setOfData2
+    myRecords=list(setOfData)
+    myRecords1=list(setOfData1)
+    myRecords2=list(setOfData2)
 
     ### scenario for security council ##########
 
@@ -3992,13 +4063,17 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
 
     if (bodysession[0]=="A"):
-
-        start = time.perf_counter()
+        #start = time.perf_counter()
         # Retrieving the number of records
         recordNumber = 0
 
+        #bg - 
+        myRecords=lstVotes
+        myRecords1=lstVotes
+        myRecords2=lstVotes
         for record in myRecords:
             recordNumber+=1
+        
 
         # two columns display
 
@@ -4013,13 +4088,20 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         sectPr = section._sectPr
         cols = sectPr.xpath('./w:cols')[0]
         cols.set(qn('w:num'),'2')
+        
+        # Marging of the document
+
+        section.top_margin = Inches(0.81)
+        section.bottom_margin = Inches(1)
+        section.left_margin = Inches(1)
+        section.right_margin = Inches(1) 
 
         # set some variables
         myRow = 0
         myCol = 0
         myNumColum=15
         myNumTable=0
-        myNumLine=196
+        myNumRow=193 # number of countries that have a vote
         myIndex=0
         
 
@@ -4027,19 +4109,22 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         myNumTable=math.ceil(recordNumber/myNumColum)
 
         # creation of the table
-        table = document.add_table(rows=myNumLine, cols=myNumColum)
-        table.alignment = WD_TABLE_ALIGNMENT.LEFT
-        # write the memberstate
-        table.cell(myRow,0).paragraphs[0].text=""
+        table = document.add_table(rows=myNumRow+3, cols=myNumColum)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        table_cells=table._cells
+        # write the memberstates in the first (0) column
+        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
         myRow+=1
-        table.cell(myRow,0).paragraphs[0].text=""
+        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
         myRow+=1
-        table.cell(myRow,0).paragraphs[0].text=""
+        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
+        
         for country in countries:
             myRow+=1
-            table.cell(myRow,0).paragraphs[0].text=country
-
+            table_cells[myRow*myNumColum].paragraphs[0].text=country
+            
         myRow=0
+
 
         # Flip
         myFlip=0
@@ -4048,95 +4133,140 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         set_repeat_table_header(table.rows[0])
         set_repeat_table_header(table.rows[1])
         set_repeat_table_header(table.rows[2])
+
+        
         myOneTimeExec=False
+        vlCounter=0
         
-        #for myRecord in myRecords1:
+        ts1=time.time()
         while myIndex<recordNumber:
+            # for 1 row which is a header populate resolution numbers. Votes start from idx=3 and and with idx=195
             
-            for myVoteList in myRecords1[myIndex]["votelist"] : 
-
-                if myRow == 0:
-                    if myOneTimeExec==False:
-                        table.cell(myRow,myCol).paragraphs[0].text=myRecords1[myIndex]["docsymbol"][:7]+"-"
-                        myOneTimeExec=True
-                    
-                    # adding two additional row
-                    
-                    if myFlip==0:
-                        table.cell(myRow+1,myCol+1).paragraphs[0].text=myRecords1[myIndex]["resnum"]
-                        myFlip=1
-                    else:
-                        table.cell(myRow,myCol+1).paragraphs[0].text=myRecords1[myIndex]["resnum"]
-                        myFlip=0
-                    myRow+=1
-                    myRow+=1
-                    myRow+=1
-
+            vlLen=len(myRecords1[myIndex]["votelist"])
+            myRow=0
+            
+            
+            if myRow == 0:
+                if myOneTimeExec==False:
+                    myResCounter=0
+                    table_cells[myRow+myCol*myNumColum].paragraphs[0].text=myRecords1[myIndex]["docsymbol"][:9]+"-"
+                    myOneTimeExec=True
+                # adding two additional row
+                
+                if myFlip==0:
+                    myFlip=1
+                    table_cells[myCol+1+myNumColum].paragraphs[0].text=myRecords1[myIndex]["resnum"]
+                    myResCounter+=1   
                 else:
-                    table.cell(myRow,myCol+1).paragraphs[0].text=myVoteList["vote"]
-                    myRow+=1
-
-                # move to another column
-                if myRow==myNumLine:    
+                    myFlip=0
+                    table_cells[myCol+1].paragraphs[0].text=myRecords1[myIndex]["resnum"]
+                    myResCounter+=1
                     
-                    myRow=0
-                    myCol+=1
 
-                # check if we need to create a new table
-                if myCol==14:
-
-                    #create a new table
-                    p=document.add_paragraph()
-                    run = p.add_run()
-                    myBreak = run.add_break(WD_BREAK.PAGE)
-                    table = document.add_table(rows=myNumLine, cols=myNumColum)
-                    table.alignment = WD_TABLE_ALIGNMENT.LEFT
-
-                    # set the header visible
-                    set_repeat_table_header(table.rows[0])
-                    set_repeat_table_header(table.rows[1])
-                    set_repeat_table_header(table.rows[2])
-
-                    table.cell(myRow,myCol).paragraphs[0].text=myRecords1[myIndex]["docsymbol"][:7]+"-"
-
-                    # write the memberstate
-                    table.cell(myRow,0).paragraphs[0].text=""
-                    myRow+=1
-                    table.cell(myRow,0).paragraphs[0].text=""
-                    myRow+=1
-                    table.cell(myRow,0).paragraphs[0].text=""
-                    for country in countries:
+                myRow+=1
+                myRow+=1
+                myRow+=1
+            #write 1 column of votes
+            
+            for myVoteList in myRecords1[myIndex]["votelist"]: 
+                table_cells[(myRow)*(myNumColum)+myCol+1].paragraphs[0].text=myVoteList["vote"]
+                myRow+=1
+                vlCounter+=1    
+                if vlCounter==vlLen and myCol+1==14:
+                    # check if we need to create a new table
+                        myCol=0
+                        myRow=0
+                        myIndex+=1
+                        vlCounter=0
+                        #create a new table
+                        p=document.add_paragraph()
+                        run = p.add_run()
+                        myBreak = run.add_break(WD_BREAK.PAGE)
+                        table = document.add_table(rows=myNumRow+3, cols=myNumColum)
+                        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+                        table_cells=table._cells
+                        # write the memberstates in the first (0) column
+                        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
                         myRow+=1
-                        table.cell(myRow,0).paragraphs[0].text=country
+                        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
+                        myRow+=1
+                        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
 
-                    myRow=0
-                    myCol=0
-            myIndex+=1
 
-        
-        # Apply the font
-        widths = (Inches(5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5), Inches(1.5))
+                        # set the header visible
+                        set_repeat_table_header(table.rows[0])
+                        set_repeat_table_header(table.rows[1])
+                        set_repeat_table_header(table.rows[2])
+
+                        
+                        for country in countries:
+                            myRow+=1
+                            table_cells[myRow*myNumColum].paragraphs[0].text=country
+                        
+                        myOneTimeExec=False
+
+                    #write next column 
+                elif vlCounter==vlLen:    
+                        myCol+=1
+                        myRow=0
+                        myIndex+=1
+                        vlCounter=0
+                        
+                    
+            
+        stl_itp_vot_cell= document.styles.add_style('itpvotcell', WD_STYLE_TYPE.PARAGRAPH)
+        stl_itp_vot_cell_font=stl_itp_vot_cell.font
+        stl_itp_vot_cell_font.name = 'Arial'
+        stl_itp_vot_cell_font.size = Pt(8)
+        stl_itp_vot_cell_font.bold = False
+        #pf_stl_itp_vot_cell = stl_itp_vot_cell.paragraph_format
+
         for table in document.tables:
-            for row in table.rows:
-                for idx,width in enumerate(widths):
-                    row.cells[idx].width = width
-                for cell in row.cells:
-                    paragraphs = cell.paragraphs
-                    for paragraph in paragraphs:
-                        # Adding styling
-                        paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                        paragraph_format = paragraph.paragraph_format
-                        paragraph_format.space_after = Pt(0)
-                        paragraph_format.line_spacing =  1
-                        for run in paragraph.runs:
-                            font = run.font
-                            font.name="Arial"
-                            font.size= Pt(8)
+            table.autofit = False
+            table.allow_autofit = False
+            table_cells=table._cells
+            for cell in table_cells:
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                set_cell_margins(cell, top=0, start=0, bottom=0, end=0)
+                paragraphs = cell.paragraphs
+                for paragraph in paragraphs:
+                    paragraph.style=stl_itp_vot_cell
+                    ##pass
+                    # Adding styling
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    paragraph_format = paragraph.paragraph_format
+                    paragraph_format.space_after = Pt(0)
+                    paragraph_format.space_before = Pt(0)
+                    paragraph_format.line_spacing =  1
+                    paragraph_format.left_indent = Inches(0.00)
+                    paragraph_format.right_indent = Inches(0.00)
+                    
+                    for run in paragraph.runs:
+                        font = run.font
+                        font.name="Arial"
+                        font.size= Pt(8)
+            for ii, cell in enumerate(table_cells[30:45]):
+                paragraphs = cell.paragraphs
+                for paragraph in paragraphs:
+                    # Adding styling        
+                    set_cell_border(cell, bottom={"color": "#000000", "val": "single"})
+            for cell in table_cells:
+                table.cell=cell
 
-
+            for cell in table.columns[0].cells:
+                cell.width=Inches(1.4)
+                for paragraph in cell.paragraphs:
+                    ##pass
+                    paragraph.alignment=WD_ALIGN_PARAGRAPH.LEFT
+            for i in range(myNumColum-1):
+                for cell in table.columns[i+1].cells:
+                    cell.width=Inches(0.2)
+            
+            #table.columns[0].style=document.styles['itpvottabcol1']  
+            
+        print(f"time to generate itpvot is {time.time()-ts1}")
+        
         add_page_number(document.sections[0].footer.paragraphs[0])
-        end = time.perf_counter()
-        print(f"the duration of the process is {end-start}")
         return document
 
 def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
