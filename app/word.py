@@ -2102,7 +2102,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
             p2.add_run(" ")
             p2.add_run(entry["entry"])
-            #print(f"No of characters in entry for {entry['docsymbol']} is: {len(entry['entry'])}")
+            #print(f"No of characters in entry for {entry['docsymbol']} is: {len(entry['entry'])}") 
             count1=1+((len(entry['docsymbol'])+len(entry['entry']))//52)
             #print(f"No of lines in entry for {entry['docsymbol']} is: {count1}")
             #Breaks management
