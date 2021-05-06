@@ -1851,158 +1851,198 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
     #setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
 
+
     # Creation of the word document
     document = Document()
 
     # Two columns display
-    
+
     section = document.sections[0]
     sectPr = section._sectPr
     cols = sectPr.xpath('./w:cols')[0]
     cols.set(qn('w:num'),'2')
-    
+
     # Marging of the document
 
-    section.top_margin = Cm(1.54)
-    # section.bottom_margin = Cm(2.54)
-    section.left_margin = Cm(2.54)
-    section.right_margin = Cm(2.54)    
-    
+    section.top_margin = Inches(1)
+    section.header_distance=Inches(0.5)
+    section.bottom_margin = Inches(1)
+    section.footer_distance=Inches(0.5)
+    section.left_margin = Inches(1)
+    section.right_margin = Inches(1) 
 
-    
+
+
     ################## HEADER ###############################################
-    
+
     styles = document.styles
     new_heading_style = styles.add_style('New Heading', WD_STYLE_TYPE.PARAGRAPH)
     new_heading_style.base_style = styles['Heading 1']
-    
+
+
     # Font settings
-    
+
     font = new_heading_style.font
     font.name = 'Arial'
     font.size = Pt(8)
     font.bold = False
     font.color.rgb = RGBColor(0, 0, 0)
-    
+
     # Adding the header to the document
-    
+
     header=document.sections[0].header
 
     pfnew_heading_style = new_heading_style.paragraph_format
     pfnew_heading_style.line_spacing_rule =  WD_LINE_SPACING.SINGLE
-    
-    ################## SUBHEADER ###############################################
-    
+    #pfnew_heading_style.keep_together = True
+
+    ################## SUBHEADER ############################################### 
+
     new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
     new_sub_heading_style.base_style = styles['Heading 1']
-    
     # Font settings
-    
+
     font = new_sub_heading_style.font
     font.name = 'Arial'
     font.size = Pt(8)
     font.bold = False
     font.color.rgb = RGBColor(0, 0, 0)
-    
-    ################## itshead ###############################################
-    
+
+    ################## itshead ############################################### these are subjects
+
     stlItsHead = document.styles.add_style('itshead', WD_STYLE_TYPE.PARAGRAPH)
-    
+    stlItsHead.quick_style =True
+
     # Font name
-    
+
     stlItsHeadFont=stlItsHead.font
     stlItsHeadFont.name = 'Arial'
     stlItsHeadFont.size = Pt(9)
     stlItsHeadFont.bold = True
-    
+
     pfItsHead = stlItsHead.paragraph_format
+    pfItsHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    pfItsHead.space_before=Pt(8)
+    pfItsHead.space_after=Pt(3)
+    pfItsHead.keep_together = True
+
 
     # Line spacing
-    
-    pfItsHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
-    
 
-    
-    ################## itssubhead ###############################################
-    
+    #pfItsHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+
+    ################## column break style #####################################
+    stl_its_col_break = document.styles.add_style('itsColBreak', WD_STYLE_TYPE.PARAGRAPH)
+    stl_its_col_break.quick_style =True
+
+
+    stl_its_col_break_font=stl_its_col_break.font
+    stl_its_col_break_font.name = 'Arial'
+    stl_its_col_break_font.size = Pt(1)
+
+
+    # Indentation Spacing
+    pf_its_col_break = stl_its_col_break.paragraph_format
+
+    pf_its_col_break.left_indent = Inches(0)
+    pf_its_col_break.space_before=Pt(0)
+    pf_its_col_break.space_after=Pt(0)
+
+    pf_its_col_break.line_spacing_rule=WD_LINE_SPACING.EXACTLY
+
+
+    ################## itssubhead ############################################### this is for grouping
+
     stlItssubHead = document.styles.add_style('itssubhead', WD_STYLE_TYPE.PARAGRAPH)
-    
+    stlItssubHead.quick_style =True
     # Font name
-    
+
     stlItsSubHeadFont=stlItssubHead.font
     stlItsSubHeadFont.name = 'Arial'
     stlItsSubHeadFont.size = Pt(9)
     stlItsSubHeadFont.bold = True
     stlItsSubHeadFont.underline = True
-    
+
     pfItsSubHead = stlItssubHead.paragraph_format
+    pfItsSubHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+    pfItsSubHead.keep_together=True
+    pfItsSubHead.space_before=Pt(3)
+    pfItsSubHead.space_after=Pt(0)
 
     # Indentation
-    
+
     pfItsSubHead.left_indent = Inches(0)
-    
+
     # Line spacing
-    
-    pfItsSubHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
-    
-    
-    ################## itsentry ###############################################
-    
+
+    #pfItsSubHead.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+
+
+    ################## itsentry ############################################### entries styling
+
     stlitsentry= document.styles.add_style('itsentry', WD_STYLE_TYPE.PARAGRAPH)
-    
+    stlitsentry.quick_style =True
     # Font name
-    
+
     stlitsentryFont=stlitsentry.font
     stlitsentryFont.name = 'Arial'
     stlitsentryFont.size = Pt(8)
     stlitsentryFont.bold = False
-    
-    
+
+
     pfstlitsentry = stlitsentry.paragraph_format
 
     # Indentation
-    
-    pfstlitsentry.left_indent = Inches(0.15)
-    
+
+    pfstlitsentry.left_indent = Inches(0.1)
+    pfstlitsentry.first_line_indent  = Inches(-0.1)
+
     # Line spacing
-    
+
     pfstlitsentry.line_spacing_rule =  WD_LINE_SPACING.SINGLE
-    
-    ################## note ###############################################
-    
+    pfstlitsentry.keep_together=True
+    pfstlitsentry.space_before=Pt(5)
+    pfstlitsentry.space_after=Pt(0)
+
+    ################## note ############################################### notes styling
+
     stlNote = document.styles.add_style('note', WD_STYLE_TYPE.PARAGRAPH)
-    
+    stlNote.quick_style =True
+
     # Font name
-    
+
     stlNoteFont=stlNote.font
     stlNoteFont.name = 'Arial'
     stlNoteFont.size = Pt(8)
-    
+
     pfNote = stlNote.paragraph_format
 
     # Indentation
-    
-    pfNote.left_indent = Inches(0.05)
 
-    pfNote.first_line_indent = Cm(0.90)
-    
+    #pfNote.left_indent = Inches(0.1)
+    pfNote.first_line_indent = Inches(0.3)
+
     # Line spacing
-    
+
     pfNote.line_spacing_rule =  WD_LINE_SPACING.SINGLE
-    
-    ################## WRITING THE DOCUMENT ###############################################
-    
+    pfNote.keep_together=True
+    pfNote.space_before=Pt(0)
+    pfNote.space_after=Pt(0)
+
+
+    ################## WRITING THE DOCUMENT ############################################### 
+
     # Adding the Header to the document
-    
+
     p=header.add_paragraph(myTitle.upper(), style='New Heading')
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
+
     # Adding the sub Header to the document
-    
+
     p1=header.add_paragraph(mySubTitle.upper(), style='New sub Heading')
     p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p1.add_run("\n")
-    p1.add_run("\n")
+    #p1.add_run("\n")
+    #p1.add_run("\n")
 
     # Breaks management
     paragraph_format = p1.paragraph_format
@@ -2010,103 +2050,189 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
     paragraph_format.space_after = Pt(10)
     paragraph_format.keep_together = True
     paragraph_format.keep_with_next = True
-    
+
     myRecords=setOfData
 
-    for record in myRecords:
 
+    def insert_its_head(record):
         try :
             itshead= record['head']
         except :
             itshead=""
         
         # Adding itshead content
+        
         p=document.add_paragraph(itshead,style=stlItsHead)
 
-        # Breaks management
-        paragraph_format = p.paragraph_format
-        paragraph_format.space_after = Pt(5)
-        paragraph_format.space_before = Pt(0)
-        # paragraph_format.keep_together = True
-        # paragraph_format.keep_with_next = True
+    def insert_its_head_break(record):
+        try :
+            itshead= record['head']
+        except :
+            itshead=""
         
-        subheading=record['subheading'] 
+        p0=document.add_paragraph()
+        p0.style=stl_its_col_break
+        column_break_run = p0.add_run()
+        column_break_run.add_break(WD_BREAK.COLUMN)
+        
+    def insert_its_head_continued(record):
+        try :
+            itshead= record['head']
+        except :
+            itshead=""
+        
+        # Adding itshead content
+        p=document.add_paragraph(itshead+" (continued)",style=stlItsHead)
 
-        for mysubhead in subheading:
-
-            itssubhead=mysubhead["subhead"]
-
+    def insert_its_subhead(itssubhead):
             # Adding itssubhead content
             p1=document.add_paragraph(itssubhead,style=stlItssubHead)
+
+    def insert_entry_note(entry):
+        
+        if entry["note"]!="":
+            #p2=document.add_paragraph(entry["entry"],style=stlitsentry)
+            p2=document.add_paragraph(style=stlitsentry)
+            #dual document symbol
+            myEntry=entry["docsymbol"].split(" ")
+            add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+            p2.add_run(" ")
+            if len(myEntry)==2:
+                p2.add_run(myEntry[1])
+
+            p2.add_run(" ")
+            p2.add_run(entry["entry"])
+            #print(f"No of characters in entry for {entry['docsymbol']} is: {len(entry['entry'])}") 
+            count1=1+((len(entry['docsymbol'])+len(entry['entry']))//52)
+            #print(f"No of lines in entry for {entry['docsymbol']} is: {count1}")
+            #Breaks management
+            paragraph_format = p2.paragraph_format
+            paragraph_format.keep_with_next = True
+        
+        
+
+            insert_note(entry)
             
-            # Breaks management
-            paragraph_format = p1.paragraph_format
-            paragraph_format.space_after = Pt(6)
-            paragraph_format.space_before = Pt(0)
-            # paragraph_format.keep_together = True
-            # paragraph_format.keep_with_next = True
+
+        else:
+            #p2=document.add_paragraph(entry["entry"],style=stlitsentry)
+            p2=document.add_paragraph(style=stlitsentry)
+            #try:
+
+            #dual document symbol
+            myEntry=entry["docsymbol"].split(" ")
+            add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+            p2.add_run(" ")
+            if len(myEntry)==2:
+                p2.add_run(myEntry[1])
+        
+            p2.add_run(" ")
+            p2.add_run(entry["entry"])
+            #print(f"No of characters in entry for {entry['docsymbol']} is: {len(entry['entry'])}")
+            count1=1+((len(entry['docsymbol'])+len(entry['entry']))//52)
+            #print(f"No of lines in entry for {entry['docsymbol']} is: {count1}")
+
+    def insert_note(entry):
+            p3=document.add_paragraph(entry["note"],style=stlNote)
+            #print(f"No of characters in note for {entry['docsymbol']} is: {len(entry['note'])}")
+            count2=1+(len(entry['note'])//52)
+            #print(f"No of lines in note for {entry['docsymbol']} is: {count2}")
+            #Breaks management
+            paragraph_format = p3.paragraph_format
+            paragraph_format.keep_together = True
+
+
+    # to break columns .. 
+    nextPage={}
+
+    def dxa_counter_entry_note(entry):
+        if entry["note"]!="":
+            count_n=1+(len(entry['note'])//52)
+            count_e=1+((len(entry['docsymbol'])+len(entry['entry']))//52)
+            lines=count_n+count_e
+        else:
+            count_n=0
+            count_e=1+((len(entry['docsymbol'])+len(entry['entry']))//52)
+            lines=count_n+count_e
+            #lines*fontsize*20+space after*20
+        return lines*8*20+5*20
+
+    def dxa_counter_head(head):
+        lines= 1+(len(head)//37) #37 is number of characters per line / on average ??
+        #lines*fontsize*20+space after*20
+        return lines*9*20+11*20 # 8 pts before and 3 after
+
+    def dxa_counter_head_continued(head):
+        lines = 1+((len(head)+len("(continued)"))//37)
+        return lines*9*20+11*20
+
+    def dxa_counter_subhead(subhead):
+        lines=1+(len(subhead)//37)
+        return lines*9*20+3*20
+        
+    entries_counter=0
+    dxa_counter=0
+    dxa_page_length=11111# 8"*1440dxa - 300
+
+
+
+    for record in myRecords:
+
+        try :
+            itshead= record['head']
         
             
-            itsentries=mysubhead["entries"]
-            
-            for entry in itsentries:
-       
-                #Adding itssubhead content
-                p2=document.add_paragraph(" ",style=stlitsentry)
-                p2.paragraph_format.first_line_indent = Pt(-10)
+            # Adding itshead content
+            dxa_len_curr_head=dxa_counter_head(itshead)
+            #if counter + next head +first subhead+first entry_note .. then break as there is no room on the page..
+            #cs=dxa_counter_subhead(record["subheading"][0])
+            #fe=dxa_counter_entry_note(record['subheading'][0]["entries"][0])
+            if (dxa_counter+dxa_len_curr_head+dxa_counter_subhead(record["subheading"][0])+dxa_counter_entry_note(record['subheading'][0]["entries"][0]))>dxa_page_length:#Inches(11-0.61-1-1-1)*1440
+                insert_its_head_break(record)
+                dxa_counter=0
+                insert_its_head(record)
+                dxa_counter+=dxa_counter_head(itshead)
+            else:
+                insert_its_head(record)
+                dxa_counter+=dxa_counter_head(itshead)
 
-                # We have some separators between docsymbole
-                try:
-                    
-                    # result=entry["docsymbol"].find(" ")
-                    # if result > 0 :
-                    #     myEntry=entry["docsymbol"].split(" ")
-                    #     add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
-                        
-                    #     p2.add_run(" ")
-                    #     p2.add_run(myEntry[1])
+            subheading=record['subheading'] 
 
-                    
-                    # else :
-                        
-                    add_hyperlink1(p2,str(entry["docsymbol"]),Config.url_prefix+entry["docsymbol"])          
+            for mysubhead in subheading:
+                entries_counter=0
+                itssubhead=mysubhead["subhead"]
+
+                # Adding itssubhead content
                 
-                except:
-                    pass
-                
-                if entry["note"]!="":
-                    p2.add_run(" ")
-                    p2.add_run(entry["entry"])
-                    
-                    #Breaks management
-                    paragraph_format = p2.paragraph_format
-                    paragraph_format.space_after = Pt(0)
-                    paragraph_format.space_before = Pt(0)
-                    # paragraph_format.keep_together = True
-                    # paragraph_format.keep_with_next = True
-                
-                    #Adding itssubhead content
-                    p3=document.add_paragraph(entry["note"],style=stlNote)
-                    
-                    #Breaks management
-                    paragraph_format = p3.paragraph_format
-                    paragraph_format.space_after = Pt(7)
-                    paragraph_format.space_before = Pt(0)
-                    # paragraph_format.keep_together = True
-                    # paragraph_format.keep_with_next = True
-   
-                
+                itsentries=mysubhead["entries"]
+                dxa_len_entry_note=dxa_counter_entry_note(itsentries[0])
+                if (dxa_counter+dxa_counter_subhead(itssubhead)+dxa_counter_entry_note(itsentries[0]))>dxa_page_length:# and entries_counter<=len(itsentries):#Inches(11-0.61-1-1-1)*1440
+                    #print(f"dxa_counter BEFORE column break is {dxa_counter}")
+                    insert_its_head_break(record)
+                    dxa_counter=0
+                    insert_its_head_continued(record)
+                    dxa_counter+=dxa_counter_head_continued(itshead)
+                    insert_its_subhead(itssubhead)
+                    dxa_counter+=dxa_counter_subhead(itshead)                   
                 else:
-                    p2.add_run(" ")
-                    p2.add_run(entry["entry"])
+                    insert_its_subhead(itssubhead)
+                    dxa_counter+=dxa_counter_subhead(itssubhead)
                     
-                    #Breaks management
-                    paragraph_format = p2.paragraph_format
-                    #paragraph_format.space_after = Pt(5)
-                    paragraph_format.space_after = Pt(7)
-                    paragraph_format.space_before = Pt(0)
-                    # paragraph_format.keep_together = True
-                    # paragraph_format.keep_with_next = True
+                for entry in itsentries:
+                    entries_counter+=1
+                    #Adding itssubhead content
+                    if dxa_counter+dxa_counter_entry_note(entry)>dxa_page_length:# and entry["docsymbol"]!=itsentries[-1]["docsymbol"]:#Inches(11-0.61-1-1-1)*1440
+                        insert_its_head_break(record)
+                        dxa_counter=0
+                        insert_its_head_continued(record)
+                        dxa_counter+=dxa_counter_head_continued(itshead)
+                        insert_entry_note(entry)
+                        dxa_counter+=dxa_counter_entry_note(entry)                 
+                    else:
+                        insert_entry_note(entry)
+                        dxa_counter+=dxa_counter_entry_note(entry)
+        except:
+            itshead=""
 
     add_page_number(document.sections[0].footer.paragraphs[0])
     return document    
