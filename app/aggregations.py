@@ -728,14 +728,16 @@ def itpres(bodysession):
                     'w': {'$indexOfCP': ['$decision', 'without' ]},   
                     'u': {'$indexOfCP': ['$decision', 'unanimously' ]},   
                     'x': {'$indexOfCP': ['$decision', '(' ]},   
-                    'y': {'$indexOfCP': ['$decision', ')' ]},   
+                    'y': {'$indexOfCP': ['$decision', ')' ]}, 
+                    's': {'$indexOfCP': ['$decision', 'silence' ]},  
                     'a': {'$indexOfCP': ['$decision', ' ' ]},   
                     'b': {'$indexOfCP': ['$decision', ',' ]}},
             'in': {   
                 '$switch': {   
                     'branches': [
                         {'case': {'$gt': ['$$w', -1]}, 'then': 'without vote'}, 
-                        {'case': {'$gt': ['$$u', -1]}, 'then': 'Unanimous'}, 
+                        {'case': {'$gt': ['$$u', -1]}, 'then': 'Unanimous'},
+                        {'case': {'$gt': ['$$s', -1]}, 'then': '$decision'},  
                         {'case': {'$gt': ['$$x', -1]}, 'then': {'$substrCP': ['$decision', {'$add': ['$$x', 1 ]}, {'$subtract': [{'$subtract': ['$$y', '$$x'] }, 1 ]}]}}],   
                     'default': {'$substrCP': ['$decision', {'$add': ['$$a', 1]}, {'$subtract': [{'$subtract': ['$$b', '$$a']}, 1]}]}
                     }
