@@ -724,7 +724,8 @@ def itpres(bodysession):
         transform['vote'] = {
             '$let': {
                 'vars': {   
-                    'decision': 1,   
+                    'decision': 1, 
+                    'str_len': {'$strLenCP': '$decision'},  
                     'w': {'$indexOfCP': ['$decision', 'without' ]},   
                     'u': {'$indexOfCP': ['$decision', 'unanimously' ]},   
                     'x': {'$indexOfCP': ['$decision', '(' ]},   
@@ -735,9 +736,15 @@ def itpres(bodysession):
                 '$switch': {   
                     'branches': [
                         {'case': {'$gt': ['$$w', -1]}, 'then': 'without vote'}, 
-                        {'case': {'$gt': ['$$u', -1]}, 'then': 'Unanimous'}, 
+                        {'case': {'$gt': ['$$u', -1]}, 'then': 'Unanimous'},
                         {'case': {'$gt': ['$$x', -1]}, 'then': {'$substrCP': ['$decision', {'$add': ['$$x', 1 ]}, {'$subtract': [{'$subtract': ['$$y', '$$x'] }, 1 ]}]}}],   
-                    'default': {'$substrCP': ['$decision', {'$add': ['$$a', 1]}, {'$subtract': [{'$subtract': ['$$b', '$$a']}, 1]}]}
+                    'default': {
+                        '$cond': {
+                            'if': {'$gt': ['$$b', -1]}, 
+                            'then': {'$substrCP': ['$decision', {'$add': ['$$a', 1]}, {'$subtract': [{'$subtract': ['$$b', '$$a']}, 1]}]}, 
+                            'else': {'$substrCP': ['$decision', {'$add': ['$$a', 1]}, {'$subtract': [{'$subtract': ['$$str_len', '$$a']}, 1]}]}
+                            }
+                        }
                     }
                 }
             }
