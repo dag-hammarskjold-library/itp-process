@@ -803,21 +803,27 @@ def itpres(bodysession):
             }
             
             transform['meeting'] = {
-                '$concat': [
-                    '$191.b', 
-                    {'$substrCP': ['$191.c', 0, 4]}, 
-                    '/PV.', 
-                    {'$let': {
-                        'vars': {
-                            'e': {'$arrayElemAt': [
-                                {'$split': ['$996.a', ' ']}, 
-                                {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'meeting']}, 1]}]}
-                        }, 
-                        'in': {
-                            '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
-                        }}
-                    }
-                ]
+                '$cond': {
+                    'if': {'$gt': [{'$indexOfCP': ['$decision', 'meeting']}, -1]}, 
+                    'then': {
+                        '$concat': [
+                            '$191.b', 
+                            {'$substrCP': ['$191.c', 0, 4]}, 
+                            '/PV.', 
+                            {'$let': {
+                                'vars': {
+                                    'e': {'$arrayElemAt': [
+                                        {'$split': ['$996.a', ' ']}, 
+                                        {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'meeting']}, 1]}]}
+                                }, 
+                                'in': {
+                                    '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
+                                }}
+                            }
+                        ]
+                    }, 
+                    'else': ''
+                }
             }
 
             transform['voteyear'] = {'$arrayElemAt': ['$votedate', 0]}
@@ -893,41 +899,53 @@ def itpres(bodysession):
     
         if body == "A":
             transform['meeting'] = {
-                '$concat': [
-                    '$191.b', 
-                    {'$substrCP': ['$191.c', 0, 4]}, 
-                    '/PV.', 
-                    {'$let': {
-                        'vars': {
-                            'e': {'$arrayElemAt': [
-                                {'$split': ['$996.a', ' ']}, 
-                                {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'plenary']}, 1]}]}
-                        }, 
-                        'in': {
-                            '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
-                        }}
-                    }
-                ]
+                '$cond': {
+                    'if': {'$gt': [{'$indexOfCP': ['$decision', 'plenary']}, -1]}, 
+                    'then': {
+                        '$concat': [
+                            '$191.b', 
+                            {'$substrCP': ['$191.c', 0, 4]}, 
+                            '/PV.', 
+                            {'$let': {
+                                'vars': {
+                                    'e': {'$arrayElemAt': [
+                                        {'$split': ['$996.a', ' ']}, 
+                                        {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'plenary']}, 1]}]}
+                                }, 
+                                'in': {
+                                    '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
+                                }}
+                            }
+                        ]
+                    }, 
+                    'else': ''
+                }
             }    
 
         if body == "E":
             transform['meeting'] = {
-                '$concat': [
-                    '$191.b', 
-                    {'$substrCP': ['$191.c', 0, 4]}, 
-                    '/SR.', 
-                    {'$let': {
-                        'vars': {
-                            'e': {'$arrayElemAt': [
-                                {'$split': ['$996.a', ' ']}, 
-                                {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'plenary']}, 1]}]}
-                        }, 
-                        'in': {
-                            '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
-                        }}
-                    }
-                ]
-            }
+                '$cond': {
+                    'if': {'$gt': [{'$indexOfCP': ['$decision', 'plenary']}, -1]}, 
+                    'then': {
+                        '$concat': [
+                            '$191.b', 
+                            {'$substrCP': ['$191.c', 0, 4]}, 
+                            '/SR.', 
+                            {'$let': {
+                                'vars': {
+                                    'e': {'$arrayElemAt': [
+                                        {'$split': ['$996.a', ' ']}, 
+                                        {'$subtract': [{'$indexOfArray': [{'$split': ['$996.a', ' ']}, 'plenary']}, 1]}]}
+                                }, 
+                                'in': {
+                                    '$substrCP': ['$$e', 0, {'$subtract': [{'$strLenCP': '$$e'}, 2]}]
+                                }}
+                            }
+                        ]
+                    }, 
+                    'else': ''
+                }
+            }    
 
         transform['sortkey1'] = '$191.a'
 
