@@ -1725,17 +1725,23 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             firstTitle=""
             firstlineValue=""
             firstTitle= record["docsymbol"].split("/")
+
             firstlineValue= record["meeting"].split(".")
             row_cells = table.add_row().cells
 
             add_hyperlink(row_cells[0].paragraphs[0],firstTitle[3],Config.url_prefix+firstTitle[0]+"/"+firstTitle[1]+"/"+firstTitle[2]+"/"+firstTitle[3])
             row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             row_cells[1].text=record["title"]
-            row_cells[1].paragraphs[0].style="tableContent"   
-            add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValue[0]+"."+firstlineValue[1])
-            
-            row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
-            row_cells[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            row_cells[1].paragraphs[0].style="tableContent" 
+
+            ### based on Jennifer's update on 12 May 2021
+            if ''.join(firstlineValue) !="":
+                add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValue[0]+"."+firstlineValue[1])
+                row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
+                row_cells[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            else:
+                row_cells[2].paragraphs[0].add_run(record["votedate"])
+                row_cells[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             ############################################
             
             row_cells[3].text=record["ainumber"]
@@ -1769,9 +1775,10 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         firstTitle= myRecords[0]["docsymbol"].split("/")
         baseUrl1=firstTitle[0] + "/" + firstTitle[1] + "/"
+    
         firstlineValue= (myRecords[0]["meeting"].split("."))[0].split("/")
-
-        baseUrl2="  ("+firstlineValue[0]+"/"+ firstlineValue[2] +".-)"
+        if ''.join(firstlineValue) !="":
+            baseUrl2="  ("+firstlineValue[0]+"/"+ firstlineValue[2] +".-)"
 
         hdr_cells[0].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[0].paragraphs[0].add_run(baseUrl1)
@@ -1794,7 +1801,8 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
         hdr_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[2].paragraphs[0].add_run('Meeting / Date, '+myRecords[0]["voteyear"] )
         run.underline=True
-        run1=hdr_cells[2].paragraphs[0].add_run(" "+baseUrl2)
+        if ''.join(firstlineValue) !="":
+            run1=hdr_cells[2].paragraphs[0].add_run(" "+baseUrl2)
 
         hdr_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
         run = hdr_cells[3].paragraphs[0].add_run('Vote')
@@ -1835,12 +1843,16 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
             row_cells[1].add_paragraph(record["subjectsubtitle"],style="tableContent1")
             
             row_cells[2].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
-            add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValuePlus[0]+"/"+ firstlineValuePlus[2]+ "."+firstlineValue[1])
-            row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
-
+            if ''.join(firstlineValue) !="":
+                add_hyperlink(row_cells[2].paragraphs[0],firstlineValue[1],Config.url_prefix+firstlineValuePlus[0]+"/"+ firstlineValuePlus[2]+ "."+firstlineValue[1])
+                row_cells[2].paragraphs[0].add_run( " / " + record["votedate"])
+            else:
+                row_cells[2].paragraphs[0].add_run(record["votedate"])
             row_cells[3].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
             #row_cells[3].text=record["vote"]
             row_cells[3].paragraphs[0].text=record["vote"]
+            
+
 
         # Definition of the size of the column
 
