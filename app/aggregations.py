@@ -2145,9 +2145,9 @@ def itpdsl(bodysession):
                         '$concat': [
                             {'$arrayElemAt': ['$191.a', '$primary']}, 
                             {'$cond': {
-                                'if': {'$arrayElemAt': ['$191.a', '$secondary']}, 
-                                'then': {'$concat': [' (', {'$arrayElemAt': ['$191.a', '$secondary']}, ')']}, 
-                                'else': ''
+                                'if': {'$eq': ['$primary', '$secondary']},
+                                'then': {'$concat': [' (', {'$arrayElemAt': ['$191.a', 1]}, ')']}, 
+                                'else': {'$concat': [' (', {'$arrayElemAt': ['$191.a', '$secondary']}, ')']},
                                 }
                             }
                         ]
