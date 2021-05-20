@@ -1259,6 +1259,16 @@ def itpsubj(bodysession):
             }
         }
 
+        add_1['startYY'] = {'$ltrim': {'input': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 0]},'chars': '0'}}
+
+        add_1['endYY'] = {
+            '$cond': { 
+                'if': '$992.b', 
+                'then': { '$ltrim': { 'input': {'$arrayElemAt': [{'$split': ['$992.b', '-']}, 0] }, 'chars': '0' } }, 
+                'else': 'N/A'
+            }
+        }
+
         add_stage1 = {}
         add_stage1['$addFields'] = add_1
 
@@ -1315,9 +1325,9 @@ def itpsubj(bodysession):
         add_2['votedate'] = {
             '$switch': { 
                 'branches': [ 
-                    { 'case': {'$eq': ['$endDD', 'N/A'] }, 'then': {'$concat': ['$startDD', ' ', '$startMM'] } }, 
-                    { 'case': {'$eq': ['$startMM', '$endMM'] }, 'then': {'$concat': ['$startDD', '-', '$endDD', ' ', '$startMM'] } }, 
-                    { 'case': {'$ne': ['$startMM', '$endMM'] }, 'then': {'$concat': ['$startDD', ' ', '$startMM', '-', '$endDD', ' ', '$endMM'] } }
+                    { 'case': {'$eq': ['$endDD', 'N/A'] }, 'then': {'$concat': ['$startDD', ' ', '$startMM', ' ', '$startYY'] } }, 
+                    { 'case': {'$eq': ['$startMM', '$endMM'] }, 'then': {'$concat': ['$startDD', '-', '$endDD', ' ', '$startMM', ' ', '$startYY'] } }, 
+                    { 'case': {'$ne': ['$startMM', '$endMM'] }, 'then': {'$concat': ['$startDD', ' ', '$startMM', '-', '$endDD', ' ', '$endMM', ' ', '$endYY'] } }
                 ], 
                 'default': 'N/A'
             }
