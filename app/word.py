@@ -2865,6 +2865,7 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
     font.name = 'Arial'
     font.size = Pt(12)
     font.bold = True
+    #font.italic = True
     font.color.rgb = RGBColor(0, 0, 0)
     
     # Adding the header to the document
@@ -2906,6 +2907,7 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     pfSornorm.line_spacing_rule =  WD_LINE_SPACING.SINGLE
 
+
     ################## SORNOTE ###############################################
     
     stlSornote = document.styles.add_style('sornote', WD_STYLE_TYPE.PARAGRAPH)
@@ -2914,14 +2916,44 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     stlSornoteFont=stlSornote.font
     stlSornoteFont.name = 'Arial'
-    stlSornoteFont.size = Pt(8)    
-    
+    stlSornoteFont.size = Pt(8)     
     pfSornote = stlSornote.paragraph_format
 
     # Line spacing
     
     pfSornote.line_spacing_rule =  WD_LINE_SPACING.SINGLE
+
+    ################## SORNOTE-ITALIC ###############################################
+    
+    stlSornoteIt = document.styles.add_style('sornote_italic', WD_STYLE_TYPE.CHARACTER)
+    
+    # Font name
+    
+    stlSornoteFontIt=stlSornoteIt.font
+    stlSornoteFontIt.name = 'Arial'
+    stlSornoteFontIt.size = Pt(8)    
+    stlSornoteFontIt.italic = True 
+    #pfSornoteIt = stlSornote.paragraph_format
+
+    # Line spacing
+    
+    #pfSornoteIt.line_spacing_rule =  WD_LINE_SPACING.SINGLE
      
+################## SORNOTE-nonITALIC ###############################################
+    
+    stlSornoteNonIt = document.styles.add_style('sornote_non_italic', WD_STYLE_TYPE.CHARACTER)
+    
+    # Font name
+    
+    stlSornoteFontNonIt=stlSornoteNonIt.font
+    stlSornoteFontNonIt.name = 'Arial'
+    stlSornoteFontNonIt.size = Pt(8)    
+    stlSornoteFontNonIt.italic = False 
+    #pfSornoteIt = stlSornote.paragraph_format
+
+    # Line spacing
+    
+    #pfSornoteIt.line_spacing_rule =  WD_LINE_SPACING.SINGLE
     ################## WRITING THE DOCUMENT ###############################################
     
     # Adding the Header to the document
@@ -2940,14 +2972,47 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
     cols.set(qn('w:num'),'1')
 
     if (bodysession[0]=="A"):
-        p=document.add_paragraph("NOTE :   Languages of corrigenda are indicated only when corrigenda are not issued in all six official languages.Documents issued as Supplements to the Official Records of the General Assembly, Seventy-second Session are so indicated. Information regarding documents bearing the double symbol A/  and S/  can be found in the Supplements to the Official Records of the Security Council. The information provided below is current as of the date this Index is submitted for publication.",style="sornote")
-    
+        p=document.add_paragraph()
+        p.add_run("NOTE: ",style="sornote_italic") 
+        #run1.text=
+        #run1.
+        run2=p.add_run("Languages of corrigenda are indicated only when corrigenda are not issued in all six official languages. Documents issued as ")
+        run2.style="sornote_non_italic"
+        run3=p.add_run("Supplements")
+        run3.style="sornote_italic"
+        run4=p.add_run(" to the ")
+        run4.style="sornote_non_italic"
+        run5=p.add_run("Official Records of the General Assembly,")
+        run5.style="sornote_italic"
+        run6=p.add_run(" Seventy-second Session are so indicated. Information regarding documents bearing the double symbol A/-  and S/-  can be found in the ")
+        run6.style="sornote_non_italic"
+        run7=p.add_run("Supplements")
+        run7.style="sornote_italic"
+        run8=p.add_run(" to the ")
+        run8.style="sornote_non_italic"
+        run9=p.add_run("Official Records of the Security Council.")
+        run9.style="sornote_italic"
+        run10=p.add_run(" The information provided below is current as of the date this Index is submitted for publication.")
+        run10.style="sornote_non_italic"
     if (bodysession[0]=="E"):
-        p=document.add_paragraph("NOTE: Languages of corrigenda are indicated only when corrigenda are not issued in all six languages. Documents issued as Supplements to the Official Records of the Economic and Social Council, 2018 are also indicated. The information provided below is current as of the date this Index is submitted for publication.",style="sornote")
-   
-    if (bodysession[0]=="S"):
-        p=document.add_paragraph("NOTE: Languages of corrigenda are indicated only when corrigenda are not issued in all six official languages. The information provided below is current as of the date this Index is submitted for publication.",style="sornote")
-    
+        p=document.add_paragraph()
+        p.add_run("NOTE: ",style="sornote_italic") 
+        run2=p.add_run("Languages of corrigenda are indicated only when corrigenda are not issued in all six languages. Documents issued as ")
+        run2.style="sornote_non_italic"
+        run3=p.add_run("Supplements")
+        run3.style="sornote_italic"
+        run4=p.add_run(" to the ")
+        run4.style="sornote_non_italic"
+        run5=p.add_run("Official Records of the Economic and Social Council,")
+        run5.style="sornote_italic"
+        run6=p.add_run(" 2018 are also indicated. The information provided below is current as of the date this Index is submitted for publication.")
+        run6.style="sornote_non_italic"
+    if (bodysession[0]=="S"): 
+        p=document.add_paragraph()
+        p.add_run("NOTE: ",style="sornote_italic") 
+        runs2=p.add_run("Languages of corrigenda are indicated only when corrigenda are not issued in all six official languages. The information provided below is current as of the date this Index is submitted for publication.")
+        runs2.style="sornote_non_italic"
+
     p.add_run("\n")
 
     p=document.add_paragraph(myRecords[0]["committee"],style="sorentry")
