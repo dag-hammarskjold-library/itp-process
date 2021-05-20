@@ -1139,7 +1139,7 @@ def itpsubj(bodysession):
                     'else': ''} }, 
                     '.']
         }
-
+        
         #body == S
         add_1['unique_case1'] = {
             '$cond': { 
@@ -1198,6 +1198,67 @@ def itpsubj(bodysession):
         add_1['agendasubject'] = { 
             '$replaceAll': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }
 
+        add_1['startDD'] = {'$ltrim': {'input': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 2]},'chars': '0'}}
+
+        add_1['endDD'] = {
+            '$cond': { 
+                'if': '$992.b', 
+                'then': { '$ltrim': { 'input': {'$arrayElemAt': [{'$split': ['$992.b', '-']}, 2] }, 'chars': '0' } }, 
+                'else': 'N/A'
+            }
+        }
+
+        add_1['startMM'] = {
+            '$let': {
+                'vars': { 'startMM': { '$arrayElemAt': [{'$split': ['$992.a', '-']}, 1 ] }
+                }, 
+                'in': {
+                    '$switch': {
+                        'branches': [
+                            {'case': {'$eq': ['$$startMM', '01']},'then': 'Jan.'}, 
+                            {'case': {'$eq': ['$$startMM', '02']},'then': 'Feb.'},
+                            {'case': {'$eq': ['$$startMM', '03']},'then': 'Mar.'}, 
+                            {'case': {'$eq': ['$$startMM', '04']},'then': 'Apr.'},
+                            {'case': {'$eq': ['$$startMM', '05']},'then': 'May'},
+                            {'case': {'$eq': ['$$startMM', '06']},'then': 'June'}, 
+                            {'case': {'$eq': ['$$startMM', '07']},'then': 'July'},
+                            {'case': {'$eq': ['$$startMM', '08']},'then': 'Aug.'},
+                            {'case': {'$eq': ['$$startMM', '09']},'then': 'Sept.'},
+                            {'case': {'$eq': ['$$startMM', '10']},'then': 'Oct.'}, 
+                            {'case': {'$eq': ['$$startMM', '11']},'then': 'Nov.'},
+                            {'case': {'$eq': ['$$startMM', '12']},'then': 'Dec.'}
+                        ], 
+                    'default': 'N/A'
+                    }
+                }
+            }
+        }
+
+        add_1['endMM'] = {
+            '$let': { 
+                'vars': { 'startMM': { '$arrayElemAt': [   {   '$split': [ '$992.b', '-'   ]   }, 1 ] } }, 
+                'in': {
+                    '$switch': {
+                        'branches': [
+                            {'case': {'$eq': ['$$startMM', '01']},'then': 'Jan.'}, 
+                            {'case': {'$eq': ['$$startMM', '02']},'then': 'Feb.'}, 
+                            {'case': {'$eq': ['$$startMM', '03']},'then': 'Mar.'}, 
+                            {'case': {'$eq': ['$$startMM', '04']},'then': 'Apr.'}, 
+                            {'case': {'$eq': ['$$startMM', '05']},'then': 'May'}, 
+                            {'case': {'$eq': ['$$startMM', '06']},'then': 'June'}, 
+                            {'case': {'$eq': ['$$startMM', '07']},'then': 'July'}, 
+                            {'case': {'$eq': ['$$startMM', '08']},'then': 'Aug.'}, 
+                            {'case': {'$eq': ['$$startMM', '09']},'then': 'Sept.'}, 
+                            {'case': {'$eq': ['$$startMM', '10']},'then': 'Oct.'}, 
+                            {'case': {'$eq': ['$$startMM', '11']},'then': 'Nov.'}, 
+                            {'case': {'$eq': ['$$startMM', '12']},'then': 'Dec.'} 
+                            ], 
+                        'default': 'N/A' 
+                    } 
+                }
+            }
+        }
+
         add_stage1 = {}
         add_stage1['$addFields'] = add_1
 
@@ -1252,30 +1313,16 @@ def itpsubj(bodysession):
         } 
 
         add_2['votedate'] = {
-            '$let': {
-                'vars': {
-                    'testMonth': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 1]},
-                    'testDate': {'$ltrim': { 'input': {'$arrayElemAt': [{'$split': [ '$992.a', '-']}, 2]}, 'chars': '0' }},
-                    'testYear': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 0]}},
-                'in': {
-                    '$switch': {
-                        'branches': [
-                            {'case': {'$eq': ['$$testMonth', '01']},'then': {'$concat': ['$$testDate', ' ', 'Jan.', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '02']},'then': {'$concat': ['$$testDate', ' ', 'Feb.', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '03']},'then': {'$concat': ['$$testDate', ' ', 'Mar.', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '04']},'then': {'$concat': ['$$testDate', ' ', 'Apr.', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '05']},'then': {'$concat': ['$$testDate', ' ', 'May', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '06']},'then': {'$concat': ['$$testDate', ' ', 'June', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '07']},'then': {'$concat': ['$$testDate', ' ', 'July', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '08']},'then': {'$concat': ['$$testDate', ' ', 'Aug.', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '09']},'then': {'$concat': ['$$testDate', ' ', 'Sept.', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '10']},'then': {'$concat': ['$$testDate', ' ', 'Oct.', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '11']},'then': {'$concat': ['$$testDate', ' ', 'Nov.', ' ', '$$testYear']}}, 
-                            {'case': {'$eq': ['$$testMonth', '12']},'then': {'$concat': ['$$testDate', ' ', 'Dec.', ' ', '$$testYear']}}],
-                            'default': '$992.a'}
-                } 
-            } 
+            '$switch': { 
+                'branches': [ 
+                    { 'case': {'$eq': ['$endDD', 'N/A'] }, 'then': {'$concat': ['$startDD', ' ', '$startMM'] } }, 
+                    { 'case': {'$eq': ['$startMM', '$endMM'] }, 'then': {'$concat': ['$startDD', '-', '$endDD', ' ', '$startMM'] } }, 
+                    { 'case': {'$ne': ['$startMM', '$endMM'] }, 'then': {'$concat': ['$startDD', ' ', '$startMM', '-', '$endDD', ' ', '$endMM'] } }
+                ], 
+                'default': 'N/A'
+            }
         }
+
 
         add_2['recorddesignator'] = {
             '$cond': {
