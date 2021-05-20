@@ -3268,7 +3268,25 @@ def itpsor(bodysession):
                         ]
                     }, 
                     'else': ''
-                }}, 
+                }},
+                {
+				'$cond': {
+					'if': '$245.n',
+					'then': {
+						'$concat': [' ', '$245.n']
+					},
+					'else': ''
+				}
+                },
+                {
+                    '$cond': {
+                        'if': '$245.p',
+                        'then': {
+                            '$concat': [' ', '$245.p']
+                        },
+                        'else': ''
+                    }
+                }, 
                 '.'
             ]
         }
