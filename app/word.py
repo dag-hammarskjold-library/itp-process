@@ -2682,11 +2682,11 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
             #p2=document.add_paragraph(entry["entry"],style=stlitsentry)
             p2=document.add_paragraph(style=stlitsentry)
             #dual document symbol
-            myEntry=entry["docsymbol"].split(" ")
+            myEntry=entry["docsymbol"].split(" (S/")
             add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
             p2.add_run(" ")
             if len(myEntry)==2:
-                p2.add_run(myEntry[1])
+                p2.add_run("(S/"+myEntry[1])
 
             p2.add_run(" ")
             p2.add_run(entry["entry"])
@@ -2708,11 +2708,11 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
             #try:
 
             #dual document symbol
-            myEntry=entry["docsymbol"].split(" ")
+            myEntry=entry["docsymbol"].split(" (S/")
             add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
             p2.add_run(" ")
             if len(myEntry)==2:
-                p2.add_run(myEntry[1])
+                p2.add_run("(S/"+myEntry[1])
         
             p2.add_run(" ")
             p2.add_run(entry["entry"])
