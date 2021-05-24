@@ -3073,6 +3073,83 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
     setOfData1=myCollection.find({'bodysession': bodysession,'section': paramSection})
 
+
+
+    ### calc whether the table of meetings will fit onthe page; breaks the page if it doesn't fit; returns cursorLIne number
+    def lines_committee(data1, cursorLine): 
+        nbMeetings=0
+        CURSOR_LINE_MAX=50
+
+        for num in data1["years"]:
+            nbMeetings+=len(num["meetings"]) 
+        nbYears=len(data1["years"])    
+            
+    
+        if nbMeetings>=9:
+            nbrRecPerCol1=round(nbMeetings / 3)
+            nbrRecPerCol2=round(nbMeetings / 3)
+            nbrRecPerCol3=nbMeetings - (nbrRecPerCol1+nbrRecPerCol1)
+            if nbYears>1:
+                #nbMeetings+=3
+                if len(data1["years"][0]["meetings"])<round(nbMeetings / 3):
+                    nbrRecPerCol1= round(nbMeetings / 3)-3
+                    nbrRecPerCol2= round(nbMeetings / 3)
+                    nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol1)
+                elif len(data1["years"][0]["meetings"])<2*round(nbMeetings / 3):
+                    nbrRecPerCol1= round(nbMeetings / 3)
+                    nbrRecPerCol2= round(nbMeetings / 3)-3
+                    nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol1)
+                else:
+                    nbrRecPerCol1= round(nbMeetings / 3)
+                    nbrRecPerCol2= round(nbMeetings / 3)
+                    nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol1)
+        else:
+            nbrRecPerCol1=nbMeetings
+            nbrRecPerCol2=nbMeetings
+            nbrRecPerCol3=nbMeetings
+                
+
+        for num in data1["years"]:   
+
+            if (nbrRecPerCol1 >= nbrRecPerCol3):
+                
+                if (cursorLine + nbrRecPerCol1 > CURSOR_LINE_MAX):
+
+                    # break the page
+                    run=document.add_paragraph().add_run()
+                    myBreak = run.add_break(WD_BREAK.PAGE)
+
+                    # reset the cursorLine
+                    cursorLine=0
+
+                #else :
+                    
+                    #if data1["committee2"]: 
+                    #    cursorLine+=nbrRecPerCol1+6
+                    #else:
+                    #    cursorLine+=nbrRecPerCol1+4
+
+            else :
+
+                if (cursorLine + nbrRecPerCol3 > CURSOR_LINE_MAX):
+
+                    # break the page
+                    run=document.add_paragraph().add_run()
+                    myBreak = run.add_break(WD_BREAK.PAGE)
+
+                    # reset the cursorLine
+                    cursorLine=0
+
+                #else :
+
+                    # write the titles
+                #    if data1["committee2"]: 
+                #        cursorLine+=nbrRecPerCol3+6
+                #    else:
+                #        cursorLine+=nbrRecPerCol3+4
+        
+        return cursorLine, nbMeetings, nbrRecPerCol1, nbrRecPerCol2, nbrRecPerCol3
+
     # Creation of the word document
 
     document = Document()
@@ -3433,37 +3510,32 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         cursorLine=1
         for data1 in datas:
 
-           
+            
             # 0- Reset the counters 
-            nbMeetings=0
+            
             index0=0
             index1=0
             
-            CURSOR_LINE_MAX=56
+            
             line=0        
             overFlowTitle=5
             overFlowContent=3
             createSection=False
 
-            # # check the number of pages available
-            if (cursorLine + overFlowTitle >= CURSOR_LINE_MAX):
+            
+            # # check the number of lines available
+            cursorLine, nbMeetings,nbrRecPerCol1, nbrRecPerCol2, nbrRecPerCol3=lines_committee(data1, cursorLine+overFlowTitle)
 
-                # break the page
-                run=document.add_paragraph().add_run()
-                myBreak = run.add_break(WD_BREAK.PAGE)
 
-                # reset the cursorLine
-                cursorLine=0
-
-                section = document.add_section(WD_SECTION.CONTINUOUS)
-                sectPr = section._sectPr
-                cols = sectPr.xpath('./w:cols')[0]
-                cols.set(qn('w:num'),'1')
-                document.add_paragraph('')
+            section = document.add_section(WD_SECTION.CONTINUOUS)
+            sectPr = section._sectPr
+            cols = sectPr.xpath('./w:cols')[0]
+            cols.set(qn('w:num'),'1')
+            document.add_paragraph('')
 
             # writing the title for each record
-    
-            cursorLine+=1
+            #section = document.add_section(WD_SECTION.CONTINUOUS)
+            #cursorLine+=1
             p=document.add_paragraph(data1["committee1"],style="styleheaderforA")
             cursorLine+=1
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -3473,100 +3545,21 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                 p.add_run(data1["committee2"])
                 p.add_run("\n")
                 cursorLine+=2
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            #p.paragraph_format.
         
             z=p.add_run("(Symbol: " + data1["symbol"]+ ")")
             cursorLine+=1
-            z.bold=False
-  
-            # 1- Count the number of meeting per records
-            #nbRecordsMeetings=len(data1["years"])
-            for num in data1["years"]:
-                nbMeetings+=len(num["meetings"])     
-
-
-
-
-            if nbMeetings>=9:
-
-                nbrRecPerCol1= round(nbMeetings / 3)
-                nbrRecPerCol2= round(nbMeetings / 3)
-                nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol2)
-
-                section = document.add_section(WD_SECTION.CONTINUOUS)
-                sectPr = section._sectPr
-                cols = sectPr.xpath('./w:cols')[0]
-                cols.set(qn('w:num'),'3')
-
-                # check the number of pages available
-                if (nbrRecPerCol1 >= nbrRecPerCol3):
-                    
-                    if (cursorLine + nbrRecPerCol1 > CURSOR_LINE_MAX):
-
-                        # break the page
-                        run=document.add_paragraph().add_run()
-                        myBreak = run.add_break(WD_BREAK.PAGE)
-
-                        # reset the cursorLine
-                        cursorLine=0
-
-                    else :
-                        
-                        if data1["committee2"]: 
-                            cursorLine+=nbrRecPerCol1+6
-                        else:
-                            cursorLine+=nbrRecPerCol1+4
-
-                else :
-
-                    if (cursorLine + nbrRecPerCol3 > CURSOR_LINE_MAX):
-
-                        # break the page
-                        run=document.add_paragraph().add_run()
-                        myBreak = run.add_break(WD_BREAK.PAGE)
-
-                        # reset the cursorLine
-                        cursorLine=0
-
-                    else :
-
-                        # write the titles
-                        if data1["committee2"]: 
-                            cursorLine+=nbrRecPerCol3+6
-                        else:
-                            cursorLine+=nbrRecPerCol3+4
-
-
-            if nbMeetings<9:
-
-                nbrRecPerCol1=nbMeetings
-
-                section = document.add_section(WD_SECTION.CONTINUOUS)
-                sectPr = section._sectPr
-                cols = sectPr.xpath('./w:cols')[0]
-                cols.set(qn('w:num'),'1')
-
-                # check the number of pages available
-                if (cursorLine + nbMeetings > CURSOR_LINE_MAX):
-
-                    # break the page
-                    run=document.add_paragraph().add_run()
-                    myBreak = run.add_break(WD_BREAK.PAGE)
-
-                    # reset the cursorLine
-                    cursorLine=0
-
-                else :
-
-                    if data1["committee2"]: 
-                        cursorLine+=nbrRecPerCol1+6
-                    else:
-                        cursorLine+=nbrRecPerCol1+4
-                    
+            z.bold=False       
 
             for years in data1["years"]:
 
                 # 2- Define the number of records per cols
                 if nbMeetings>=9:
+                    section = document.add_section(WD_SECTION.CONTINUOUS)
+                    sectPr = section._sectPr
+                    cols = sectPr.xpath('./w:cols')[0]
+                    cols.set(qn('w:num'),'3')
 
                     # 3- Display the values using table
                     for meeting in years["meetings"]:
@@ -3590,7 +3583,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                 myRun.underline=True
                                 myRun=hdr_cells[1].paragraphs[0].add_run('\n')
                                 line+=1
-                                index0+=1
+                                #index0+=1
                                 #fill the cell of the table
                                 hdr_cells = table.rows[line].cells
                                 hdr_cells[0].text=meeting["meetingnum"]
@@ -3613,8 +3606,9 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                     hdr_cells = table.rows[line].cells
                                     hdr_cells[0].text=""
                                     hdr_cells[1].text=""
-                                    line+=1
-                                    # index0+=1
+                                    #
+                                    # line+=1
+                                    #index0+=1
                                     myRun=hdr_cells[1].paragraphs[0].add_run('')
 
 
@@ -3626,7 +3620,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                     myRun.underline=True
                                     myRun=hdr_cells[1].paragraphs[0].add_run('\n')
                                     line+=1
-                                    index0+=1
+                                    #index0+=1
                                     #fill the cell of the table
                                     hdr_cells = table.rows[line].cells
                                     hdr_cells[0].text=meeting["meetingnum"]
@@ -3635,14 +3629,14 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                     index0+=1
 
 
-                        if (index0>=nbrRecPerCol1+1) and (index0<=nbrRecPerCol1+nbrRecPerCol1+1):
+                        if (index0>=nbrRecPerCol1+1) and (index0<=nbrRecPerCol1+nbrRecPerCol2+2):
 
                             if index0==nbrRecPerCol1+1:
 
                                 # column break
                                 run=document.add_paragraph().add_run()
                                 myBreak = run.add_break(WD_BREAK.COLUMN)
-                                table = document.add_table(rows=nbrRecPerCol1+overFlowContent,cols=2)
+                                table = document.add_table(rows=nbrRecPerCol2+overFlowContent,cols=2)
                                 line=0
 
                                 # table creation
@@ -3662,7 +3656,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                 index0+=1
                             
                             else :
-                                 
+                                    
                                 if myActualYear==years["year"]:
                                     # fill the cell of the table
                                     hdr_cells = table.rows[line].cells
@@ -3676,7 +3670,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                     hdr_cells[0].text=""
                                     hdr_cells[1].text=""
                                     line+=1
-                                    # index0+=1
+                                    #index0+=1
                                     myRun=hdr_cells[1].paragraphs[0].add_run('')
                                     hdr_cells = table.rows[line].cells
                                     # myRun=""
@@ -3686,9 +3680,11 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                     hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
                                     myRun.underline=True
                                     myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+                                    row=table.add_row()
                                     line+=1
-                                    index0+=1
-                                    #fill the cell of the table
+                                    #index0+=1
+                                    #fill the cell of
+                                    #  the table
                                     hdr_cells = table.rows[line].cells
                                     myRun=hdr_cells[1].paragraphs[0].add_run('\n')
                                     hdr_cells[0].text=meeting["meetingnum"]
@@ -3697,16 +3693,18 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                     index0+=1
                                 
 
-                        if (index0>=2*nbrRecPerCol1+2):
 
-                            if index0==(2*nbrRecPerCol1+2):
+                        if (index0>nbrRecPerCol1+nbrRecPerCol2+2):# and index0<nbMeetings:
+
+
+                            if index0==(nbrRecPerCol1+nbrRecPerCol2+3):
 
                                 # column break
                                 p=document.add_paragraph()
                                 run=p.add_run()
                                 myBreak = run.add_break(WD_BREAK.COLUMN)
                                 
-                                table = document.add_table(rows=nbrRecPerCol3+overFlowContent,cols=2)
+                                table = document.add_table(rows=nbrRecPerCol1+overFlowContent,cols=2)
                                 line=0
 
                                 # table creation
@@ -3714,6 +3712,8 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                                 # display header
                                 hdr_cells = table.rows[0].cells
+                                cursorLine+=1
+
                                 myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
                                 myRun.underline=True
                                 myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+years["year"])
@@ -3721,6 +3721,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                 hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
                                 myRun.underline=True
                                 myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+                                
                                 index0+=1
                                 line+=1
 
@@ -3734,12 +3735,12 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                     line+=1
                                     index0+=1
                                 else :
-                                    # adding a break because we are changing of date
+                                    # adding a break because we are changing the year
                                     hdr_cells = table.rows[line].cells
                                     hdr_cells[0].text=""
                                     hdr_cells[1].text=""
                                     line+=1
-                                    # index0+=1
+                                    #index0+=1
                                     myRun=hdr_cells[1].paragraphs[0].add_run('')
                                     hdr_cells = table.rows[line].cells
                                     # myRun=""
@@ -3750,8 +3751,9 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                                     myRun.underline=True
                                     myRun=hdr_cells[1].paragraphs[0].add_run('\n')
                                     line+=1
-                                    index0+=1
-                                    #fill the cell of the table
+                                    #index0+=1
+                                    #fill the cell of
+                                    #  the table
                                     hdr_cells = table.rows[line].cells
                                     myRun=hdr_cells[1].paragraphs[0].add_run('\n')
                                     hdr_cells[0].text=meeting["meetingnum"]
@@ -3766,15 +3768,10 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                             #     cols.set(qn('w:num'),'1')
                             #     document.add_paragraph('')
 
-                            if (index0==3*nbrRecPerCol1+3):
-                                section = document.add_section(WD_SECTION.CONTINUOUS)
-                                sectPr = section._sectPr
-                                cols = sectPr.xpath('./w:cols')[0]
-                                cols.set(qn('w:num'),'1')
-                                document.add_paragraph('')
-                
+                    #        if (index0==3*nbrRecPerCol1+3):
+                                
 
-                if nbMeetings<9 :
+                else :
 
                     # creation of one table with 1 column
                     table = document.add_table(rows=nbMeetings+1,cols=2)
@@ -3813,7 +3810,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                     
 
         # Apply the font
-        widths = (Inches(0.6), Inches(0.7))
+        widths = (Inches(1.15), Inches(0.85))
         for table in document.tables:
             for row in table.rows:
                 for idx,width in enumerate(widths):
@@ -3830,8 +3827,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                             font = run.font
                             font.name="Arial"
                             font.size= Pt(8)
-
-
+        add_page_number(document.sections[0].footer.paragraphs[0])
         return document
 
 
