@@ -1137,7 +1137,69 @@ def itpsubj(bodysession):
                     'if': '$245.c',
                     'then': {'$concat': [' ', '$245.c']},
                     'else': ''} }, 
-                    '.']
+                {'$cond': {
+                    'if': {'$and': [{'$isArray': '$245.n'}, {'$isArray': '$245.p'}]}, 
+                    'then': {
+                        '$let': {
+                            'vars': {'total': {'$size': '$245.n'}}, 
+                            'in': {
+                                '$switch': {
+                                    'branches': [
+                                        {'case': {'$eq': ['$$total', 1]}, 
+                                            'then': {'$concat': [
+                                                ' ', {'$arrayElemAt': ['$245.n', 0]}, 
+                                                ' ', {'$arrayElemAt': ['$245.p', 0]}
+                                                ]
+                                            }
+                                        }, 
+                                        {'case': {'$eq': ['$$total', 2]}, 
+                                            'then': {'$concat': [
+                                                ' ', {'$arrayElemAt': ['$245.n', 0]}, 
+                                                ' ', {'$arrayElemAt': ['$245.p', 0]}, 
+                                                ' ', {'$arrayElemAt': ['$245.n', 1]}, 
+                                                ' ', {'$arrayElemAt': ['$245.p', 1]}
+                                                ]
+                                            }
+                                        }, 
+                                        {'case': {'$eq': ['$$total', 3]}, 
+                                            'then': {'$concat': [
+                                                ' ', {'$arrayElemAt': ['$245.n', 0]}, 
+                                                ' ', {'$arrayElemAt': ['$245.p', 0]}, 
+                                                ' ', {'$arrayElemAt': ['$245.n', 1]}, 
+                                                ' ', {'$arrayElemAt': ['$245.p', 1]}, 
+                                                ' ', {'$arrayElemAt': ['$245.n', 2]}, 
+                                                ' ', {'$arrayElemAt': ['$245.p', 2]}
+                                                ]
+                                            }
+                                        }
+                                    ], 
+                                    'default': ''
+                                }
+                            }
+                        }
+                    }, 
+                    'else': {
+                        '$concat': [
+                            {
+                                '$cond': {
+                                    'if': '$245.n', 
+                                    'then': {'$concat': [' ', {'$trim': {'input': '$245.n', 'chars': ' '}}]}, 
+                                    'else': ''
+                                }
+                            }, 
+                            {
+                                '$cond': {
+                                    'if': '$245.p', 
+                                    'then': {'$concat': [' ', {'$trim': {'input': '$245.p', 'chars': ' '}}]}, 
+                                    'else': ''
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+
+            '.']
         }
         
         #body == S
