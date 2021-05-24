@@ -3876,7 +3876,11 @@ def group_itpitsp(section, bodysession):
             '_id': {
                 'itshead': '$_id.itshead',
                 'sort': {
-                    '$substrCP': ['$_id.sortkey1', 0, {'$indexOfCP': ['$_id.sortkey1', '+']}]
+                    '$replaceAll': {
+                        'input': {'$substrCP': ['$_id.sortkey1', 0, {'$indexOfCP': ['$_id.sortkey1', '+']}]}, 
+                        'find': '-', 
+                        'replacement': '^'
+                    }
                 }
             }, 
             'subheading': {
