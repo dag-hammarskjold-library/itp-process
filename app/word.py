@@ -2582,7 +2582,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     # Indentation
 
-    pfstlitsentry.left_indent = Inches(0.1)
+    pfstlitsentry.left_indent = Inches(0.2)
     pfstlitsentry.first_line_indent  = Inches(-0.1)
 
     # Line spacing
@@ -2607,7 +2607,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     # Indentation
 
-    #pfNote.left_indent = Inches(0.1)
+    pfNote.left_indent = Inches(0.1)
     pfNote.first_line_indent = Inches(0.3)
 
     # Line spacing
@@ -2683,10 +2683,16 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
             p2=document.add_paragraph(style=stlitsentry)
             #dual document symbol
             myEntry=entry["docsymbol"].split(" (S/")
-            add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
-            p2.add_run(" ")
             if len(myEntry)==2:
-                p2.add_run("(S/"+myEntry[1])
+                add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                p2.add_run(" (S/"+myEntry[1])
+            elif len(entry["docsymbol"].split(" (E/"))==2:
+                myEntry=entry["docsymbol"].split(" (E/")
+                add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                p2.add_run(" (E/"+myEntry[1])
+            else:
+                add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+
 
             p2.add_run(" ")
             p2.add_run(entry["entry"])
@@ -2709,10 +2715,16 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
             #dual document symbol
             myEntry=entry["docsymbol"].split(" (S/")
-            add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
-            p2.add_run(" ")
             if len(myEntry)==2:
-                p2.add_run("(S/"+myEntry[1])
+                add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                p2.add_run(" (S/"+myEntry[1])
+            elif len(entry["docsymbol"].split(" (E/"))==2:
+                myEntry=entry["docsymbol"].split(" (E/")
+                add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                p2.add_run(" (E/"+myEntry[1])
+            else:
+                add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+
         
             p2.add_run(" ")
             p2.add_run(entry["entry"])
@@ -2735,12 +2747,12 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     def dxa_counter_entry_note(entry):
         if entry["note"]!="":
-            count_n=1+(len(entry['note'])//52)
-            count_e=1+((len(entry['docsymbol'])+len(entry['entry']))//52)
+            count_n=1+(len(entry['note'])//48)
+            count_e=1+((len(entry['docsymbol'])+len(entry['entry']))//48)
             lines=count_n+count_e
         else:
             count_n=0
-            count_e=1+((len(entry['docsymbol'])+len(entry['entry']))//52)
+            count_e=1+((len(entry['docsymbol'])+len(entry['entry']))//48)
             lines=count_n+count_e
             #lines*fontsize*20+space after*20
         return lines*8*20+5*20
