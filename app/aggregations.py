@@ -366,18 +366,22 @@ def itpitsp(bodysession):
                 'itsentry': 1, 
                 'docsymbol': 1, 
                 'sortkey1': {
-                    '$replaceAll': {
-                        'input': {
-                            '$replaceAll': {
-                                'input': {
-                                    '$concat': [
-                                        {'$toUpper': '$itshead'}, '+']}, 
-                                'find': ' ', 
-                                'replacement': '!'
-                            }
-                        }, 
-                        'find': ',', 
-                        'replacement': ' '
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$concat': [{'$toUpper': '$itshead'}, '+']}, 
+                                    'find': ' ', 
+                                    'replacement': '!'
+                                }
+                            }, 
+                            'find': ',', 
+                            'replacement': ' '
+                        }
+                    }, 
+                    'find': '-', 
+                    'replacement': '^'
                     }
                 },
                 'sortkey2': {
@@ -3846,13 +3850,7 @@ def group_itpitsp(section, bodysession):
         '$group': {
             '_id': {
                 'itshead': '$_id.itshead',
-                'sort': {
-                    '$replaceAll': {
-                        'input': {'$substrCP': ['$_id.sortkey1', 0, {'$indexOfCP': ['$_id.sortkey1', '+']}]}, 
-                        'find': '-', 
-                        'replacement': '^'
-                    }
-                }
+                'sort': {'$substrCP': ['$_id.sortkey1', 0, {'$indexOfCP': ['$_id.sortkey1', '+']}]}
             }, 
             'subheading': {
                 '$push': {
