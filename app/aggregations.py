@@ -1128,56 +1128,20 @@ def itpsubj(bodysession):
                 
         add_1['title_default'] = {
             '$concat': [ 
-                '$245.a', 
-                { '$cond': {                 
-                    'if': '$245.b', 
-                    'then': {'$concat': [' ',{ '$trim': { 'input': '$245.b',  'chars': " " } }]}, 
-                    'else': '' } }, 
-                {'$cond': {
-                    'if': '$245.c',
-                    'then': {'$concat': [' ', '$245.c']},
-                    'else': ''} }, 
+                '$245.a',  
                 {'$cond': {
                     'if': {'$and': [{'$isArray': '$245.n'}, {'$isArray': '$245.p'}]}, 
                     'then': {
-                        '$let': {
-                            'vars': {'total': {'$size': '$245.n'}}, 
-                            'in': {
-                                '$switch': {
-                                    'branches': [
-                                        {'case': {'$eq': ['$$total', 1]}, 
-                                            'then': {'$concat': [
-                                                ' ', {'$arrayElemAt': ['$245.n', 0]}, 
-                                                ' ', {'$arrayElemAt': ['$245.p', 0]}
-                                                ]
-                                            }
-                                        }, 
-                                        {'case': {'$eq': ['$$total', 2]}, 
-                                            'then': {'$concat': [
-                                                ' ', {'$arrayElemAt': ['$245.n', 0]}, 
-                                                ' ', {'$arrayElemAt': ['$245.p', 0]}, 
-                                                ' ', {'$arrayElemAt': ['$245.n', 1]}, 
-                                                ' ', {'$arrayElemAt': ['$245.p', 1]}
-                                                ]
-                                            }
-                                        }, 
-                                        {'case': {'$eq': ['$$total', 3]}, 
-                                            'then': {'$concat': [
-                                                ' ', {'$arrayElemAt': ['$245.n', 0]}, 
-                                                ' ', {'$arrayElemAt': ['$245.p', 0]}, 
-                                                ' ', {'$arrayElemAt': ['$245.n', 1]}, 
-                                                ' ', {'$arrayElemAt': ['$245.p', 1]}, 
-                                                ' ', {'$arrayElemAt': ['$245.n', 2]}, 
-                                                ' ', {'$arrayElemAt': ['$245.p', 2]}
-                                                ]
-                                            }
-                                        }
-                                    ], 
-                                    'default': ''
-                                }
-                            }
-                        }
-                    }, 
+                        '$concat': [
+                            {'$cond': {'if': {'$arrayElemAt': ['$245.n', 0]},'then': {'$concat': [' ', {'$trim': {'input': {'$arrayElemAt': ['$245.n', 0]},'chars': ' '}}]},'else': ''}}, 
+                            {'$cond': {'if': {'$arrayElemAt': ['$245.p', 0]},'then': {'$concat': [' ', {'$trim': {'input': {'$arrayElemAt': ['$245.p', 0]},'chars': ' '}}]},'else': ''}}, 
+                            {'$cond': {'if': {'$arrayElemAt': ['$245.n', 1]},'then': {'$concat': [' ', {'$trim': {'input': {'$arrayElemAt': ['$245.n', 1]},'chars': ' '}}]},'else': ''}}, 
+                            {'$cond': {'if': {'$arrayElemAt': ['$245.p', 1]},'then': {'$concat': [' ', {'$trim': {'input': {'$arrayElemAt': ['$245.p', 1]},'chars': ' '}}]},'else': ''}}, 
+                            {'$cond': {'if': {'$arrayElemAt': ['$245.n', 2]},'then': {'$concat': [' ', {'$trim': {'input': {'$arrayElemAt': ['$245.n', 2]},'chars': ' '}}]},'else': ''}}, 
+                            {'$cond': {'if': {'$arrayElemAt': ['$245.p', 2]},'then': {'$concat': [' ', {'$trim': {'input': {'$arrayElemAt': ['$245.p', 2]},'chars': ' '}}]},'else': ''}}, 
+                            {'$cond': {'if': {'$arrayElemAt': ['$245.n', 3]},'then': {'$concat': [' ', {'$trim': {'input': {'$arrayElemAt': ['$245.n', 3]},'chars': ' '}}]},'else': ''}}, 
+                            {'$cond': {'if': {'$arrayElemAt': ['$245.p', 3]},'then': {'$concat': [' ', {'$trim': {'input': {'$arrayElemAt': ['$245.p', 3]},'chars': ' '}}]},'else': ''}}] 
+                        }, 
                     'else': {
                         '$concat': [
                             {
@@ -1198,7 +1162,14 @@ def itpsubj(bodysession):
                     }
                 }
             },
-
+            { '$cond': {                 
+                    'if': '$245.b', 
+                    'then': {'$concat': [' ',{ '$trim': { 'input': '$245.b',  'chars': " " } }]}, 
+                    'else': '' } }, 
+            {'$cond': {
+                'if': '$245.c',
+                'then': {'$concat': [' ', '$245.c']},
+                'else': ''} },
             '.']
         }
         
