@@ -183,7 +183,25 @@ def itpitsc(bodysession):
                         'replacement': ' $'
                     }
                 },
-                'sortkey2': '$itsentry', 
+                'sortkey2': {
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
+                                    'find': ' ', 
+                                    'replacement': '!'
+                                }
+                            }, 
+                            'find': ',', 
+                            'replacement': ' '
+                        }
+                    }, 
+                    'find': '-', 
+                    'replacement': '^'
+                    }
+                },
                 'sortkey3': '$docsymbol'
             }
         }
@@ -597,7 +615,25 @@ def itpitss(bodysession):
                         'replacement': ' $'
                     }
                 },
-                'sortkey2': '$itsentry', 
+                'sortkey2': {
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
+                                    'find': ' ', 
+                                    'replacement': '!'
+                                }
+                            }, 
+                            'find': ',', 
+                            'replacement': ' '
+                        }
+                    }, 
+                    'find': '-', 
+                    'replacement': '^'
+                    }
+                }, 
                 'sortkey3': '$docsymbol'
             }
         }
@@ -3777,7 +3813,11 @@ def group_speeches(section, bodysession):
 
     #print(pipeline)
 
-    outputCollection.aggregate(pipeline)
+    outputCollection.aggregate(pipeline, 
+        collation={
+            'locale': 'en', 
+            'strength': 1, #ignore diacritics
+        })
 
 def group_itpitsp(section, bodysession):
 
