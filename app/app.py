@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
+from app.delete_snapshot import snapshotSummary, deleteSnapshot, snapshotDropdown
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms.validators import DataRequired
@@ -306,10 +307,29 @@ def create_snapshot():
     else:
         return jsonify({'status':'arguments required'})
 
-@app.route('/snapshots/<id>/delete')
+@app.route('/deleteSnapshots',methods=["GET", "POST"])
 @login_required
-def delete_snapshot(id):
-    pass
+def delete_snapshot():
+    if request.method == "GET" :
+    
+        # Returning the view
+        dropdown = snapshotDropdown()
+        summary = snapshotSummary()
+    
+        return render_template('delete_snapshot.html', results=summary, dropdown=dropdown)
+    else :
+         # Calling the logic to delete the snapshot     
+        
+        msg = deleteSnapshot(request.form.get('bodysession')) 
+
+        # Returning the view
+        dropdown = snapshotDropdown()
+        summary = snapshotSummary()
+
+        flash(msg)
+        
+        return render_template('delete_snapshot.html', results=summary, dropdown=dropdown)
+
 
 @app.route("/displaySnapshot")
 @login_required

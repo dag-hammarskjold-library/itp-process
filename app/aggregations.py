@@ -103,10 +103,15 @@ def itpitsc(bodysession):
         }
 
         add_1['agendasubject'] = {
-            '$replaceAll': {
-                'input': '$991.d', 
-                'find': '--', 
-                'replacement': '—'
+            '$trim': {
+                'input': {
+                    '$replaceAll': {
+                        'input': '$991.d', 
+                        'find': '--', 
+                        'replacement': '—'
+                    }
+                }, 
+                'chars': ' '
             }
         }
 
@@ -122,8 +127,8 @@ def itpitsc(bodysession):
                     '$cond': { 
                         'if': {'$isArray': '$710' }, 
                         'then': {'$arrayElemAt': [ '$710.a', 0]},
-                        'else': "$710.a"}}, 
-                'else': '$711.a'
+                        'else': {'$trim': { 'input': '$710.a',  'chars': ' ' }}}}, 
+                'else': {'$trim': { 'input': '$711.a',  'chars': ' ' }}
             }
         }
         
@@ -147,8 +152,8 @@ def itpitsc(bodysession):
         add_2['itsentry'] = {
             '$cond': {
                 'if': '$700.g', 
-                'then': {'$concat': ['$700.a', ' ', '$700.g']}, 
-                'else': '$700.a'
+                'then': {'$concat': [{'$trim': { 'input': '$700.a',  'chars': ' ' }}, ' ', {'$trim': { 'input': '$700.g',  'chars': ' ' }}]}, 
+                'else': {'$trim': { 'input': '$700.a',  'chars': ' ' }}
             }
         }
 
@@ -183,7 +188,25 @@ def itpitsc(bodysession):
                         'replacement': ' $'
                     }
                 },
-                'sortkey2': '$itsentry', 
+                'sortkey2': {
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
+                                    'find': ' ', 
+                                    'replacement': '!'
+                                }
+                            }, 
+                            'find': ',', 
+                            'replacement': ' '
+                        }
+                    }, 
+                    'find': '-', 
+                    'replacement': '^'
+                    }
+                },
                 'sortkey3': '$docsymbol'
             }
         }
@@ -301,10 +324,15 @@ def itpitsp(bodysession):
         }
 
         add_1['agendasubject'] = {
-            '$replaceAll': {
-                'input': '$991.d', 
-                'find': '--', 
-                'replacement': '—'
+            '$trim': {
+                'input': {
+                    '$replaceAll': {
+                        'input': '$991.d', 
+                        'find': '--', 
+                        'replacement': '—'
+                    }
+                }, 
+                'chars': ' '
             }
         }
 
@@ -318,8 +346,8 @@ def itpitsp(bodysession):
                 '$concat': [        
                 {'$cond': {        
                     'if': '$700.g',        
-                    'then': {'$concat': ['$700.a', ' ', '$700.g' ]}, 
-                    'else': '$700.a'}},          
+                    'then': {'$concat': [{'$trim': { 'input': '$700.a',  'chars': ' ' }}, ' ', {'$trim': { 'input': '$700.g',  'chars': ' ' }} ]}, 
+                    'else': {'$trim': { 'input': '$700.a',  'chars': ' ' }}}},          
                 ' (',         
                 {'$cond': {
                     'if': {'$ne': ['$710', '']}, 
@@ -327,8 +355,8 @@ def itpitsp(bodysession):
                         '$cond': { 
                             'if': {'$isArray': '$710' }, 
                             'then': {'$arrayElemAt': [ '$710.a', 0]},
-                            'else': "$710.a"}}, 
-                    'else': '$711.a'
+                            'else': {'$trim': { 'input': '$710.a',  'chars': ' ' }}}}, 
+                    'else': {'$trim': { 'input': '$711.a',  'chars': ' ' }}
                 }},         
                 ')' ]}
         
@@ -366,18 +394,22 @@ def itpitsp(bodysession):
                 'itsentry': 1, 
                 'docsymbol': 1, 
                 'sortkey1': {
-                    '$replaceAll': {
-                        'input': {
-                            '$replaceAll': {
-                                'input': {
-                                    '$concat': [
-                                        {'$toUpper': '$itshead'}, '+']}, 
-                                'find': ' ', 
-                                'replacement': '!'
-                            }
-                        }, 
-                        'find': ',', 
-                        'replacement': ' '
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$concat': [{'$toUpper': '$itshead'}, '+']}, 
+                                    'find': ' ', 
+                                    'replacement': '!'
+                                }
+                            }, 
+                            'find': ',', 
+                            'replacement': ' '
+                        }
+                    }, 
+                    'find': '-', 
+                    'replacement': '^'
                     }
                 },
                 'sortkey2': {
@@ -513,10 +545,15 @@ def itpitss(bodysession):
         }
 
         add_1['agendasubject'] = {
-            '$replaceAll': {
-                'input': '$991.d', 
-                'find': '--', 
-                'replacement': '—'
+            '$trim': {
+                'input': {
+                    '$replaceAll': {
+                        'input': '$991.d', 
+                        'find': '--', 
+                        'replacement': '—'
+                    }
+                }, 
+                'chars': ' '
             }
         }
 
@@ -550,16 +587,16 @@ def itpitss(bodysession):
                     '$cond': { 
                         'if': {'$isArray': '$710' }, 
                         'then': {'$arrayElemAt': [ '$710.a', 0]},
-                        'else': "$710.a"}}, 
-                'else': '$711.a'
+                        'else': {'$trim': { 'input': '$710.a',  'chars': ' ' }}}}, 
+                'else': {'$trim': { 'input': '$711.a',  'chars': ' ' }}
             }
         }
         
         add_2['itsentry'] = {
             '$cond': {
                 'if': '$700.g', 
-                'then': {'$concat': ['$700.a', ' ', '$700.g']}, 
-                'else': '$700.a'
+                'then': {'$concat': [{'$trim': { 'input': '$700.a',  'chars': ' ' }}, ' ', {'$trim': { 'input': '$700.g',  'chars': ' ' }}]}, 
+                'else': {'$trim': { 'input': '$700.a',  'chars': ' ' }}
             }
         }
 
@@ -593,7 +630,25 @@ def itpitss(bodysession):
                         'replacement': ' $'
                     }
                 },
-                'sortkey2': '$itsentry', 
+                'sortkey2': {
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
+                                    'find': ' ', 
+                                    'replacement': '!'
+                                }
+                            }, 
+                            'find': ',', 
+                            'replacement': ' '
+                        }
+                    }, 
+                    'find': '-', 
+                    'replacement': '^'
+                    }
+                }, 
                 'sortkey3': '$docsymbol'
             }
         }
@@ -1228,8 +1283,18 @@ def itpsubj(bodysession):
                 'else': '' } 
         }
         
-        add_1['agendasubject'] = { 
-            '$replaceAll': { 'input': '$991.d', 'find': '--', 'replacement': '—' } }
+        add_1['agendasubject'] = {
+            '$trim': {
+                'input': {
+                    '$replaceAll': {
+                        'input': '$991.d', 
+                        'find': '--', 
+                        'replacement': '—'
+                    }
+                }, 
+                'chars': ' '
+            }
+        }
 
         add_1['startDD'] = {'$ltrim': {'input': {'$arrayElemAt': [{'$split': ['$992.a', '-']}, 2]},'chars': '0'}}
 
@@ -1910,12 +1975,17 @@ def itpage(bodysession):
                 '$cond': {
                     'if': '$191.d', 
                     'then': {
-                        '$replaceAll': {
-                            'input': '$191.d', 
-                            'find': '--', 
-                            'replacement': '—'
+                        '$trim': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': '$191.d', 
+                                    'find': '--', 
+                                    'replacement': '—'
+                                }
+                            }, 
+                            'chars': ' '
                         }
-                    }, 
+                    },
                     'else': ''
                 }
             }
@@ -2080,10 +2150,15 @@ def itpage(bodysession):
                 '$cond': {
                     'if': '$991.d', 
                     'then': {
-                        '$replaceAll': {
-                            'input': '$991.d', 
-                            'find': '--', 
-                            'replacement': '—'
+                        '$trim': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': '$991.d', 
+                                    'find': '--', 
+                                    'replacement': '—'
+                                }
+                            }, 
+                            'chars': ' '
                         }
                     }, 
                     'else': ''
@@ -3773,7 +3848,11 @@ def group_speeches(section, bodysession):
 
     #print(pipeline)
 
-    outputCollection.aggregate(pipeline)
+    outputCollection.aggregate(pipeline, 
+        collation={
+            'locale': 'en', 
+            'strength': 1, #ignore diacritics
+        })
 
 def group_itpitsp(section, bodysession):
 
@@ -3846,13 +3925,7 @@ def group_itpitsp(section, bodysession):
         '$group': {
             '_id': {
                 'itshead': '$_id.itshead',
-                'sort': {
-                    '$replaceAll': {
-                        'input': {'$substrCP': ['$_id.sortkey1', 0, {'$indexOfCP': ['$_id.sortkey1', '+']}]}, 
-                        'find': '-', 
-                        'replacement': '^'
-                    }
-                }
+                'sort': {'$substrCP': ['$_id.sortkey1', 0, {'$indexOfCP': ['$_id.sortkey1', '+']}]}
             }, 
             'subheading': {
                 '$push': {
