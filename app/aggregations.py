@@ -597,7 +597,25 @@ def itpitss(bodysession):
                         'replacement': ' $'
                     }
                 },
-                'sortkey2': '$itsentry', 
+                'sortkey2': {
+                    '$replaceAll': {
+                        'input': {
+                            '$replaceAll': {
+                                'input': {
+                                    '$replaceAll': {
+                                        'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
+                                        'find': ' ', 
+                                        'replacement': '!'
+                                    }
+                                }, 
+                                'find': ',', 
+                                'replacement': ' '
+                            }
+                        }, 
+                        'find': '-', 
+                        'replacement': '^'
+                        }
+                },
                 'sortkey3': '$docsymbol'
             }
         }
@@ -624,6 +642,8 @@ def itpitss(bodysession):
         pipeline.append(sort_stage)
     
         pipeline.append(merge_stage)
+
+        print(pipeline)
 
         inputCollection.aggregate(pipeline, collation=collation)
 
@@ -3775,7 +3795,7 @@ def group_speeches(section, bodysession):
     pipeline.append(project_stage)
     pipeline.append(merge_stage)
 
-    #print(pipeline)
+    print(pipeline)
 
     outputCollection.aggregate(pipeline)
 
