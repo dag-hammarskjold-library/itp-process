@@ -427,7 +427,7 @@ def itpitsp(bodysession):
                             }
                         }, 
                         'find': '—', 
-                        'replacement': ' $'
+                        'replacement': ' —'
                     }
                 }, 
                 'sortkey3': '$docsymbol'
