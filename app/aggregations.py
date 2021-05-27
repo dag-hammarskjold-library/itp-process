@@ -174,35 +174,50 @@ def itpitsc(bodysession):
                 'itsentry': 1, 
                 'docsymbol': 1, 
                 'sortkey1': {
+                    '$concat': [
+                        {
+                            '$replaceAll': {
+                                'input': {
+                                    '$replaceAll': {
+                                        'input': {'$toUpper': '$itshead'}, #corporate
+                                        'find': '. ', 
+                                        'replacement': ' .'
+                                    }
+                                }, 
+                                'find': '—', 
+                                'replacement': ' —'
+                            }
+                        },
+                        '+',
+                        {
+                            '$replaceAll': {
+                                'input': {
+                                    '$replaceAll': {
+                                        'input': {'$toUpper':'$itssubhead'}, #subject
+                                        'find': '. ', 
+                                        'replacement': ' .'
+                                    }
+                                }, 
+                                'find': '—', 
+                                'replacement': ' —'
+                            }
+                        },
+                ]},
+                'sortkey2': {
                     '$replaceAll': {
                         'input': {
                             '$replaceAll': {
                                 'input': {
-                                    '$concat': [
-                                        {'$toUpper': '$itshead'}, '+', {'$toUpper':'$itssubhead'}]}, 
-                                'find': '. ', 
-                                'replacement': ' .'
+                                    '$replaceAll': {
+                                        'input': {'$toUpper': '$itsentry'}, #speaker
+                                        'find': ' ', 
+                                        'replacement': '!'
+                                    }
+                                }, 
+                                'find': ',', 
+                                'replacement': ' '
                             }
                         }, 
-                        'find': '—', 
-                        'replacement': ' $'
-                    }
-                },
-                'sortkey2': {
-                '$replaceAll': {
-                    'input': {
-                        '$replaceAll': {
-                            'input': {
-                                '$replaceAll': {
-                                    'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
-                                    'find': ' ', 
-                                    'replacement': '!'
-                                }
-                            }, 
-                            'find': ',', 
-                            'replacement': ' '
-                        }
-                    }, 
                     'find': '-', 
                     'replacement': '^'
                     }
@@ -416,15 +431,13 @@ def itpitsp(bodysession):
                     '$replaceAll': {
                         'input': {
                             '$replaceAll': {
-                                'input': {
-                                    '$concat': [
-                                        {'$toUpper': '$itssubhead'}, '+']}, 
+                                'input': {'$toUpper': '$itssubhead'}, #subject 
                                 'find': '. ', 
                                 'replacement': ' .'
                             }
                         }, 
                         'find': '—', 
-                        'replacement': ' $'
+                        'replacement': ' —'
                     }
                 }, 
                 'sortkey3': '$docsymbol'
@@ -616,39 +629,51 @@ def itpitss(bodysession):
                 'itsentry': 1, 
                 'docsymbol': 1, 
                 'sortkey1': {
+                    '$concat': [
+                        {'$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$toUpper': '$agendasubject'}, #subject
+                                    'find': '. ', 
+                                    'replacement': ' .'
+                                }
+                            }, 
+                            'find': '—', 
+                            'replacement': ' —'} # $
+                        },
+                        '+',
+                        {'$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$toUpper':'$itssubhead'}, #corporate
+                                    'find': '. ', 
+                                    'replacement': ' .'
+                                }
+                            }, 
+                            'find': '—', 
+                            'replacement': ' —'} # $
+                        },
+                    ]
+                },
+                'sortkey2': {
                     '$replaceAll': {
                         'input': {
                             '$replaceAll': {
                                 'input': {
-                                    '$concat': [
-                                        {'$toUpper': '$agendasubject'}, '+', {'$toUpper':'$itssubhead'}]}, 
-                                'find': '. ', 
-                                'replacement': ' .'
+                                    '$replaceAll': {
+                                        'input': {'$toUpper': '$itsentry'},  #speaker
+                                        'find': ' ', 
+                                        'replacement': '!'
+                                    }
+                                }, 
+                                'find': ',', 
+                                'replacement': ' '
                             }
                         }, 
-                        'find': '—', 
-                        'replacement': ' $'
-                    }
-                },
-                'sortkey2': {
-                '$replaceAll': {
-                    'input': {
-                        '$replaceAll': {
-                            'input': {
-                                '$replaceAll': {
-                                    'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
-                                    'find': ' ', 
-                                    'replacement': '!'
-                                }
-                            }, 
-                            'find': ',', 
-                            'replacement': ' '
+                        'find': '-', 
+                        'replacement': '^'
                         }
-                    }, 
-                    'find': '-', 
-                    'replacement': '^'
-                    }
-                }, 
+                },
                 'sortkey3': '$docsymbol'
             }
         }
@@ -675,6 +700,8 @@ def itpitss(bodysession):
         pipeline.append(sort_stage)
     
         pipeline.append(merge_stage)
+
+        #print(pipeline)
 
         inputCollection.aggregate(pipeline, collation=collation)
 
@@ -3847,6 +3874,8 @@ def group_speeches(section, bodysession):
     pipeline.append(merge_stage)
 
     #print(pipeline)
+
+    #outputCollection.aggregate(pipeline)
 
     outputCollection.aggregate(pipeline, 
         collation={
