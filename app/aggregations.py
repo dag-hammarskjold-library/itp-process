@@ -222,28 +222,6 @@ def itpitsc(bodysession):
                     'replacement': '^'
                     }
                 },
-<<<<<<< HEAD
-=======
-                'sortkey2': {
-                '$replaceAll': {
-                    'input': {
-                        '$replaceAll': {
-                            'input': {
-                                '$replaceAll': {
-                                    'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
-                                    'find': ' ', 
-                                    'replacement': '!'
-                                }
-                            }, 
-                            'find': ',', 
-                            'replacement': ' '
-                        }
-                    }, 
-                    'find': '-', 
-                    'replacement': '^'
-                    }
-                },
->>>>>>> 17d2aafee4e31d8cb0f546b23089f12c78d9adff
                 'sortkey3': '$docsymbol'
             }
         }
@@ -696,28 +674,6 @@ def itpitss(bodysession):
                         'replacement': '^'
                         }
                 },
-<<<<<<< HEAD
-=======
-                'sortkey2': {
-                '$replaceAll': {
-                    'input': {
-                        '$replaceAll': {
-                            'input': {
-                                '$replaceAll': {
-                                    'input': {'$concat': [{'$toUpper': '$itsentry'}, '+']}, 
-                                    'find': ' ', 
-                                    'replacement': '!'
-                                }
-                            }, 
-                            'find': ',', 
-                            'replacement': ' '
-                        }
-                    }, 
-                    'find': '-', 
-                    'replacement': '^'
-                    }
-                }, 
->>>>>>> 17d2aafee4e31d8cb0f546b23089f12c78d9adff
                 'sortkey3': '$docsymbol'
             }
         }
@@ -3919,11 +3875,8 @@ def group_speeches(section, bodysession):
 
     #print(pipeline)
 
-<<<<<<< HEAD
     #outputCollection.aggregate(pipeline)
 
-=======
->>>>>>> 17d2aafee4e31d8cb0f546b23089f12c78d9adff
     outputCollection.aggregate(pipeline, 
         collation={
             'locale': 'en', 
