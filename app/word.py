@@ -2690,6 +2690,10 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                 myEntry=entry["docsymbol"].split(" (E/")
                 add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
                 p2.add_run(" (E/"+myEntry[1])
+            elif len(entry["docsymbol"].split(" (A/"))==2:
+                myEntry=entry["docsymbol"].split(" (A/")
+                add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                p2.add_run(" (A/"+myEntry[1])
             else:
                 add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
 
@@ -2722,6 +2726,10 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                 myEntry=entry["docsymbol"].split(" (E/")
                 add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
                 p2.add_run(" (E/"+myEntry[1])
+            elif len(entry["docsymbol"].split(" (A/"))==2:
+                myEntry=entry["docsymbol"].split(" (A/")
+                add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
+                p2.add_run(" (A/"+myEntry[1])
             else:
                 add_hyperlink1(p2,myEntry[0],Config.url_prefix+myEntry[0])
 
