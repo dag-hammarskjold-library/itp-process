@@ -624,7 +624,7 @@ def itpitss(bodysession):
                                 }
                             }, 
                             'find': '—', 
-                            'replacement': ' $'}
+                            'replacement': ' —'} # $
                         },
                         '+',
                         {'$replaceAll': {
@@ -636,7 +636,7 @@ def itpitss(bodysession):
                                 }
                             }, 
                             'find': '—', 
-                            'replacement': ' $'}
+                            'replacement': ' —'} # $
                         },
                     ]
                 },
