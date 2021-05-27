@@ -180,7 +180,7 @@ def itpitsc(bodysession):
                                     }
                                 }, 
                                 'find': '—', 
-                                'replacement': ' $'
+                                'replacement': ' —'
                             }
                         },
                         '+',
@@ -194,7 +194,7 @@ def itpitsc(bodysession):
                                     }
                                 }, 
                                 'find': '—', 
-                                'replacement': ' $'
+                                'replacement': ' —'
                             }
                         },
                 ]},
