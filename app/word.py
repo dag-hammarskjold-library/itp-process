@@ -4512,7 +4512,8 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
     setOfData1=myCollection.find({'bodysession': bodysession,'section': paramSection})
     setOfData2=myCollection.find({'bodysession': bodysession,'section': paramSection})
-    lstVotes=list(setOfData)
+    setOfData3=myCollection.find({'bodysession': bodysession,'section': paramSection})
+    lstVotes=list(setOfData3)
     # Creation of the word document
 
     document = Document()
@@ -4701,9 +4702,10 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         for datax in myRecords2[0]["votelist"]:
             countries.append(datax["memberstate"])
 
-        for record in myRecords:
-            recordNumber+=1
-     
+        recordNumber=len(lstVotes)
+        #for record in myRecords:
+        #    recordNumber+=1
+       
 
         # creation of the table
         table = document.add_table(rows=1,cols=16)
