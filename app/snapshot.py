@@ -11,7 +11,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from app.models import Itpp_itp, Itpp_section, Itpp_rule#, list_all_sections
 from mongoengine import connect,disconnect
-
+from app.aggregations import fetch_agenda
 
 
 DB.connect(Config.connect_string)
@@ -136,10 +136,12 @@ class Snapshot(object):
 
 
     def fetch_auth_data(self,proj_auth_dict):
+        match_criteria=fetch_agenda(self.body,self.session)
         query_auth = QueryDocument(
                 Condition(
                 tag='191',
-                subfields={'a': re.compile('^'+self.body+'/'+self.session[0:4])}
+                #subfields={'a': re.compile('^'+self.body+'/'+self.session[0:4])}
+                subfields={'a': match_criteria}
                     )
             )
         #print(query.to_json())
