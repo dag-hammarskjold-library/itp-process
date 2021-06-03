@@ -1866,13 +1866,6 @@ def itpage(bodysession):
         bs = bodysession.split("/")
         body = bs[0]
         session = bs[1]
-
-        if body == "A":
-            match_criteria = "A/" + session + "/251"
-        
-        if body == "E":
-            year = session.split("-")
-            match_criteria = "E/" + year[0] + "/100"
         
         if body == "S":
             match_stage1 = {
@@ -1972,6 +1965,9 @@ def itpage(bodysession):
 
         else: #A or E
             #### Insert Agenda records from AUTHs for records without []
+
+            match_criteria = fetch_agenda(body, session)
+
             match_stage1 = {
                 '$match': {
                     'bodysession': bodysession, 
@@ -4746,3 +4742,27 @@ def section_summary():
     pipeline.append(project_stage)   
 
     return list(outputCollection.aggregate(pipeline))
+
+def fetch_agenda(body, session):
+    match_criteria = ""
+
+    if body == "A":
+        sp = re.search("sp", session)
+        em = re.search("em", session)
+
+        if em:
+            match_criteria = "A/ES-" + session[:-4] + "/2"
+        elif sp:
+            match_criteria = "A/S-" + session[:-2] + "/1"
+        else:
+            match_criteria = "A/" + session + "/251"
+
+    if body == "E":
+        year = session.split("-")
+        
+        if year[1] == "0":
+            match_criteria = "E/" + year[0] + "/2"
+        else:
+            match_criteria = "E/" + year[0] + "/100"
+
+    return match_criteria
