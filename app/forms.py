@@ -71,8 +71,8 @@ class SelectAuthority(FlaskForm):
     authority = StringField('Authority number or Series symbol (e.g. 896399 or A/74)', validators=[DataRequired()])
 
 class SelectAgendaAuthority(FlaskForm):
-    authority = StringField('Series symbol or Document symbol (e.g. A/74 or A/74/251)', validators=[DataRequired()])
-    agenda_number = IntegerField('The agenda document number')
+    authority = StringField('Authority number or Series symbol (e.g. 896399 or A/74)', validators=[DataRequired()])
+    agenda_document = IntegerField('The agenda document (e.g. A/74/251)')
 
 class SelectPVRangeAuthority(FlaskForm):
     authority = StringField('Authority number or Series symbol (e.g. 896399 or A/74)')

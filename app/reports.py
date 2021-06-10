@@ -239,7 +239,7 @@ class Incorrect991(Report):
         self.description = ""
         
         self.form_class = SelectAgendaAuthority
-        self.expected_params = ['authority', 'agenda_number']
+        self.expected_params = ['authority', 'agenda_document']
     
         self.field_names = ['Record ID', self.symbol_field + '$a', '991$a', '991$b', '991$c', '991$d', '991$e']
         
@@ -262,18 +262,22 @@ class Incorrect991(Report):
                 found = 0
     
                 for sym in syms:
-                    if args['agenda_number']:
-                        xbody = _body_session_from_symbol(sym)[0]
-                        xsession = args['agenda_number']
-                    elif _body_session_from_symbol(sym):
+                    
+                    if _body_session_from_symbol(sym):
                         xbody, xsession =  _body_session_from_symbol(sym)
                     else:
-                        # from the user input
+                        # can't derive session from symbol
+                        # get from the user input
                         xbody, xsession = body[0:-1], session
-
-                    if aparts[0:2] == [xbody, xsession]:                
+                    
+                    # compare
+                    if args['agenda_document']:
+                        if args['agenda_document'].upper() in bib.get_values('991', 'a'):
+                            found += 1
+                            
+                    elif aparts[0:2] == [xbody, xsession]:                
                         found += 1
-
+                    
                 if found == 0: # and bib.get_value(self.symbol_field, 'a')[:4] != 'S/PV':
                     row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
                     row.insert(0, '; '.join(syms))
