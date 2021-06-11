@@ -1105,7 +1105,8 @@ def itpsubj(bodysession):
         match_stage = {
             '$match': {
                 'bodysession': bodysession, 
-                'record_type': "BIB"
+                'record_type': "BIB",
+                '191': {'$ne': ''}
             }
         }
 
@@ -2242,7 +2243,8 @@ def itpdsl(bodysession):
         match_stage = {
             '$match': {
                 'record_type': 'BIB', 
-                'bodysession': bodysession
+                'bodysession': bodysession,
+                '191': {'$ne': ''}
             }
         }
 
