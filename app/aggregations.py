@@ -747,7 +747,7 @@ def itpres(bodysession):
             '$match': {
                 '191.b': body + "/",
                 '191.c': session, 
-                '991.z': "I"
+                '991.z': "I" 
             }
         }
 
@@ -758,21 +758,23 @@ def itpres(bodysession):
         add_1['votedate'] = {'$split': ['$992.a', '-']}
 
         add_1['agendas'] = {
-        '$cond': {
-            'if': {'$isArray': ['$991']}, 
-            'then': {
-                '$filter': {
-                    'input': '$991', 
-                    'as': 'fields', 
-                    'cond': {'$eq': ['$$fields.z', 'I']}
-                }
-            }, 
-            'else': {
-                '$cond': {
-                    'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
-                    'then': '$991.b', 
-                    'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}}}
-                }
+            '$cond': {
+                'if': '$991.b', 
+                'then': {
+                    '$cond': {
+                        'if': {'$isArray': ['$991']}, 
+                        'then': '$991', 
+                        'else': {
+                            '$cond': {
+                                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                                'then': '$991.b', 
+                                'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+                            }
+                        }
+                    }
+                }, 
+                'else': ''
+            }
         }
 
         if body == "S":
