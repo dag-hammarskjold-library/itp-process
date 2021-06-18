@@ -747,7 +747,7 @@ def itpres(bodysession):
             '$match': {
                 '191.b': body + "/",
                 '191.c': session, 
-                '991.z': "I" 
+                #'991.z': "I" 
             }
         }
 
