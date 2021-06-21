@@ -747,7 +747,7 @@ def itpres(bodysession):
             '$match': {
                 '191.b': body + "/",
                 '191.c': session, 
-                '991.z': "I"
+                #'991.z': "I" 
             }
         }
 
@@ -759,40 +759,44 @@ def itpres(bodysession):
 
         add_1['agendas'] = {
             '$cond': {
-                'if': {'$isArray': ['$991']}, 
+                'if': '$991.b', 
                 'then': {
-                    '$filter': {
-                        'input': '$991', 
-                        'as': 'fields', 
-                        'cond': {'$eq': ['$$fields.z', 'I']}
-                    }
-                }, 
-                'else': {
                     '$cond': {
-                        'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
-                        'then': '$991.b', 
-                        'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}}}
-            }
-        }
-
-        add_1['subjects'] = {
-            '$cond': {
-                'if': {'$isArray': ['$991']}, 
-                'then': {
-                    '$filter': {
-                        'input': '$991', 
-                        'as': 'fields', 
-                        'cond': {
-                            '$eq': [
-                                '$$fields.z', 'I'
-                            ]
+                        'if': {'$isArray': ['$991']}, 
+                        'then': '$991', 
+                        'else': {
+                            '$cond': {
+                                'if': {'$eq': [{'$indexOfCP': ['$991.b', '[']}, -1]}, 
+                                'then': '$991.b', 
+                                'else': {'$substrCP': ['$991.b', 0, {'$indexOfCP': ['$991.b', '[']}]}
+                            }
                         }
                     }
                 }, 
-                'else': '$991.d'
+                'else': ''
             }
         }
 
+        if body == "S":
+            add_1['subjects'] = {
+                '$cond': {
+                    'if': {'$isArray': ['$991']}, 
+                    'then': {
+                        '$filter': {
+                            'input': '$991', 
+                            'as': 'fields', 
+                            'cond': {
+                                '$eq': [
+                                    '$$fields.z', 'I'
+                                ]
+                            }
+                        }
+                    }, 
+                    'else': '$991.d'
+                }
+            }
+        else:
+            add_1['subjects'] = ''
 
         add_stage1 = {}
         add_stage1['$addFields'] = add_1
