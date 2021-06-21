@@ -258,31 +258,39 @@ class Incorrect991(Report):
         for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '991': 1}):
             for field in bib.get_fields('991'):
                 aparts = field.get_value('a').split('/')
+                ag_doc = args['agenda_document'].upper()
                 syms = bib.get_values(self.symbol_field, 'a')
-                found = 0
-    
-                for sym in syms:
+
+                if ag_doc:
+                    field_doc = field.get_value('a')
+                
+                    if ag_doc[0] == field_doc[0]:
+                        #the agenda is for the same body  
+                        if field_doc != ag_doc:
+                            row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
+                            row.insert(0, '; '.join(syms))
+                            row.insert(0, bib.id)
+                            results.append(row)
+                else:
+                    found = 0
                     
-                    if _body_session_from_symbol(sym):
-                        xbody, xsession =  _body_session_from_symbol(sym)
-                    else:
-                        # can't derive session from symbol
-                        # get from the user input
-                        xbody, xsession = body[0:-1], session
+                    for sym in syms:
                     
-                    # compare
-                    if args['agenda_document']:
-                        if args['agenda_document'].upper() in bib.get_values('991', 'a'):
+                        if _body_session_from_symbol(sym):
+                            xbody, xsession =  _body_session_from_symbol(sym)
+                        else:
+                            # can't derive session from symbol
+                            # get from the user input
+                            xbody, xsession = body[0:-1], session
+                    
+                        if aparts[0:2] == [xbody, xsession]:                
                             found += 1
-                            
-                    elif aparts[0:2] == [xbody, xsession]:                
-                        found += 1
                     
-                if found == 0: # and bib.get_value(self.symbol_field, 'a')[:4] != 'S/PV':
-                    row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
-                    row.insert(0, '; '.join(syms))
-                    row.insert(0, bib.id)
-                    results.append(row)
+                    if found == 0: # and bib.get_value(self.symbol_field, 'a')[:4] != 'S/PV':
+                        row = [field.get_value(x) for x in ('a', 'b', 'c', 'd', 'e')]
+                        row.insert(0, '; '.join(syms))
+                        row.insert(0, bib.id)
+                        results.append(row)
                 
         return results
 
