@@ -2073,7 +2073,8 @@ def itpage(bodysession):
                         'a': '$agendanum', 
                         'b': '$subagenda', 
                         'c': '$agendatitle', 
-                        'd': '$agendasubject'
+                        'd': '$agendasubject',
+                        'e': '$agendaitem'
                     }
                 }
             }
@@ -2097,19 +2098,7 @@ def itpage(bodysession):
             
             transform['sortkey2'] = '$_id.b'
 
-            transform['sortkey3'] = {
-                '$replaceAll': {
-                    'input': {
-                        '$replaceAll': {
-                            'input': '$_id.d', 
-                            'find': '. ', 
-                            'replacement': ' .'
-                        }
-                    }, 
-                    'find': '—', 
-                    'replacement': ' $'
-                }
-            }
+            transform['sortkey3'] = '$_id.e'
 
             transform_stage = {}
             transform_stage['$project'] = transform
@@ -4392,7 +4381,8 @@ def group_itpage_AE(section, bodysession):
                 'a': '$agendanum', 
                 'sub': '$subagenda', 
                 'title': '$agendatitle', 
-                'heading': '$heading'
+                'heading': '$heading',
+                'sortkey3': '$sortkey3'
             }, 
             'see': {
                 '$push': '$agendasubject'
@@ -4405,7 +4395,8 @@ def group_itpage_AE(section, bodysession):
             '_id': {
                 'a': '$_id.a', 
                 'sub': '$_id.sub', 
-                'h': '$_id.heading'
+                'h': '$_id.heading',
+                'sortkey3': '$_id.sortkey3'  
             }, 
             'titlesubject': {
                 '$push': {
@@ -4419,7 +4410,8 @@ def group_itpage_AE(section, bodysession):
     sort_stage1 =  {
         '$sort': {
             '_id.a': 1, 
-            '_id.sub': 1
+            '_id.sub': 1,
+            '_id.sortkey3': 1
         }
     }
 
