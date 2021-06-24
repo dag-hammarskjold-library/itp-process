@@ -2096,9 +2096,21 @@ def itpage(bodysession):
             }
             transform['sortkey1'] = '$_id.a'
             
-            transform['sortkey2'] = '$_id.b'
+            transform['sortkey2'] = '$_id.e'
 
-            transform['sortkey3'] = '$_id.e'
+            transform['sortkey3'] = {
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': '$_id.d', 
+                            'find': '. ', 
+                            'replacement': ' .'
+                        }
+                    }, 
+                    'find': '—', 
+                    'replacement': ' $'
+                }
+            }
 
             transform_stage = {}
             transform_stage['$project'] = transform
@@ -4382,7 +4394,7 @@ def group_itpage_AE(section, bodysession):
                 'sub': '$subagenda', 
                 'title': '$agendatitle', 
                 'heading': '$heading',
-                'sortkey3': '$sortkey3'
+                'sortkey2': '$sortkey2'
             }, 
             'see': {
                 '$push': '$agendasubject'
@@ -4396,7 +4408,7 @@ def group_itpage_AE(section, bodysession):
                 'a': '$_id.a', 
                 'sub': '$_id.sub', 
                 'h': '$_id.heading',
-                'sortkey3': '$_id.sortkey3'  
+                'sortkey2': '$_id.sortkey2'  
             }, 
             'titlesubject': {
                 '$push': {
@@ -4411,7 +4423,7 @@ def group_itpage_AE(section, bodysession):
         '$sort': {
             '_id.a': 1, 
             '_id.sub': 1,
-            '_id.sortkey3': 1
+            '_id.sortkey2': 1
         }
     }
 
@@ -4480,7 +4492,7 @@ def group_itpage_AE(section, bodysession):
     pipeline.append(project_stage)
     pipeline.append(sort_stage3)
     pipeline.append(merge_stage)
-
+    
     outputCollection.aggregate(pipeline, collation=collation)
 
 def group_itpreps(section, bodysession):
