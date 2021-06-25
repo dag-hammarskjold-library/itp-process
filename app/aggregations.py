@@ -2108,7 +2108,7 @@ def itpage(bodysession):
                         }
                     }, 
                     'find': '—', 
-                    'replacement': ' $'
+                    'replacement': ' —' #' $'
                 }
             }
 
