@@ -3913,33 +3913,8 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     stlSorentryFont.name = 'Arial'
     stlSorentryFont.size = Pt(8)
 
-    ################## see ###############################################
     
-    see = document.styles.add_style('see3', WD_STYLE_TYPE.PARAGRAPH)
-    
-    # Font name
-    
-    stlSorentryFont=see.font
-    stlSorentryFont.name = 'Arial'
-    stlSorentryFont.size = Pt(8)
-    stlSorentryFont.italic=True
-
-    pformat=see.paragraph_format
-    pformat.space_after=Pt(5)
-    pformat.left_indent=Cm(2)
-    pformat.first_line_indent=Inches(-0.58)
-
-    ################## see ###############################################
-    
-    see = document.styles.add_style('see4', WD_STYLE_TYPE.PARAGRAPH)
-    
-    # Font name
-    
-    stlSorentryFont=see.font
-    stlSorentryFont.name = 'Arial'
-    stlSorentryFont.size = Pt(8)
-    stlSorentryFont.italic=True
-
+    '''
     ################## see ###############################################
     
     see = document.styles.add_style('see', WD_STYLE_TYPE.PARAGRAPH)
@@ -3950,7 +3925,7 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     stlSorentryFont.name = 'Arial'
     stlSorentryFont.size = Pt(8)
     stlSorentryFont.italic=True
-
+    '''
     ################## data ###############################################
     
     data = document.styles.add_style('data', WD_STYLE_TYPE.PARAGRAPH)
@@ -4012,60 +3987,207 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     pformat.left_indent=Cm(1.52)
     pformat.first_line_indent=Inches(-0.58)
  
+    ################## title ###############################################
 
-    ################## title2 ###############################################
-    
-    stlTitle2 = document.styles.add_style('title2', WD_STYLE_TYPE.PARAGRAPH)
-    
+    stlTitle = document.styles.add_style('title2', WD_STYLE_TYPE.PARAGRAPH)
+
     # Font name and size
-    
-    stlTitle2Font=stlTitle2.font
-    stlTitle2Font.name = 'Arial'
-    stlTitle2Font.size = Pt(8)
+
+    stlTitleFont=stlTitle.font
+    stlTitleFont.name = 'Arial'
+    stlTitleFont.size = Pt(8)
 
     # others formatting
-    
-    pformat=stlTitle2.paragraph_format
-    pformat.space_before=Pt(0)
-    pformat.space_after=Pt(1)
-    pformat.left_indent=Cm(1.52)
-    pformat.first_line_indent=Inches(-0.30)
+
+    pformat=stlTitle.paragraph_format
+    pformat.space_before=Pt(8)
+    pformat.space_after=Pt(0)
+    pformat.left_indent=Inches(0.3)
+    pformat.first_line_indent=Inches(-0.3)
+    pformat.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+
+
+    ################## see ###############################################
+
+    see = document.styles.add_style('see', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name
+
+    seeFont=see.font
+    seeFont.name = 'Arial'
+    seeFont.size = Pt(8)
+    seeFont.italic=True
+
+    pformat=see.paragraph_format
+    pformat.space_after=Pt(3)
+    pformat.left_indent=Inches(0.6)
+    pformat.first_line_indent=Inches(-0.3)
+    pformat.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+
+    ################## see2a ###############################################
+
+    see2a = document.styles.add_style('see2a', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name
+
+    see2aFont=see2a.font
+    see2aFont.name = 'Arial'
+    see2aFont.size = Pt(8)
+    see2aFont.italic=True
+
+    pformat2=see2a.paragraph_format
+    pformat2.space_after=Pt(3)
+    pformat2.left_indent=Inches(0.6)
+    pformat2.first_line_indent=Inches(-0.3)
+    pformat2.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+    ################## seealso ###############################################
+
+    seealso = document.styles.add_style('seealso', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name
+
+    seealsoFont=seealso.font
+    seealsoFont.name = 'Arial'
+    seealsoFont.size = Pt(8)
+    seealsoFont.italic=True
+
+    pformatseealso=seealso.paragraph_format
+    pformatseealso.space_after=Pt(3)
+    pformatseealso.left_indent=Inches(0.8)
+    pformatseealso.first_line_indent=Inches(-0.5)
+    pformatseealso.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+
+    ################## see_also_subjs ###############################################
+
+    see_also_subjs = document.styles.add_style('see_also_subjs', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name
+
+    see_also_subjsFont=see_also_subjs.font
+    see_also_subjsFont.name = 'Arial'
+    see_also_subjsFont.size = Pt(8)
+    see_also_subjsFont.italic=True
+
+    pformatsee_also_subjs=see_also_subjs.paragraph_format
+    pformatsee_also_subjs.space_after=Pt(3)
+    pformatsee_also_subjs.left_indent=Inches(1.1)
+    #pformatsee_also_subjs.first_line_indent=Inches(-0.5)
+    pformatsee_also_subjs.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+    ################## see3 ###############################################
+
+    see3 = document.styles.add_style('see3', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name
+
+    see3Font=see3.font
+    see3Font.name = 'Arial'
+    see3Font.size = Pt(8)
+    see3Font.italic=True
+
+    pformat3=see3.paragraph_format
+    pformat3.space_after=Pt(5)
+    pformat3.left_indent=Inches(0.9)
+    pformat3.first_line_indent=Inches(-0.3)
+    pformat3.line_spacing_rule = WD_LINE_SPACING.SINGLE
+    ################## see4 ###############################################
+
+    see4 = document.styles.add_style('see4', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name
+
+    see4Font=see4.font
+    see4Font.name = 'Arial'
+    see4Font.size = Pt(8)
+    see4Font.italic=True
+
+    pformat4=see4.paragraph_format
+    pformat4.space_after=Pt(5)
+    pformat4.left_indent=Inches(1.2)
+    pformat4.first_line_indent=Inches(-0.3)
+    pformat4.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+    ################## see5 ###############################################
+
+    see5 = document.styles.add_style('see5', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name
+
+    see5Font=see5.font
+    see5Font.name = 'Arial'
+    see5Font.size = Pt(8)
+    see5Font.italic=True
+
+    pformat5=see5.paragraph_format
+    pformat5.space_after=Pt(5)
+    pformat5.left_indent=Inches(0.8)
+    #pformat4.first_line_indent=Inches(-0.3)
+    pformat5.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
 
     ################## subagenda2 ###############################################
-    
+    #style for first subagenda (a), (b)
     stlSubagenda2 = document.styles.add_style('subagenda2', WD_STYLE_TYPE.PARAGRAPH)
-    
+
     # Font name and size
-    
+
     stlSubagenda2Font=stlSubagenda2.font
     stlSubagenda2Font.name = 'Arial'
     stlSubagenda2Font.size = Pt(8)
 
     # others formatting
-    
+
     pformat=stlSubagenda2.paragraph_format
     pformat.space_before=Pt(0)
     pformat.space_after=Pt(2)
-    pformat.left_indent=Cm(2.29)
-    pformat.first_line_indent=Inches(-0.58)
+    pformat.left_indent=Inches(0.6)
+    pformat.first_line_indent=Inches(-0.3)
+    pformat.line_spacing_rule = WD_LINE_SPACING.SINGLE
 
-    ################## mysubject ###############################################
-    
-    stlMysubject2 = document.styles.add_style('mysubject2', WD_STYLE_TYPE.PARAGRAPH)
-    
+    ################## subagenda3 ###############################################
+    #style for aa is (a), bb is (b), etc 
+    stlSubagenda3 = document.styles.add_style('subagenda3', WD_STYLE_TYPE.PARAGRAPH)
+
     # Font name and size
-    
-    stlMysubject2Font=stlMysubject2.font
-    stlMysubject2Font.name = 'Arial'
-    stlMysubject2Font.size = Pt(8)
+
+    stlSubagenda3Font=stlSubagenda3.font
+    stlSubagenda3Font.name = 'Arial'
+    stlSubagenda3Font.size = Pt(8)
 
     # others formatting
-    
-    pformat=stlMysubject2.paragraph_format
+
+    pformat=stlSubagenda3.paragraph_format
     pformat.space_before=Pt(0)
-    pformat.space_after=Pt(5)
-    pformat.left_indent=Cm(2.50)
-    pformat.first_line_indent=Inches(-0.68)
+    pformat.space_after=Pt(2)
+    pformat.left_indent=Inches(0.9)
+    pformat.first_line_indent=Inches(-0.3)
+    pformat.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+    ################## seesubagenda3 ###############################################
+
+    stlseeSubagenda3 = document.styles.add_style('seesubagenda3', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name and size
+
+    stlSubagenda3Font=stlseeSubagenda3.font
+    stlSubagenda3Font.name = 'Arial'
+    stlSubagenda3Font.size = Pt(8)
+
+    # others formatting
+
+    pformat=stlseeSubagenda3.paragraph_format
+    pformat.space_before=Pt(0)
+    pformat.space_after=Pt(2)
+    pformat.left_indent=Inches(1.2)
+    pformat.first_line_indent=Inches(-0.3)
+    pformat.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+
+    
      
     ################## WRITING THE DOCUMENT ###############################################
     
@@ -4075,11 +4197,22 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     if (bodysession[0]=="A"):
 
+        ########### GENERAL ASSEMBLY ##########
+
+        def key_title(myAgendaText):
+            if myAgendaText["title"]=="":
+                #return (2,myAgendaText["title"])
+                return 2
+            else:
+                #return (1,myAgendaText["title"])
+                return 1
+
         myRecords=setOfData
         preventDoubleValue=""
 
+
         for record in myRecords:  
-      
+
             # Display management
             
             if record["heading"]=="AGENDA":
@@ -4097,7 +4230,7 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
 
                     # Selection of the agendanum value
                     myAgendaNum=myAgenda["agendanum"]
-
+                    prev_my_subagenda=""
                     # Selection of the text object
                     alreadyDisplayText=False
                     alreadyDisplayNum=False
@@ -4107,33 +4240,45 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                     saveTitle=""
                     seeAlso1=False
                     for myText in myAgenda["text"]:
-
+                        
                         # Selection of the subagenda value
                         if myText["subagenda"]:
                             mySubAgenda=myText["subagenda"].strip()
+                            alreadyDisplaySee=False
+                            alreadyDisplaySeeAlso=False
+                        else:
+                            mySubAgenda=""
 
                         # Selection of the agendatext value
-                        for myAgendaText in myText["agendatext"]:
+                        mySortedText=sorted(myText["agendatext"], key=key_title)
+
+                        for i,myAgendaText in enumerate(mySortedText):
 
                             # Selection of the title value
 
                             if myAgendaText["title"]!="":
                                 myTitle=myAgendaText["title"].strip()
+                            else:
+                                myTitle=""
+                                #alreadyDisplaySee=True
 
-                            if alreadyDisplayNum==False:
-                                if len(myAgendaNum)==1 :
-                                    p=document.add_paragraph(myAgendaNum+"."+"       ",style="title2")
-                                else:
-                                    p=document.add_paragraph(myAgendaNum+"."+"     ",style="title2")    
+                            if alreadyDisplayNum==False and myTitle!="": #main agenda num e.g. 1., 2., 3., ...
+                                p=document.add_paragraph('{}.{}'.format(myAgendaNum,' '*(8-2*len(myAgendaNum)+1)),style="title2")
+                                if myAgendaNum=="1":
+                                    p.paragraph_format.space_before=Pt(0)
                                 run=p.add_run(myTitle)
                                 alreadyDisplayNum=True
                                 
-                            else:
-                                ##
-
-                                if len(myAgenda["text"])!=1:
-                                    if saveTitle!=myTitle:
-                                        p=document.add_paragraph("         ("+  mySubAgenda    +")     ",style="subagenda2")   
+                            elif len(myAgenda["text"])!=1: #subagenda 
+                                if saveTitle!=myTitle and myTitle!="":
+                                    if prev_my_subagenda!=mySubAgenda:#subagenda (a)
+                                        p=document.add_paragraph("("+  mySubAgenda    +")     ",style="subagenda2")   
+                                        run=p.add_run(myTitle)
+                                        saveTitle=myTitle
+                                        seeAlso1=True
+                                        
+                                    else:# double subagenda as in agenda_num 98 in A/74 (aa), (bb)
+                                        p=document.add_paragraph("("+  mySubAgenda    +")     ",style="subagenda3")   
                                         run=p.add_run(myTitle)
                                         saveTitle=myTitle
                                         seeAlso1=True
@@ -4142,74 +4287,63 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                             alreadyDisplayMultipleSee=False
                             alreadyDisplayMultipleb=False
                             index=0
+                        
                             for mySubject in myAgendaText["subjects"]:
                                 if mySubject:
-                                    if alreadyDisplaySee==False:
+                                    #my main agenda See when no subagendas exist: 
+                                    if alreadyDisplaySee==False and myAgendaText['title']!="":
                                         if len(myAgenda["text"])==1:
-                                            p=document.add_paragraph("\t"+"See:  ",style='see2') 
+                                            p=document.add_paragraph(""+"See:  ",style='see2a') 
                                             run=p.add_run(mySubject.strip())
                                             run.font.italic=False
                                             alreadyDisplaySee=True
- 
+
                                         else:
-                                            # here see + () header under the header level
-                                            if myText["subagenda"]!="":
-                                                p=document.add_paragraph("                            See:  ",style="see2")
+                                            # See for subagenda 
+                                            if prev_my_subagenda!=mySubAgenda and mySubAgenda!=""and myAgendaText['title']!="":
+                                                p=document.add_paragraph("See:  ",style="see3")
                                                 run=p.add_run(mySubject.strip()) 
                                                 run.font.italic=False
                                                 alreadyDisplaySee=True
-
+                                                prev_my_subagenda=mySubAgenda
+                                            elif mySubAgenda!=""and myAgendaText['title']!="":# See for the (aa), (bb), (cc),...
+                                                    p=document.add_paragraph("See:  ",style="see4")
+                                                    run=p.add_run(mySubject.strip()) 
+                                                    run.font.italic=False
+                                                    alreadyDisplaySee=True
                                             
-                                            if myText["subagenda"]=="":
-                                                p=document.add_paragraph("                   See:  ",style="see2")
+                                            # See under the main title when there are subagendas as well - subjects
+                                            if mySubAgenda=="":
+                                                p=document.add_paragraph("See:  ",style="see2a")
                                                 run=p.add_run(mySubject.strip()) 
                                                 run.font.italic=False
                                                 alreadyDisplaySee=True                                           
-                                            
-                                    
                                     else:
                                         
                                         # normal scenario
                                         if len(myAgenda["text"])==1 and myText["agendatext"][0]["subjects"][0]=="":
                                             ####### yls
-                                            p=document.add_paragraph("                   "+mySubject.strip(),style="mysubject2")  
+                                            p=document.add_paragraph(""+mySubject.strip(),style="see3")  
                                             alreadyDisplayMultipleb=True
-                                                
-                                        if len(myAgenda["text"])!=1 :
-                                            # here see + () contents inside the contents
-                                            if preventDoubleValue!=mySubject:
-                                                if alreadyDisplayMultipleSee==False:
-                                                    p=document.add_paragraph("                            See:   ",style="see2")
-                                                    run=p.add_run(mySubject.strip()) # 17 spaces
-                                                    run.font.italic=False
-                                                    alreadyDisplayMultipleSee=True
-                                                    preventDoubleValue=mySubject
-
-                                                else:
-                                                    p=document.add_paragraph("                             "+mySubject.strip(),style="mysubject2")
-                                                preventDoubleValue=mySubject
-
-                                        if len(myText["agendatext"])==2 and myText["agendatext"][0]["title"]!="" and myText["agendatext"][1]["title"]=="" and myText["subagenda"]=="" and myText["agendatext"][0]["subjects"][0]!="":
+                                            alreadyDisplaySee=True
+                                        #See also        
+                                        if len(mySortedText)==2 and myAgendaText['title']=="" and myAgendaText['subjects']!="":
+                                            if mySubAgenda!="": #subagenda see also
+                                                see_also_style="see3"#See also: 1st subject
+                                                see_also_subj="see_also_subjs"#subjects
+                                            else: # main agenda see also
+                                                see_also_style="seealso"
+                                                see_also_subj="see5"
                                             if alreadyDisplaySeeAlso==False:
-                                                p=document.add_paragraph("                   See also:   ",style="see2")
-                                                run=p.add_run(mySubject.strip()) # 17 spaces
-                                                run.font.italic=False 
+                                                p=document.add_paragraph("See also: ",style=see_also_style)
+                                                run=p.add_run(mySubject.strip()) 
+                                                run.font.italic=False   
                                                 alreadyDisplaySeeAlso=True
                                             else:
-                                                p=document.add_paragraph("                                     ",style="see2")
-                                                run=p.add_run(mySubject.strip()) # 17 spaces
+                                                p=document.add_paragraph("",style=see_also_subj)
+                                                run=p.add_run(mySubject.strip())
                                                 run.font.italic=False 
- 
-                                            continue
 
-                                        if len(myText["agendatext"])==2 and myText["agendatext"][0]["title"]!="" and myText["agendatext"][1]["title"]=="" and myText["subagenda"]!="" and myText["agendatext"][0]["subjects"][0]!="":
-                                            if alreadyDisplaySeeAlso==False:
-                                                p=document.add_paragraph("                            See also:   ",style="see2")
-                                                run=p.add_run(myText["agendatext"][1]["subjects"][0].strip()) # 17 spaces
-                                                run.font.italic=False 
-                                                alreadyDisplaySeeAlso=True
-                                                preventDoubleValue=myText["agendatext"][1]["subjects"][0]
- 
                                             continue
 
                                 else : # no subject
@@ -4218,12 +4352,45 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                                         p.paragraph_format.space_after = Pt(5)
                                     #pass 
 
+
+            if record["heading"]=="OTHER MATTERS INCLUDED IN THE INDEX":   
+
+                myBreak = p.add_run().add_break(WD_BREAK.PAGE)
+
+                paragraph = header.paragraphs[0]
+
+                # Choosing the top most sectin of the page 
+                section = document.sections[0] 
+                
+                # Selecting the header 
+                header = section.header 
+                
+                # Selecting the paragraph already present in 
+                # the header section 
+                header_para = header.paragraphs[0] 
+
+                # Selection of the agenda object
+                for myAgenda in record["agendas"]:
+
+                    for myText in myAgenda["text"]:
+
+                        for myAgendaText in myText["agendatext"]:
+
+                            for mySubject in myAgendaText["subjects"]:
+
+                                p=document.add_paragraph(mySubject,style="title2")    
+
+
+
         sections = document.sections
         for section in sections:
-            section.top_margin = Cm(1)
-            section.bottom_margin = Cm(1)
-            section.left_margin = Cm(1)
-            section.right_margin = Cm(1)
+            section.top_margin = Inches(1)
+            section.bottom_margin = Inches(1)
+            section.left_margin = Inches(1)
+            section.right_margin = Inches(1)
+
+        # add_page_number(document.sections[0].footer.paragraphs[0])
+        # return document
 
     # add_page_number(document.sections[0].footer.paragraphs[0])
     # return document

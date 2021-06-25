@@ -12,6 +12,9 @@ from datetime import datetime, timezone, timedelta
 from app.models import Itpp_itp, Itpp_section, Itpp_rule#, list_all_sections
 from mongoengine import connect,disconnect
 from app.aggregations import fetch_agenda
+from dateutil import tz
+import pytz
+
 
 
 DB.connect(Config.connect_string)
@@ -21,6 +24,12 @@ db=db_client['undlFiles']
 rules_coll = db['dev_Itpp_document']
 snapshot_coll=db['itpp_snapshot_test3']
 itp_bib_fields=[]
+
+local_tz = pytz.timezone('UTC')
+
+def datetime_to_utc(date):
+    """yls comment: the tz can be used as a parameter"""
+    return date.astimezone(tz.gettz('America/New York')).replace(tzinfo=None)
 
 
 class Snapshot(object):
@@ -300,6 +309,23 @@ class Snapshot(object):
         self.bulk_write_bibs_auths()
         print(f"--- {time.time() - start_time_bulk_write} seconds for bulk write for {self.body}/{self.session} ---")
 
+
+    def fromutc(self, dt):
+        dt_offset = dt.utcoffset()
+        dt_dst = dt.dst()
+        delta = dt_offset - dt_dst  
+                
+        if delta:
+            dt += delta   
+            dtdst = dt.dst()
+            
+        if dtdst:
+            return dt + dtdst
+        else:
+            return dt
+
+
+
     ''' listing snapshots in display snapshot'''
     def list(self):
         snapshots=snapshot_coll.distinct("bodysession")
@@ -309,16 +335,14 @@ class Snapshot(object):
             try:
                 snapshottime_str=snapshot_coll.find_one({'bodysession':sh},sort=[('snapshottime', -1)])['snapshottime']
                 #get the time for the distinct bodysession
+                #est = pytz.timezone("America/New York")
+                est = pytz.timezone('US/Eastern')
+                utc = pytz.utc
                 mdt=datetime.strptime(snapshottime_str,self.TIME)
-                #create datetime from the snapshottime
-                # 5 hours ahead - > utc is -5 hours 
-                est_time_delta    = timedelta(hours=-5)
-                #create tz object
-                tz_object        = timezone(est_time_delta, name="EST")
-                #generate date time string:1) replace UTC to EST time by adjusting to 5 hours difference using timezone object
-                snapshot_tm = mdt.replace(tzinfo=timezone.utc).astimezone(tz=tz_object).strftime(self.TIME)
-                #convert to local time zone
-                snapshot_tpl=(sh, snapshot_tm) #create tuple to display
+                mdt_utc=utc.localize(mdt)
+                mdt_ny=mdt_utc.astimezone(est)
+                snapshot_tm = mdt_ny.strftime(self.TIME)
+                snapshot_tpl=(sh, snapshot_tm) #create a tuple to display
                 self.snapshots_list.append(snapshot_tpl) #append the lsit of tuples
                 print (f"sh is {sh} snapshot_time is {snapshot_tm}")
             except:
