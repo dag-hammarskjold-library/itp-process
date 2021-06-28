@@ -1977,7 +1977,7 @@ def itpage(bodysession):
                 '$match': {
                     'bodysession': bodysession, 
                     'record_type': 'AUTH',
-                    '191.b': {'$not': {'$regex': '\\['}}
+                    #'191.b': {'$not': {'$regex': '\\['}}
                     }     
             }
 
