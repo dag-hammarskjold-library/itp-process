@@ -1395,6 +1395,8 @@ class ReportList(object):
         # (3) Missing fields - 700 + 710
         #SpeechMissingFields(['700', '710']),
         SpeechMissingFields_700_710(),
+        # (New Report) Speeches with parentheses in 700 field
+        SpeechParens700(),
         
         # (4) Incomplete authorities - mother record
         SpeechIncompleteAuthMother(),
@@ -1431,8 +1433,7 @@ class ReportList(object):
         SpeechMismatch('269', '992'), 
         # (18) Missing files
         SpeechMissingFiles(),
-        # (New Report) Speeches with parentheses in 700 field
-        SpeechParens700(),
+        
         
         ################ voting category ############
 
