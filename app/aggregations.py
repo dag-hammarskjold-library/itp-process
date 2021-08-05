@@ -1977,7 +1977,7 @@ def itpage(bodysession):
                 '$match': {
                     'bodysession': bodysession, 
                     'record_type': 'AUTH',
-                    #'191.b': {'$not': {'$regex': '\\['}}
+                    '191.b': {'$not': {'$regex': '\\['}} ##remove per Valeria request!!
                     }     
             }
 
@@ -2212,8 +2212,6 @@ def itpage(bodysession):
             #print(pipeline2)
             inputCollection.aggregate(pipeline2, collation=collation)
             group_itpage_AE("itpage", bodysession)
-
-            #print(pipeline)
 
         return "itpage completed successfully"
 
