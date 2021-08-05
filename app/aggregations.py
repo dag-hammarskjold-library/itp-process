@@ -1977,7 +1977,7 @@ def itpage(bodysession):
                 '$match': {
                     'bodysession': bodysession, 
                     'record_type': 'AUTH',
-                    #'191.b': {'$not': {'$regex': '\\['}}
+                    '191.b': {'$not': {'$regex': '\\['}} ##remove per Valeria request!!
                     }     
             }
 
@@ -2197,6 +2197,15 @@ def itpage(bodysession):
             add_stage1 = {}
 
             add_stage1['$addFields'] = add_1
+
+            """ merge_stage2 = {
+                'into': 'itp_sample_output', 
+                'on': [
+                    'bodysession', 'section', 'sortkey1', 'sortkey2', 'sortkey3'
+                    ], 
+                'whenMatched': 'keepExisting', 
+                'whenNotMatched': 'insert'
+            } """
 
             pipeline2.append(match_stage1)
             pipeline2.append(unwind_stage)
