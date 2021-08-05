@@ -2198,15 +2198,6 @@ def itpage(bodysession):
 
             add_stage1['$addFields'] = add_1
 
-            """ merge_stage2 = {
-                'into': 'itp_sample_output', 
-                'on': [
-                    'bodysession', 'section', 'sortkey1', 'sortkey2', 'sortkey3'
-                    ], 
-                'whenMatched': 'keepExisting', 
-                'whenNotMatched': 'insert'
-            } """
-
             pipeline2.append(match_stage1)
             pipeline2.append(unwind_stage)
             pipeline2.append(match_stage2)
@@ -2221,8 +2212,6 @@ def itpage(bodysession):
             #print(pipeline2)
             inputCollection.aggregate(pipeline2, collation=collation)
             group_itpage_AE("itpage", bodysession)
-
-            #print(pipeline)
 
         return "itpage completed successfully"
 
