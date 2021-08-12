@@ -2144,7 +2144,7 @@ def itpage(bodysession):
             match_stage1 = {
                 '$match': {
                     'bodysession': bodysession, 
-                    'record_type': 'BIB'
+                    'record_type': {'$in': ['ITS', 'BIB']}
                     }     
             }
 
