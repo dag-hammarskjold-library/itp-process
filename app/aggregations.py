@@ -1569,22 +1569,28 @@ def itpsubj(bodysession):
             }
         }
 
-        add_2['code'] = {
-            '$cond': {
-                'if': {'$isArray': '$191'},
-                'then': {
-                    '$let': {
-                        'vars': {
-                            'a': {'$arrayElemAt': ['$191.b', 0]},
-                            'b': {'$arrayElemAt': ['$191.c', 0]},
-                            'first': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 0]},'chars': ' '}},
-                            'second': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 1]},'chars': ' '}}},
-                        'in': {'$cond': {
-                            'if': {'$and': [
-                                {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
-                                {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
-                            'then': '$$first','else': '$$second'}}}},
-                'else': {'$trim': {'input': '$191.9','chars': ' '}}} 
+        add_2['code'] = { 
+            '$cond': { 
+                'if': '$991.f', 
+                'then': '$991.f', 
+                'else': {
+                    '$cond': {
+                        'if': {'$isArray': '$191'},
+                        'then': {
+                            '$let': {
+                                'vars': {
+                                    'a': {'$arrayElemAt': ['$191.b', 0]},
+                                    'b': {'$arrayElemAt': ['$191.c', 0]},
+                                    'first': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 0]},'chars': ' '}},
+                                    'second': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 1]},'chars': ' '}}},
+                                'in': {'$cond': {
+                                    'if': {'$and': [
+                                        {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
+                                        {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
+                                    'then': '$$first','else': '$$second'}}}},
+                        'else': {'$trim': {'input': '$191.9','chars': ' '}}}
+                }
+            }
         }
 
         add_stage2 = {}
@@ -1700,11 +1706,19 @@ def itpsubj(bodysession):
                         {'$gt': [{'$indexOfCP': ['$docsymbol', '/PV.']}, -1]}, 
                         {'$gt': [{'$indexOfCP': ['$docsymbol', '/SR.']}, -1]}]
                     }, 
-                'then': {'$concat': [
-                        '(', 
-                        '$votedate', 
-                        ').'
-                        ]}, 
+                'then': {
+                    '$cond': { 
+                        'if': {'$eq': ['$code', "X27"]}, 
+                        'then': {
+                            '$concat': ['(', '$votedate', ') ',
+                                        { '$substrCP': [ '$agendanote', 62, {'$strLenCP': '$agendanote'} ] },
+                            ]}, 
+                            'else': {
+                                '$concat': [
+                                    '(', '$votedate', ').'
+                                ]} 
+                        } 
+                }, 
                 'else': {'$concat': [
                             '$recorddesignator', 
                             '$ECOSOCdesignator', 
@@ -1719,7 +1733,7 @@ def itpsubj(bodysession):
                                 }
                             }, 
                             {'$cond': {
-                                'if': {'$eq': ['$191.9', 'X27']}, 
+                                'if': {'$eq': ['$code', 'X27']}, 
                                 'then': '$agendanote', 
                                 'else': ''
                             }}
@@ -1776,7 +1790,7 @@ def itpsubj(bodysession):
                                 {'$eq': ['$letter','']}]},
                         'then': '$summarynote'
                     },
-                    {'case': {'$ne': ['$191.9', 'X27']}, 
+                    {'case': {'$ne': ['$code', 'X27']}, 
                         'then': '$agendanote'}
                     ], 
                     'default': ''
