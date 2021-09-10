@@ -683,7 +683,7 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
         
     #entries_counter=0
     dxa_counter=0
-    dxa_page_length=11520# 8"*1440dxa 
+    dxa_page_length=10720# 8"*1440dxa 
 
 
 
@@ -1181,14 +1181,15 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
             except:
                 itsentry=""
             docsymbols=itsentries[0]["docsymbols"]
-            if dxa_counter+dxa_counter_head(record)+dxa_counter_subhead(subheading[0]["itssubhead"])+dxa_counter_itsentry(itsentry)+dxa_counter_symbol(docsymbols)>dxa_page_length:
+            if dxa_counter+dxa_counter_head(itshead)+dxa_counter_subhead(subheading[0]["itssubhead"])+dxa_counter_itsentry(itsentry)+dxa_counter_symbol(docsymbols)>dxa_page_length:
                 insert_its_head_break(record)
                 dxa_counter=0
                 insert_its_head(record)
-                dxa_counter+=dxa_counter_head_continued(record)
+                dxa_counter+=dxa_counter_head(itshead)
+            #document.save('bgitpitsp'+str(math.floor(datetime.datetime.utcnow().timestamp()))+'.doc')
             else:
                 insert_its_head(record)
-                dxa_counter+=dxa_counter_head(record["itshead"])
+                dxa_counter+=dxa_counter_head(itshead)
                 
             
             for mysubhead in subheading:
@@ -1229,7 +1230,7 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
                         #insert_its_head_break(record)
                         dxa_counter=0
                         insert_its_head_continued(record)
-                        dxa_counter+=dxa_counter_head_continued(record)
+                        dxa_counter+=dxa_counter_head_continued(itshead)
 
                         insert_its_subhead(itssubhead)
                         dxa_counter+=dxa_counter_subhead(itssubhead)
@@ -2105,7 +2106,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
                 for run in paragraph.runs:
                     font = run.font
                     font.name="Arial"
-                    font.size= Pt(7)
+                    font.size= Pt(8)
 
     # Save the document
     add_page_number(document.sections[0].footer.paragraphs[0])
