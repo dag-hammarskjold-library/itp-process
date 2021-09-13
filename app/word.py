@@ -2091,7 +2091,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         # Definition of the size of the column
 
-        widths = (Inches(1.3), Inches(5.06), Inches(1.7),Inches(0.75))
+        widths = (Inches(1.3), Inches(5), Inches(1.7),Inches(0.75))
         for row in table.rows:
             for idx, width in enumerate(widths):
                 row.cells[idx].width = width
