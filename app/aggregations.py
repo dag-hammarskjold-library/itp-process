@@ -3439,6 +3439,31 @@ def itpsor(bodysession):
                 }
             }
 
+        add_0 = {}
+
+        add_0['primary'] = {
+            '$cond': {
+                'if': {'$isArray': '$191'}, 
+                'then': {
+                    '$cond': {
+                        'if': {
+                            '$and': [
+                                {'$eq': [{'$arrayElemAt': ['$191.b', 0]}, fullbody]}, 
+                                {'$eq': [{'$arrayElemAt': ['$191.c', 0]}, session]}
+                            ]
+                        }, 
+                        'then': 0, 
+                        'else': 1
+                    }
+                }, 
+                'else': 'not an array'
+            }
+        }
+
+        add_stage0 = {}
+
+        add_stage0['$addFields'] = add_0
+
         add_1 = {}
 
         add_1['supplno'] = {
@@ -3683,6 +3708,7 @@ def itpsor(bodysession):
         }
 
         pipeline.append(match_stage)
+        pipeline.append(add_stage0)
         pipeline.append(add_stage1)
         pipeline.append(match_stage2)
         pipeline.append(transform_stage)
