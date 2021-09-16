@@ -3922,6 +3922,7 @@ def group_speeches(section, bodysession):
         collation={
             'locale': 'en', 
             'strength': 1, #ignore diacritics
+            'numericOrdering': True
         })
 
 def group_itpitsp(section, bodysession):
@@ -4044,6 +4045,7 @@ def group_itpitsp(section, bodysession):
         collation={
             'locale': 'en', 
             'strength': 1, #ignore diacritics
+            'numericOrdering': True
         })
 
 def group_itpsubj(section, bodysession):
