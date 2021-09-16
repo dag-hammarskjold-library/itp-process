@@ -1953,7 +1953,20 @@ def itpage(bodysession):
             transform['agendasubject'] = '$_id'
             transform['heading'] = 1
             transform['sortkey1'] = '$heading'
-            transform['sortkey2'] = '$_id'
+            transform['sortkey2'] = {
+                '$replaceAll': {
+                    'input': {
+                        '$replaceAll': {
+                            'input': '$_id', 
+                            'find': '. ', 
+                            'replacement': ' .'
+                        }
+                    }, 
+                    'find': '—', 
+                    'replacement': ' —' #' $'
+                }
+            }
+            #'$_id'
 
             transform_stage = {}
             transform_stage['$project'] = transform
