@@ -11,7 +11,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from app.models import Itpp_itp, Itpp_section, Itpp_rule#, list_all_sections
 from mongoengine import connect,disconnect
-from app.aggregations import fetch_agenda
+from app.aggregations import fetch_agenda, fetch_itpcode
 from dateutil import tz
 import pytz
 
@@ -119,6 +119,7 @@ class Snapshot(object):
 
 
     def fetch_bib_data(self,proj_dict):
+        match_criteria=fetch_itpcode(self.body,self.session)
         query = QueryDocument(
             Or(
                 Condition(
@@ -131,7 +132,7 @@ class Snapshot(object):
                     ),
                 Condition(
                 tag='930',
-                subfields={'a': 'ITP'+self.body+self.session}
+                subfields={'a': match_criteria}
                     )
                 )
             )
