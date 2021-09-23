@@ -1928,7 +1928,7 @@ def itpage(bodysession):
                         '$replaceAll': {
                             'input': '$991.d', 
                             'find': '--', 
-                            'replacement': '–'
+                            'replacement': '—'
                         }
                     }, 
                     'type': {
@@ -1975,7 +1975,7 @@ def itpage(bodysession):
                         }
                     }, 
                     'find': '—', 
-                    'replacement': ' —' #' $'
+                    'replacement': ' $' #' —'
                 }
             }
             #'$_id'
@@ -2147,7 +2147,7 @@ def itpage(bodysession):
                         }
                     }, 
                     'find': '—', 
-                    'replacement': ' —' #' $'
+                    'replacement': ' $' #' —' 
                 }
             }
 
