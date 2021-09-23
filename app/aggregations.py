@@ -1097,7 +1097,7 @@ def itpsubj(bodysession):
         body = bs[0]
         fullbody = body + "/"
         session = bs[1]
-        itpcode = 'ITP' + body + session
+        itpcode = fetch_itpcode(body, session)
 
         empty_string = ''
 
@@ -1159,8 +1159,20 @@ def itpsubj(bodysession):
         if body == "E":
             match_stage2 = {
                 '$match': {
-                    '991.z': "I",
-                    '991.a' : {'$regex': "^E"}
+                    '$or': [
+                        {'$and': [
+                            {'991.z': 'I'},
+                            {'991.a': {'$regex': '^E'}},
+                            {'930.a': {'$ne': itpcode}},
+                            {'991.m': {'$ne': fullbody}},
+                            {'991.s': {'$ne': session}}]}, 
+                        {'$and': [
+                            {'991.z': 'I'}, 
+                            {'991.a': {'$regex': '^E'}}, 
+                            {'930.a': itpcode}, 
+                            {'991.m': fullbody}, 
+                            {'991.s': session}]}
+                    ]
                 }
             }
 
@@ -4829,3 +4841,21 @@ def fetch_agenda(body, session):
             match_criteria = "E/" + year[0] + "/100"
 
     return match_criteria
+
+def fetch_itpcode(body, session):
+    
+    itpcode = 'ITP' + body + session
+
+    if body == "E" :
+        itpcode = 'ITP' + body + session[2:4] + session[-1]
+
+    if body == "A":
+        sp = re.search("sp", session)
+        em = re.search("em", session)
+
+        if em:
+            itpcode = 'ITP' + body + session[0:2] + "E"
+        elif sp:
+            itpcode = 'ITP' + body + session[0:2] + "S"
+
+    return itpcode
