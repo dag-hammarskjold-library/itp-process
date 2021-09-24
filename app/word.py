@@ -1799,7 +1799,8 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     ################## SUBHEADER ###############################################
     
     new_sub_heading_style = styles.add_style('New sub Heading', WD_STYLE_TYPE.PARAGRAPH)
-    new_sub_heading_style.base_style = styles['Heading 1']
+    #new_sub_heading_style.base_style = styles['Heading 1']
+    
     
     # Font settings
     
@@ -1894,7 +1895,7 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
 
     paragraph_format = p.paragraph_format
     paragraph_format.space_after = Pt(20)
-    paragraph_format.left_indent=Cm(0.508)
+    #paragraph_format.left_indent=Cm(0.508)
 
     p=document.add_paragraph("Vote reads Yes-No-Abstain",style='first line')
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
