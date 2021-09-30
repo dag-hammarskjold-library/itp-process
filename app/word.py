@@ -4045,6 +4045,26 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     pformat2.first_line_indent=Inches(-0.3)
     pformat2.line_spacing_rule = WD_LINE_SPACING.SINGLE
 
+
+    ################## see2b ###############################################
+
+    see2b = document.styles.add_style('see2b', WD_STYLE_TYPE.PARAGRAPH)
+
+    # Font name
+
+    see2bFont=see2b.font
+    see2bFont.name = 'Arial'
+    see2bFont.size = Pt(8)
+    see2bFont.italic=True
+
+    pformat2=see2b.paragraph_format
+    pformat2.space_after=Pt(3)
+    pformat2.left_indent=Inches(0.7)
+    pformat2.first_line_indent=Inches(-0.1)
+    pformat2.line_spacing_rule = WD_LINE_SPACING.SINGLE
+
+
+
     ################## seealso ###############################################
 
     seealso = document.styles.add_style('seealso', WD_STYLE_TYPE.PARAGRAPH)
@@ -4507,7 +4527,7 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     ########## ECOSOC ##########
 
     if (bodysession[0]=="E"):
-        print(f"bosy is {bodysession[0]}")
+        print(f"body is {bodysession[0]}")
         myRecords=setOfData
         preventDoubleValue=""
         for record in myRecords:  
@@ -4625,23 +4645,40 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                                             alreadyDisplaySee=True
                                         #See also        
                                         if len(mySortedText)==2 and myAgendaText['title']=="" and myAgendaText['subjects']!="":
-                                            if mySubAgenda!="": #subagenda see also
-                                                see_also_style="see3"#See also: 1st subject
-                                                see_also_subj="see_also_subjs"#subjects
-                                            else: # main agenda see also
-                                                see_also_style="seealso"
-                                                see_also_subj="see5E"
-                                            if alreadyDisplaySeeAlso==False:
-                                                p=document.add_paragraph("See also: ",style=see_also_style)
-                                                run=p.add_run(mySubject.strip()) 
-                                                run.font.italic=False   
-                                                alreadyDisplaySeeAlso=True
+                                            if mySortedText[0]["subjects"]==['']:
+                                                if mySubAgenda!="": #subagenda see also
+                                                    see_also_style="see3"#See also: 1st subject
+                                                    see_also_subj="see4"#subjects
+                                                else: # main agenda see also
+                                                    see_also_style="see2a"
+                                                    see_also_subj="see2b"
+                                                if alreadyDisplaySeeAlso==False:
+                                                    p=document.add_paragraph("See:  ",style=see_also_style)
+                                                    run=p.add_run(mySubject.strip()) 
+                                                    run.font.italic=False   
+                                                    alreadyDisplaySeeAlso=True
+                                                else:
+                                                    p=document.add_paragraph("",style=see_also_subj)
+                                                    run=p.add_run(mySubject.strip())
+                                                    run.font.italic=False 
                                             else:
-                                                p=document.add_paragraph("",style=see_also_subj)
-                                                run=p.add_run(mySubject.strip())
-                                                run.font.italic=False 
+                                                if mySubAgenda!="": #subagenda see also
+                                                    see_also_style="see3"#See also: 1st subject
+                                                    see_also_subj="see_also_subjs"#subjects
+                                                else: # main agenda see also
+                                                    see_also_style="seealso"
+                                                    see_also_subj="see5"
+                                                if alreadyDisplaySeeAlso==False:
+                                                    p=document.add_paragraph("See also: ",style=see_also_style)
+                                                    run=p.add_run(mySubject.strip()) 
+                                                    run.font.italic=False   
+                                                    alreadyDisplaySeeAlso=True
+                                                else:
+                                                    p=document.add_paragraph("",style=see_also_subj)
+                                                    run=p.add_run(mySubject.strip())
+                                                    run.font.italic=False 
+                                                continue
 
-                                            continue
 
                                 else : # no subject
                                     if len(myAgenda["text"])==1:
