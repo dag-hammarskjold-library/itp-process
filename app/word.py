@@ -4638,11 +4638,11 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
                                     else:
                                         
                                         # normal scenario
-                                        if len(myAgenda["text"])==1 and myText["agendatext"][0]["subjects"][0]=="":
+                                        #if len(myAgenda["text"])==1 and myText["agendatext"][0]["subjects"][0]=="":
                                             ####### yls
-                                            p=document.add_paragraph(""+mySubject.strip(),style="see3")  
-                                            alreadyDisplayMultipleb=True
-                                            alreadyDisplaySee=True
+                                        #   p=document.add_paragraph(""+mySubject.strip(),style="see3")  
+                                        #    alreadyDisplayMultipleb=True
+                                        #    alreadyDisplaySee=True
                                         #See also        
                                         if len(mySortedText)==2 and myAgendaText['title']=="" and myAgendaText['subjects']!="":
                                             if mySortedText[0]["subjects"]==['']:
