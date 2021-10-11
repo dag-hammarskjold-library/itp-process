@@ -3505,7 +3505,7 @@ def itpsor(bodysession):
 
         add_1['title'] = {
             '$concat': [
-                '$245.a', 
+                {'$trim': {'input': '$245.a', 'chars': ' '}}, 
                 {'$cond': {
                     'if': '$245.b', 
                     'then': {
@@ -3521,7 +3521,7 @@ def itpsor(bodysession):
                     'then': {
                         '$concat': [
                             ' ', 
-                            '$245.c'
+                            {'$trim': {'input': '$245.c', 'chars': ' '}}
                         ]
                     }, 
                     'else': ''
@@ -3530,7 +3530,7 @@ def itpsor(bodysession):
 				'$cond': {
 					'if': '$245.n',
 					'then': {
-						'$concat': [' ', '$245.n']
+						'$concat': [' ', {'$trim': {'input': '$245.n', 'chars': ' '}}]
 					},
 					'else': ''
 				}
@@ -3539,7 +3539,7 @@ def itpsor(bodysession):
                     '$cond': {
                         'if': '$245.p',
                         'then': {
-                            '$concat': [' ', '$245.p']
+                            '$concat': [' ', {'$trim': {'input': '$245.p', 'chars': ' '}}]
                         },
                         'else': ''
                     }
@@ -3560,7 +3560,7 @@ def itpsor(bodysession):
                             {'$arrayElemAt': ['$260.a', 1]}
                         ]
                     }, 
-                    'else': '$260.a'
+                    'else': {'$trim': {'input': '$260.a', 'chars': ' '}}
                 }},
                 {'$cond': {
                     'if': '$260.b', 
@@ -3576,7 +3576,7 @@ def itpsor(bodysession):
                     'if': '$260.c', 
                     'then': {
                         '$concat': [
-                            ' ', '$260.c'
+                            ' ', {'$trim': {'input': '$260.c', 'chars': ' '}}
                         ]
                     }, 
                     'else': ''
@@ -3587,7 +3587,7 @@ def itpsor(bodysession):
 
         add_1['physdesc'] = {
             '$concat': [
-                '$300.a', 
+                {'$trim': {'input': '$300.a', 'chars': ' '}}, 
                 {'$cond': {
                     'if': '$300.b', 
                     'then': {
