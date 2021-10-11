@@ -1824,7 +1824,8 @@ def itpsubj(bodysession):
                 'docsymbol': 1, 
                 'entry': 1, 
                 'note': 1, 
-                'sortkey1': {
+                'sortkey1': {'$concat': [
+                    {
                     '$replaceAll': {
                         'input': {
                             '$replaceAll': {
@@ -1836,7 +1837,9 @@ def itpsubj(bodysession):
                         'find': '—', 
                         'replacement': ' $'
                     }
-                },#'$head',
+                },
+                ' ', '$agendanum'
+                ]},#'$head',
                 'sortkey2': '$code',
                 'sortkey3': '$docsymbol'
             }
