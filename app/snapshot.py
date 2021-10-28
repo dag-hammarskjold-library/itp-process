@@ -349,5 +349,5 @@ class Snapshot(object):
                 #except when the snapshot does not contain time zone
                 self.snapshots_list.append((sh, snapshot_coll.find_one({'bodysession':sh},sort=[('snapshottime', -1)])['snapshottime'])) 
         print(f"snapshot list is:{self.snapshots_list}")
-        return sorted(self.snapshots_list,key=lambda x: x[1], reverse = True)
+        return sorted(self.snapshots_list,key=lambda x: x[0], reverse = True)
         #return sorted(self.snapshots_list, reverse = True)

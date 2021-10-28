@@ -5181,11 +5181,15 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                 
                 if myFlip==0:
                     myFlip=1
-                    table_cells[myCol+1+myNumColum].paragraphs[0].text=myRecords1[myIndex]["resnum"]
+                    #table_cells[myCol+1+myNflask runumColum].paragraphs[0].text=myRecords1[myIndex]["resnum"]
+                    paragraph=table_cells[myCol+1+myNumColum].paragraphs[0]
+                    add_hyperlink(paragraph,myRecords1[myIndex]["resnum"],"http://undocs.org/"+myRecords1[myIndex]["docsymbol"])
                     myResCounter+=1   
                 else:
                     myFlip=0
-                    table_cells[myCol+1].paragraphs[0].text=myRecords1[myIndex]["resnum"]
+                    #table_cells[myCol+1].paragraphs[0].text=myRecords1[myIndex]["resnum"]
+                    paragraph=table_cells[myCol+1].paragraphs[0]
+                    add_hyperlink(paragraph,myRecords1[myIndex]["resnum"],"http://undocs.org/"+myRecords1[myIndex]["docsymbol"])
                     myResCounter+=1
                     
 
