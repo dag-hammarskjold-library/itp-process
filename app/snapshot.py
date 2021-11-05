@@ -286,6 +286,8 @@ class Snapshot(object):
             warning="something went wrong with insert into MDb"    
     '''asynch function'''
     def transform_write(self):
+        #start writing snapshot - flag on
+        #itpp_doc.snapshot_running=true
         proj_bib_dict,itpp_bib_fields,proj_auth_dict,itpp_auth_fields=self.fields_to_extract()
         #lbibs,l_temp=self.fetch_bib_data(proj_dict)
         lbibs=self.fetch_bib_data(proj_bib_dict)
@@ -308,6 +310,8 @@ class Snapshot(object):
         start_time_bulk_write=time.time()
         self.bulk_write_bibs_auths()
         print(f"--- {time.time() - start_time_bulk_write} seconds for bulk write for {self.body}/{self.session} ---")
+        #stop writing snapshot - flag off
+        #itpp_doc.snapshot_running=false
 
 
     def fromutc(self, dt):
@@ -324,7 +328,15 @@ class Snapshot(object):
         else:
             return dt
 
-
+    def to_nytime(self, time_dt):
+        est = pytz.timezone('US/Eastern')
+        utc = pytz.utc
+        #mdt=datetime.strptime(time_dt,self.TIME)
+        mdt=time_dt
+        mdt_utc=utc.localize(mdt)
+        mdt_ny=mdt_utc.astimezone(est)
+        return mdt_ny.strftime(self.TIME)
+        #return mdt_ny
 
     ''' listing snapshots in display snapshot'''
     def list(self):
