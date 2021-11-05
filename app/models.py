@@ -53,9 +53,12 @@ class Itpp_snapshot(Document):
     snapshot_name = StringField()
     snapshot_date = DateTimeField()
     body_session_auth = StringField()
-    created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-    record = DictField()
-
+    #created = DateTimeField(default=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+    created = DateTimeField()
+    started = DateTimeField()
+    finished = DateTimeField()
+    #record = DictField()
+    currently_running = BooleanField(default=False)
     meta = {'collection': Config.collection_prefix + 'Itpp_snapshot'}
 
 class Itpp_rule(EmbeddedDocument):

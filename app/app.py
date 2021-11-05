@@ -341,6 +341,20 @@ def displaySnapshot():
 def transform_and_write_snapshot(body, session):
     form = "Select Authority"
     snapshot=Snapshot(body,session) # snapshot class uses A and 72
+    try:
+        sh=Itpp_snapshot.objects.filter(snapshot_name=body+session).first()
+        sh.currently_running=True
+        #sh.started = snapshot.to_nytime(datetime.now())
+        sh.started = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        sh.save()
+    except:
+        sh=Itpp_snapshot(snapshot_name=body+session)
+        sh.currently_running=True
+        sh.created = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        #sh.started = snapshot.to_nytime(datetime.now())
+        sh.started = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        sh.save()
+    snapshot=Snapshot(body,session) # snapshot class uses A and 72
     if snapshot is None:
         abort(400)
     if not (body,session) is None:
@@ -356,11 +370,14 @@ def transform_and_write_snapshot(body, session):
         except:
             warning = 'Unknown Problem'
         #return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(), form=form, recordNumber=snapshot.snapshot_len,url=URL_BY_DEFAULT,errorMail=warning)
+        
     else:
         snapshot= None
         #return redirect(url_for('main'))    
         #return render_template('snapshot.html', snapshot=snapshot, snapshots=snapshot.list(),form=form)    
-
+    sh.currently_running=False
+    sh.finished = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    sh.save()
 
 @app.route("/executeSnapshot",methods=["POST"])
 @login_required
