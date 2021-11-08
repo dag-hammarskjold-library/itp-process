@@ -2711,7 +2711,8 @@ def itpmeet(bodysession):
                     '$or': [
                         {'191.a': {'$regex': '/SR.'}}, 
                         {'191.a': {'$regex': '/PV.'}}
-                    ]
+                    ],
+                    '191.a': {'$not': {'$regex': 'Cor'}}
                 }
             }
 
