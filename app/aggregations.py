@@ -1121,13 +1121,13 @@ def itpsubj(bodysession):
                 '$match': {
                     '$or': [
                         {'$and': [
-                            {'991.z': 'I'},
+                            {'991.z': {'$regex': '^I'}},
                             {'991.a': {'$regex': '^S'}},
                             {'930.a': {'$ne': itpcode}},
                             {'991.m': {'$ne': fullbody}},
                             {'991.s': {'$ne': session}}]}, 
                         {'$and': [
-                            {'991.z': 'I'}, 
+                            {'991.z': {'$regex': '^I'}}, 
                             {'991.a': {'$regex': '^S'}}, 
                             {'930.a': itpcode}, 
                             {'991.m': fullbody}, 
@@ -1141,13 +1141,13 @@ def itpsubj(bodysession):
                 '$match': {
                     '$or': [
                         {'$and': [
-                            {'991.z': 'I'},
+                            {'991.z': {'$regex': '^I'}},
                             {'991.a': {'$regex': '^A'}},
                             {'930.a': {'$ne': itpcode}},
                             {'991.m': {'$ne': fullbody}},
                             {'991.s': {'$ne': session}}]}, 
                         {'$and': [
-                            {'991.z': 'I'}, 
+                            {'991.z': {'$regex': '^I'}}, 
                             {'991.a': {'$regex': '^A'}}, 
                             {'930.a': itpcode}, 
                             {'991.m': fullbody}, 
@@ -1161,13 +1161,13 @@ def itpsubj(bodysession):
                 '$match': {
                     '$or': [
                         {'$and': [
-                            {'991.z': 'I'},
+                            {'991.z': {'$regex': '^I'}},
                             {'991.a': {'$regex': '^E'}},
                             {'930.a': {'$ne': itpcode}},
                             {'991.m': {'$ne': fullbody}},
                             {'991.s': {'$ne': session}}]}, 
                         {'$and': [
-                            {'991.z': 'I'}, 
+                            {'991.z': {'$regex': '^I'}}, 
                             {'991.a': {'$regex': '^E'}}, 
                             {'930.a': itpcode}, 
                             {'991.m': fullbody}, 
@@ -2711,7 +2711,8 @@ def itpmeet(bodysession):
                     '$or': [
                         {'191.a': {'$regex': '/SR.'}}, 
                         {'191.a': {'$regex': '/PV.'}}
-                    ]
+                    ],
+                    '191.a': {'$not': {'$regex': 'Cor'}}
                 }
             }
 
