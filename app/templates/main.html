@@ -6,8 +6,67 @@
     <hr>
 
     <!-- Sections of the app -->
+    <div class="row mt-2 card-header">
+        <h4 class="my-0 font-weight-normal">ITP Process</h4>
+    </div> 
     <div class="row">
-        <div class="col card mr-2">
+        <div class="col card mt-2">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Snapshots</h4>
+            </div>
+            <div class="card-body">
+                
+                    <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                        
+                        <li> <a href="{{url_for('displaySnapshot')}}"><span class="text-dark text-left">* Snapshot Management</span></a></li>
+                        <li> <a href="{{url_for('delete_snapshot')}}"><span class="text-dark text-left">* Delete Snapshots</span></a></li>
+
+                    </ul>
+              
+            </div>
+        </div>
+        <div class="col card mt-2">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Sections</h4>
+            </div>
+            <div class="card-body">
+                
+                    <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                        <li> <a href="{{url_for('selectSection')}}"><span class="text-dark text-left">* Generate Sections</span></a></li>
+
+                    </ul>
+              
+            </div>
+        </div>
+        <div class="col card mt-2">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Word Documents</h4>
+            </div>
+            <div class="card-body">
+                
+                    <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                        <li> <a href="{{url_for('wordGeneration')}}"><span class="text-dark text-left">* Generate word document based on section </span></a></li>
+                        <li> <a href="{{url_for('list_files')}}"><span class="text-dark text-left">* List of word document generated </span></a></li>
+
+                    </ul>
+              
+            </div>
+        </div>
+        <div class="col card mt-2">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Comparison Tool</h4>
+            </div>
+            <div class="card-body">
+                
+                    <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+                        <li> <a href="#"><span class="text-dark text-left">* Compare</span></a></li>
+
+
+                    </ul>
+              
+            </div>
+        </div>
+        <!-- <div class="col card mr-2">
             <div class="card-header">
                 <h4 class="my-0 font-weight-normal">Administration</h4>
             </div>
@@ -18,23 +77,9 @@
 
                 </ul>
             </div>
-        </div>
-        <div class="col card mr-2">
-            <div class="card-header">
-                <h4 class="my-0 font-weight-normal">ITP Process</h4>
-            </div>
-            <div class="card-body ">
-                <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                    <li> <a href="{{url_for('list_itpp_itps')}}"><span class="text-dark text-left">* ITP Document Management</span></a></li>
-                    <li> <a href="{{url_for('displaySnapshot')}}"><span class="text-dark text-left">* Snapshot Management</span></a></li>
-                    <li> <a href="{{url_for('delete_snapshot')}}"><span class="text-dark text-left">* Delete Snapshots</span></a></li>
-                    <li> <a href="{{url_for('selectSection')}}"><span class="text-dark text-left">* Generate Sections</span></a></li>
-                    <li> <a href="{{url_for('wordGeneration')}}"><span class="text-dark text-left">* Generate word document based on section </span></a></li>
-                    <li> <a href="{{url_for('list_files')}}"><span class="text-dark text-left">* List of word document generated </span></a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="col card mr-2">
+        </div> -->
+
+        <!-- <div class="col card mr-2">
                 <div class="card-header">
                     <h4 class="my-0 font-weight-normal">Editor</h4>
                 </div>
@@ -50,7 +95,7 @@
                         <li> <a href="{{url_for('itpp_itpmeet',offset=0)}}" ><span class="text-dark">* Meetings </span></a></li>
                     </ul>
                 </div>            
-        </div>
+        </div> -->
     </div>
     <div class="row mt-2 card-header">
         <h4 class="my-0 font-weight-normal">Reporting</h4>
