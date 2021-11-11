@@ -3098,39 +3098,44 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
 
 
     ### calc whether the table of meetings will fit onthe page; breaks the page if it doesn't fit; returns cursorLIne number
-    def lines_committee(data1, cursorLine): 
+    def lines_committee(data1, cursorLine):
         nbMeetings=0
         CURSOR_LINE_MAX=50
 
         for num in data1["years"]:
             nbMeetings+=len(num["meetings"]) 
         nbYears=len(data1["years"])    
+        nbMeetings=nbMeetings+(nbYears-1)*3
+
+        col1_recs=[]
+        curr_year=data1["years"][0]
+        for num in data1["years"]:
+            if curr_year!=num["year"]:
+                col1_recs.append((num["year"],'',''))
+                col1_recs.append((num["year"],'Date, ',''))
+                col1_recs.append((num["year"],'',''))
+                curr_year=num["year"]
+            for meeting in num["meetings"]:
+                col1_recs.append((num["year"],meeting["meetingnum"],meeting["meetingdate"]))
+        nbMeetings=len(col1_recs)
+
+        t=col1_recs.pop(0)
+        t=col1_recs.pop(0)
+        t=col1_recs.pop(0)
+
+        nbMeetings=len(col1_recs)
+
             
-    
         if nbMeetings>=9:
             nbrRecPerCol1=round(nbMeetings / 3)
             nbrRecPerCol2=round(nbMeetings / 3)
             nbrRecPerCol3=nbMeetings - (nbrRecPerCol1+nbrRecPerCol1)
-            if nbYears>1:
-                #nbMeetings+=3
-                if len(data1["years"][0]["meetings"])<round(nbMeetings / 3):
-                    nbrRecPerCol1= round(nbMeetings / 3)-3
-                    nbrRecPerCol2= round(nbMeetings / 3)
-                    nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol1)
-                elif len(data1["years"][0]["meetings"])<2*round(nbMeetings / 3):
-                    nbrRecPerCol1= round(nbMeetings / 3)
-                    nbrRecPerCol2= round(nbMeetings / 3)-3
-                    nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol1)
-                else:
-                    nbrRecPerCol1= round(nbMeetings / 3)
-                    nbrRecPerCol2= round(nbMeetings / 3)
-                    nbrRecPerCol3= nbMeetings - (nbrRecPerCol1+nbrRecPerCol1)
+            nbMeetings=len(col1_recs)
         else:
             nbrRecPerCol1=nbMeetings
             nbrRecPerCol2=nbMeetings
             nbrRecPerCol3=nbMeetings
-                
-
+        
         for num in data1["years"]:   
 
             if (nbrRecPerCol1 >= nbrRecPerCol3):
@@ -3144,13 +3149,6 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                     # reset the cursorLine
                     cursorLine=0
 
-                #else :
-                    
-                    #if data1["committee2"]: 
-                    #    cursorLine+=nbrRecPerCol1+6
-                    #else:
-                    #    cursorLine+=nbrRecPerCol1+4
-
             else :
 
                 if (cursorLine + nbrRecPerCol3 > CURSOR_LINE_MAX):
@@ -3162,16 +3160,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                     # reset the cursorLine
                     cursorLine=0
 
-                #else :
-
-                    # write the titles
-                #    if data1["committee2"]: 
-                #        cursorLine+=nbrRecPerCol3+6
-                #    else:
-                #        cursorLine+=nbrRecPerCol3+4
-        
-        return cursorLine, nbMeetings, nbrRecPerCol1, nbrRecPerCol2, nbrRecPerCol3
-
+        return col1_recs, cursorLine, nbMeetings, nbrRecPerCol1, nbrRecPerCol2, nbrRecPerCol3
     # Creation of the word document
 
     document = Document()
@@ -3516,8 +3505,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         add_page_number(document.sections[0].footer.paragraphs[0])
         return document
 
-    if (bodysession[0]=="A"):
-        
+    if (bodysession[0]=="A"):   
         datas=setOfData
         datas1=setOfData1
 
@@ -3525,9 +3513,6 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.add_run("\n")
         
-        ###########################################################################################
-        # Process
-        ###########################################################################################
 
         cursorLine=1
         for data1 in datas:
@@ -3546,7 +3531,7 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
 
             
             # # check the number of lines available
-            cursorLine, nbMeetings,nbrRecPerCol1, nbrRecPerCol2, nbrRecPerCol3=lines_committee(data1, cursorLine+overFlowTitle)
+            col1_recs,cursorLine, nbMeetings,nbrRecPerCol1, nbrRecPerCol2, nbrRecPerCol3=lines_committee(data1, cursorLine+overFlowTitle)
 
 
             section = document.add_section(WD_SECTION.CONTINUOUS)
@@ -3572,225 +3557,75 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         
             z=p.add_run("(Symbol: " + data1["symbol"]+ ")")
             cursorLine+=1
-            z.bold=False       
+            z.bold=False
+
+            if nbMeetings>=9:
+                
+                for years in data1["years"]:
+                    years['year']      
+                section = document.add_section(WD_SECTION.CONTINUOUS)
+                sectPr = section._sectPr
+                cols = sectPr.xpath('./w:cols')[0]
+                cols.set(qn('w:num'),'3')
+
+                # 3- Display the values using table
+                #line=0
+                new_page=0
+                index0=0
+                for index0,entry in enumerate(col1_recs):
+
+                    if index0==0 or index0==nbrRecPerCol1 or index0==(nbrRecPerCol1+nbrRecPerCol2):
+                        p=document.add_paragraph()
+                        if index0!=0:
+                            run=p.add_run()
+                            myBreak = run.add_break(WD_BREAK.COLUMN)
+                            #new_page=1
+                        table = document.add_table(rows=nbrRecPerCol1+overFlowContent,cols=2)
+                        table.alignment=WD_TABLE_ALIGNMENT.CENTER
+                        line=0
+                        # display header
+                        hdr_cells = table.rows[0].cells
+                        myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
+                        myRun.underline=True
+                        myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+ col1_recs[index0][0])
+                        hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
+                        myRun.underline=True
+                        myRun=hdr_cells[1].paragraphs[0].add_run('\n')
+
+                        line+=2
+                    if (index0==(nbrRecPerCol1-1) or index0==nbrRecPerCol1) and col1_recs[index0][2]=='' and col1_recs[index0+1][1]=='Date, ':  
+                        new_page=1
+                        continue
+                    elif new_page==1 and (index0==(nbrRecPerCol1) or index0==(nbrRecPerCol1+1)):
+                        continue
+                    elif index0==(nbrRecPerCol1+nbrRecPerCol2-1) and col1_recs[index0][2]=='' and (col1_recs[index0+1][1]=='Date, ' or col1_recs[index0+1][1]==''): 
+                        new_page=1
+                        continue
+                    elif new_page==1 and (index0==nbrRecPerCol1+nbrRecPerCol2 or index0==(nbrRecPerCol1+nbrRecPerCol2+1)):
+                        continue
+                    elif col1_recs[index0][1]=='Date, ':
+                        if not new_page==1:
+                            hdr_cells = table.rows[line].cells
+                            myRun0=hdr_cells[0].paragraphs[0].add_run('')
+                            myRun1=hdr_cells[1].paragraphs[0].add_run(col1_recs[index0][1]+col1_recs[index0][0])
+                            myRun1.underline=True
+                            myActualYear=col1_recs[index0][0]
+                            new_page=0  
+                    else:
+                        hdr_cells = table.rows[line].cells
+                        hdr_cells[0].text=col1_recs[index0][1]
+                        hdr_cells[1].text=col1_recs[index0][2]
+                        myActualYear=col1_recs[index0][0]
+                        new_page=0
+
+                    index0+=1
+                    line+=1
 
             for years in data1["years"]:
 
                 # 2- Define the number of records per cols
                 if nbMeetings>=9:
-                    section = document.add_section(WD_SECTION.CONTINUOUS)
-                    sectPr = section._sectPr
-                    cols = sectPr.xpath('./w:cols')[0]
-                    cols.set(qn('w:num'),'3')
-
-                    # 3- Display the values using table
-                    for meeting in years["meetings"]:
-
-                        if index0<=nbrRecPerCol1:
-
-                            if index0==0:
-
-                                # table creation
-                                p=document.add_paragraph()
-                                table = document.add_table(rows=nbrRecPerCol1+overFlowContent,cols=2)
-                                table.alignment=WD_TABLE_ALIGNMENT.CENTER
-
-                                # display header
-                                hdr_cells = table.rows[0].cells
-                                myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-                                myRun.underline=True
-                                myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+years["year"])
-                                myActualYear=years["year"]
-                                hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                                myRun.underline=True
-                                myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                                line+=1
-                                #index0+=1
-                                #fill the cell of the table
-                                hdr_cells = table.rows[line].cells
-                                hdr_cells[0].text=meeting["meetingnum"]
-                                hdr_cells[1].text=meeting["meetingdate"]
-                                line+=1
-                                index0+=1
-
-                            else :
-                                
-                                if myActualYear==years["year"]:
-                                    # fill the cell of the table
-                                    hdr_cells = table.rows[line].cells
-                                    hdr_cells[0].text=meeting["meetingnum"]
-                                    hdr_cells[1].text=meeting["meetingdate"]
-                                    line+=1
-                                    index0+=1
-                                else :
-                                    # adding a break because we are changing of date
-                                    
-                                    hdr_cells = table.rows[line].cells
-                                    hdr_cells[0].text=""
-                                    hdr_cells[1].text=""
-                                    #
-                                    # line+=1
-                                    #index0+=1
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('')
-
-
-                                    # myRun=""
-                                    # myRun.underline=True
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+years["year"])
-                                    myActualYear=years["year"]
-                                    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                                    myRun.underline=True
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                                    line+=1
-                                    #index0+=1
-                                    #fill the cell of the table
-                                    hdr_cells = table.rows[line].cells
-                                    hdr_cells[0].text=meeting["meetingnum"]
-                                    hdr_cells[1].text=meeting["meetingdate"]
-                                    line+=1
-                                    index0+=1
-
-
-                        if (index0>=nbrRecPerCol1+1) and (index0<=nbrRecPerCol1+nbrRecPerCol2+2):
-
-                            if index0==nbrRecPerCol1+1:
-
-                                # column break
-                                run=document.add_paragraph().add_run()
-                                myBreak = run.add_break(WD_BREAK.COLUMN)
-                                table = document.add_table(rows=nbrRecPerCol2+overFlowContent,cols=2)
-                                line=0
-
-                                # table creation
-                                table.alignment=WD_TABLE_ALIGNMENT.CENTER
-
-                                # display header
-                                hdr_cells = table.rows[0].cells
-                                cursorLine+=1
-                                myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-                                myRun.underline=True
-                                myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+years["year"])
-                                myActualYear=years["year"]
-                                hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                                myRun.underline=True
-                                myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                                line+=1
-                                index0+=1
-                            
-                            else :
-                                    
-                                if myActualYear==years["year"]:
-                                    # fill the cell of the table
-                                    hdr_cells = table.rows[line].cells
-                                    hdr_cells[0].text=meeting["meetingnum"]
-                                    hdr_cells[1].text=meeting["meetingdate"]
-                                    line+=1
-                                    index0+=1
-                                else :
-                                    # adding a break because we are changing of date
-                                    hdr_cells = table.rows[line].cells
-                                    hdr_cells[0].text=""
-                                    hdr_cells[1].text=""
-                                    line+=1
-                                    #index0+=1
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('')
-                                    hdr_cells = table.rows[line].cells
-                                    # myRun=""
-                                    myRun.underline=True
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+years["year"])
-                                    myActualYear=years["year"]
-                                    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                                    myRun.underline=True
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                                    row=table.add_row()
-                                    line+=1
-                                    #index0+=1
-                                    #fill the cell of
-                                    #  the table
-                                    hdr_cells = table.rows[line].cells
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                                    hdr_cells[0].text=meeting["meetingnum"]
-                                    hdr_cells[1].text=meeting["meetingdate"]
-                                    line+=1
-                                    index0+=1
-                                
-
-
-                        if (index0>nbrRecPerCol1+nbrRecPerCol2+2):# and index0<nbMeetings:
-
-
-                            if index0==(nbrRecPerCol1+nbrRecPerCol2+3):
-
-                                # column break
-                                p=document.add_paragraph()
-                                run=p.add_run()
-                                myBreak = run.add_break(WD_BREAK.COLUMN)
-                                
-                                table = document.add_table(rows=nbrRecPerCol1+overFlowContent,cols=2)
-                                line=0
-
-                                # table creation
-                                table.alignment=WD_TABLE_ALIGNMENT.CENTER
-
-                                # display header
-                                hdr_cells = table.rows[0].cells
-                                cursorLine+=1
-
-                                myRun=hdr_cells[0].paragraphs[0].add_run('Meeting')
-                                myRun.underline=True
-                                myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+years["year"])
-                                myActualYear=years["year"]
-                                hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                                myRun.underline=True
-                                myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                                
-                                index0+=1
-                                line+=1
-
-                            else :
-
-                                if myActualYear==years["year"]:
-                                    # fill the cell of the table
-                                    hdr_cells = table.rows[line].cells
-                                    hdr_cells[0].text=meeting["meetingnum"]
-                                    hdr_cells[1].text=meeting["meetingdate"]
-                                    line+=1
-                                    index0+=1
-                                else :
-                                    # adding a break because we are changing the year
-                                    hdr_cells = table.rows[line].cells
-                                    hdr_cells[0].text=""
-                                    hdr_cells[1].text=""
-                                    line+=1
-                                    #index0+=1
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('')
-                                    hdr_cells = table.rows[line].cells
-                                    # myRun=""
-                                    # myRun.underline=True
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('Date, '+years["year"])
-                                    myActualYear=years["year"]
-                                    hdr_cells[1].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
-                                    myRun.underline=True
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                                    line+=1
-                                    #index0+=1
-                                    #fill the cell of
-                                    #  the table
-                                    hdr_cells = table.rows[line].cells
-                                    myRun=hdr_cells[1].paragraphs[0].add_run('\n')
-                                    hdr_cells[0].text=meeting["meetingnum"]
-                                    hdr_cells[1].text=meeting["meetingdate"]
-                                    line+=1
-                                    index0+=1
-                            
-                            # if (index0==2*nbrRecPerCol1+2+nbrRecPerCol3):
-                            #     section = document.add_section(WD_SECTION.CONTINUOUS)
-                            #     sectPr = section._sectPr
-                            #     cols = sectPr.xpath('./w:cols')[0]
-                            #     cols.set(qn('w:num'),'1')
-                            #     document.add_paragraph('')
-
-                    #        if (index0==3*nbrRecPerCol1+3):
+                    pass                                
                                 
 
                 else :
@@ -3832,7 +3667,8 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                     
 
         # Apply the font
-        widths = (Inches(1.15), Inches(0.85))
+        widths = (Inches(1.15), Inches(0.85
+        ))
         for table in document.tables:
             for row in table.rows:
                 for idx,width in enumerate(widths):
