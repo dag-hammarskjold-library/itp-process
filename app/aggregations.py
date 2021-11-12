@@ -1654,28 +1654,23 @@ def itpsubj(bodysession):
             }
         }
 
-        add_2['code'] = { 
-            '$cond': { 
-                'if': '$991.f', 
-                'then': '$991.f', 
-                'else': {
-                    '$cond': {
-                        'if': {'$isArray': '$191'},
-                        'then': {
-                            '$let': {
-                                'vars': {
-                                    'a': {'$arrayElemAt': ['$191.b', 0]},
-                                    'b': {'$arrayElemAt': ['$191.c', 0]},
-                                    'first': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 0]},'chars': ' '}},
-                                    'second': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 1]},'chars': ' '}}},
-                                'in': {'$cond': {
-                                    'if': {'$and': [
-                                        {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
-                                        {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
-                                    'then': '$$first','else': '$$second'}}}},
-                        'else': {'$trim': {'input': '$191.9','chars': ' '}}}
-                }
-            }
+        #modified
+        add_2['code'] = {
+            '$cond': {
+                'if': {'$isArray': '$191'},
+                'then': {
+                    '$let': {
+                        'vars': {
+                            'a': {'$arrayElemAt': ['$191.b', 0]},
+                            'b': {'$arrayElemAt': ['$191.c', 0]},
+                            'first': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 0]},'chars': ' '}},
+                            'second': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 1]},'chars': ' '}}},
+                        'in': {'$cond': {
+                            'if': {'$and': [
+                                {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
+                                {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
+                            'then': '$$first','else': '$$second'}}}},
+                'else': {'$trim': {'input': '$191.9','chars': ' '}}}
         }
 
         add_stage2 = {}
@@ -1976,6 +1971,84 @@ def itpsubj(bodysession):
         #print(pipeline)
         
         inputCollection.aggregate(pipeline, collation=collation)
+
+        ####new####
+        if body == "S":
+            copyPipeline = []
+
+            copyMatch_stage2 = {
+                '$match': {
+                    '$or': [
+                        {'$and': [
+                            {'991.z': {'$regex': '^I'}},
+                            {'991.a': {'$regex': '^S'}},
+                            {'930.a': {'$ne': itpcode}},
+                            {'991.m': {'$ne': fullbody}},
+                            {'991.s': {'$ne': session}},
+                            {'991.f': "X27"}]}, 
+                        {'$and': [
+                            {'991.z': {'$regex': '^I'}}, 
+                            {'991.a': {'$regex': '^S'}}, 
+                            {'930.a': itpcode}, 
+                            {'991.m': fullbody}, 
+                            {'991.s': session},
+                            {'991.f': "X27"}]}
+                    ]
+                }
+            }
+
+            copyAdd_1 = {}
+            copyAdd_1['agendasubject'] = add_1['agendasubject'] 
+            copyAdd_1['startDD'] = add_1['startDD']
+            copyAdd_1['startMM'] = add_1['startMM']
+            copyAdd_1['startYY'] = add_1['startYY']
+            copyAdd_1['endDD'] = add_1['endDD']
+            copyAdd_1['endMM'] = add_1['endMM']
+            copyAdd_1['endYY'] = add_1['endYY']
+
+            copyAdd_1['code'] = "X27"
+            copyAdd_1['docsymbol'] = add_2['docsymbol']
+            copyAdd_1['agendanote'] = add_2['agendanote']
+            copyAdd_1['agendanum'] = add_2['agendanum']
+
+        
+            copyAdd1_stage = {}
+            copyAdd1_stage['$addFields'] = copyAdd_1
+
+            copyAdd_2 = {}
+            copyAdd_2['votedate'] = add_2['votedate']
+
+            copyAdd2_stage = {}
+            copyAdd2_stage['$addFields'] = copyAdd_2
+
+            copyTransform = {}
+            copyTransform['head'] = transform['head']
+            copyTransform['subhead'] = transform['subhead']
+            copyTransform['entry'] = {
+                '$concat': ['(', '$votedate', ') ',
+                            { '$substrCP': [ '$agendanote', 62, {'$strLenCP': '$agendanote'} ] },
+                ]}
+            copyTransform['note'] = ''
+
+            copyTransform_stage = {}
+            copyTransform_stage['$addFields'] = copyTransform
+            
+            copyPipeline.append(match_stage)
+            copyPipeline.append(unwind_stage)
+
+            copyPipeline.append(copyMatch_stage2)
+            copyPipeline.append(copyAdd1_stage)
+            copyPipeline.append(copyAdd2_stage)
+            copyPipeline.append(copyTransform_stage)
+
+            copyPipeline.append(project_stage)
+            copyPipeline.append(sort_stage)
+            copyPipeline.append(merge_stage)
+
+            inputCollection.aggregate(copyPipeline, collation=collation)
+
+            #print(copyPipeline)
+            ###########
 
         group_itpsubj("itpsubj", bodysession)
  
