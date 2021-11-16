@@ -1635,7 +1635,7 @@ def itpsubj(bodysession):
         add_2['agendanote'] = {
             '$cond': {
                 'if': '$991.e',
-                'then': {'$concat': ['$991.e', '.']},
+                'then': {'$concat': [{"$trim": {"input": '$991.e', "chars": "."}}, '.']},
                 'else': '' }
         } 
 
@@ -1941,7 +1941,7 @@ def itpsubj(bodysession):
                 'subhead': 1,
                 'docsymbol': 1, 
                 'entry': 1, 
-                'note': 1, 
+                'note': {"$trim": {"input": '$note', "chars": " - "}}, 
                 'sortkey1': {'$concat': [
                     {
                     '$replaceAll': {
