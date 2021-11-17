@@ -3360,6 +3360,14 @@ def itpvot(bodysession):
             inputCollection.aggregate(pipeline)
 
         if body == 'A':
+
+            em = re.search("em", session)
+
+            if em:
+                offset = 7
+            else:
+                offset = 4
+
             match_stage = {
                 '$match': {
                     'bodysession': bodysession, 
@@ -3410,7 +3418,7 @@ def itpvot(bodysession):
                         'resnum': {
                             '$substrCP': [
                                 '$791.a', 
-                                {'$add': [4, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
+                                {'$add': [offset, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
                                 4
                             ]
                         }
