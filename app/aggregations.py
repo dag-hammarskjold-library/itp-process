@@ -15,12 +15,16 @@ snapshot = "itpp_snapshot_test3"
 editorOutput = "itp_sample_output"
 wordOutput = "itp_sample_output_copy"
 lookup = "itp_codes"
+itp_config = "itp_config"
+snapshot_status = "dev_Itpp_snapshot"
 
 ## establish connections to collections
 inputCollection=myDatabase[snapshot]
 outputCollection=myDatabase[editorOutput]
 copyCollection=myDatabase[wordOutput]
 lookupCollection=myDatabase[lookup]
+configCollection=myDatabase[itp_config]
+statusCollection=myDatabase[snapshot_status]
 
 
 #### Data transformations for each section ####
@@ -3923,33 +3927,39 @@ def process_section(bodysession, section):
     """ 
     bs = bodysession.split("/")
     body = bs[0]
+    session = bs[1]
 
-    if section == "itpsubj" : 
-        s = itpsubj(bodysession) #subject index 
-    elif section == "itpitsp" : 
-        s = itpitsp(bodysession) #speaker
-    elif section == "itpitsc" : 
-        s = itpitsc(bodysession) #country
-    elif section == "itpitss" : 
-        s = itpitss(bodysession) #subject speaker
-    elif section == "itpage" : 
-        s = itpage(bodysession) #agenda
-    elif section == "itpdsl" : 
-        s = itpdsl(bodysession) #doc symbol list
-    elif section == "itpmeet" : 
-        s = itpmeet(bodysession) #meeting
-    elif section == "itpres" : 
-        s = itpres(bodysession) #list of resolutions
-    elif section == "itpvot" and body != "E": 
-        s = itpvot(bodysession) #vote
-    elif section == "itpsor" and body != "S": 
-        s = itpsor(bodysession) #suppliments to official records
-    elif section == "itpreps" and body == "A": 
-        s = itpreps(bodysession) #reports
-    else: 
-        s = section + ": This section cannot be executed for this body (" + body + ")."
+    status = statusCollection.find_one( { "snapshot_name": body + session }, {"_id": 0, "currently_running": 1} )
 
-    print(section, ": " , s)
+    if status != None and status['currently_running'] == True:
+        s = "The snapshot for " + bodysession + " is still running. Once complete you can run a section."
+    else:
+        if section == "itpsubj" : 
+            s = itpsubj(bodysession) #subject index 
+        elif section == "itpitsp" : 
+            s = itpitsp(bodysession) #speaker
+        elif section == "itpitsc" : 
+            s = itpitsc(bodysession) #country
+        elif section == "itpitss" : 
+            s = itpitss(bodysession) #subject speaker
+        elif section == "itpage" : 
+            s = itpage(bodysession) #agenda
+        elif section == "itpdsl" : 
+            s = itpdsl(bodysession) #doc symbol list
+        elif section == "itpmeet" : 
+            s = itpmeet(bodysession) #meeting
+        elif section == "itpres" : 
+            s = itpres(bodysession) #list of resolutions
+        elif section == "itpvot" and body != "E": 
+            s = itpvot(bodysession) #vote
+        elif section == "itpsor" and body != "S": 
+            s = itpsor(bodysession) #suppliments to official records
+        elif section == "itpreps" and body == "A": 
+            s = itpreps(bodysession) #reports
+        else: 
+            s = section + ": This section cannot be executed for this body (" + body + ")."
+
+    # print(section, ": " , s)
 
     return s
 
@@ -4951,26 +4961,34 @@ def section_summary():
     return list(outputCollection.aggregate(pipeline))
 
 def fetch_agenda(body, session):
+    
+    result = configCollection.find_one( { "type": "agenda", "bodysession": body + '/' + session }, {"_id": 0, "agenda_symbol": 1} )
+    
     match_criteria = ""
 
-    if body == "A":
-        sp = re.search("sp", session)
-        em = re.search("em", session)
+    if result == None:
 
-        if em:
-            match_criteria = "A/ES-" + session[:-4] + "/2"
-        elif sp:
-            match_criteria = "A/S-" + session[:-2] + "/1"
-        else:
-            match_criteria = "A/" + session + "/251"
+        if body == "A":
+            sp = re.search("sp", session)
+            em = re.search("em", session)
 
-    if body == "E":
-        year = session.split("-")
-        
-        if year[1] == "0":
-            match_criteria = "E/" + year[0] + "/2"
-        else:
-            match_criteria = "E/" + year[0] + "/100"
+            if em:
+                match_criteria = "A/ES-" + session[:-4] + "/2"
+            elif sp:
+                match_criteria = "A/S-" + session[:-2] + "/1"
+            else:
+                match_criteria = "A/" + session + "/251"
+
+        if body == "E":
+            year = session.split("-")
+            
+            if year[1] == "0":
+                match_criteria = "E/" + year[0] + "/2"
+            else:
+                match_criteria = "E/" + year[0] + "/100"
+
+    else:
+        match_criteria = result['agenda_symbol']
 
     return match_criteria
 
