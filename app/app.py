@@ -33,6 +33,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
+from app.itp_config import upsert_agenda, delete_agenda, get_all_agendas
 
 
 ###############################################################################################
@@ -1856,6 +1857,36 @@ def wordGeneration():
 
         # Returning the view
         return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
+
+@app.route("/agenda", methods=["GET", "POST"])
+@login_required
+def manage_agenda():
+    if request.method == "GET" :
+    
+        # Returning the view
+        results = get_all_agendas()
+
+        return render_template('manage_agenda.html', results=results)
+
+    else :
+         # Insert or update the record    
+
+        upsert_agenda(request.form.get('bodysession'), request.form.get('agenda_symbol')) 
+
+        # # Returning the view
+        results = get_all_agendas()
+
+
+        return render_template('manage_agenda.html', results=results)
+
+@app.route("/agenda/delete/<path:bodysession>")
+@login_required
+def del_agenda(bodysession):
+    delete_agenda(bodysession)
+    return redirect(url_for('manage_agenda'))
+
+    
+    
 
 ####################################################
 # START APPLICATION

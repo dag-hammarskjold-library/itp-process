@@ -15,12 +15,14 @@ snapshot = "itpp_snapshot_test3"
 editorOutput = "itp_sample_output"
 wordOutput = "itp_sample_output_copy"
 lookup = "itp_codes"
+itp_config = "itp_config"
 
 ## establish connections to collections
 inputCollection=myDatabase[snapshot]
 outputCollection=myDatabase[editorOutput]
 copyCollection=myDatabase[wordOutput]
 lookupCollection=myDatabase[lookup]
+configCollection=myDatabase[itp_config]
 
 
 #### Data transformations for each section ####
@@ -4951,26 +4953,34 @@ def section_summary():
     return list(outputCollection.aggregate(pipeline))
 
 def fetch_agenda(body, session):
+    
+    result = configCollection.find_one( { "type": "agenda", "bodysession": body + '/' + session }, {"_id": 0, "agenda_symbol": 1} )
+    
     match_criteria = ""
 
-    if body == "A":
-        sp = re.search("sp", session)
-        em = re.search("em", session)
+    if result == None:
 
-        if em:
-            match_criteria = "A/ES-" + session[:-4] + "/2"
-        elif sp:
-            match_criteria = "A/S-" + session[:-2] + "/1"
-        else:
-            match_criteria = "A/" + session + "/251"
+        if body == "A":
+            sp = re.search("sp", session)
+            em = re.search("em", session)
 
-    if body == "E":
-        year = session.split("-")
-        
-        if year[1] == "0":
-            match_criteria = "E/" + year[0] + "/2"
-        else:
-            match_criteria = "E/" + year[0] + "/100"
+            if em:
+                match_criteria = "A/ES-" + session[:-4] + "/2"
+            elif sp:
+                match_criteria = "A/S-" + session[:-2] + "/1"
+            else:
+                match_criteria = "A/" + session + "/251"
+
+        if body == "E":
+            year = session.split("-")
+            
+            if year[1] == "0":
+                match_criteria = "E/" + year[0] + "/2"
+            else:
+                match_criteria = "E/" + year[0] + "/100"
+
+    else:
+        match_criteria = result['agenda_symbol']
 
     return match_criteria
 
