@@ -33,7 +33,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
-from app.itp_config import upsert_agenda, delete_agenda, get_all_agendas
+from app.itp_config import upsert_agenda, delete_agenda, get_all_agendas, get_all_votedec, delete_votedec, update_votedec, insert_votedec
 
 
 ###############################################################################################
@@ -1886,7 +1886,40 @@ def del_agenda(bodysession):
     return redirect(url_for('manage_agenda'))
 
     
+@app.route("/votedec", methods=["GET", "POST"])
+@login_required
+def manage_votedec():
+    if request.method == "GET" :
     
+        # Returning the view
+        results = get_all_votedec()
+
+        return render_template('manage_voting.html', results=results)
+
+    else :
+         # Insert or update the record    
+
+        insert_votedec(request.form.get('code'), request.form.get('expansion'), request.form.get('display')) 
+
+        # # Returning the view
+        results = get_all_votedec()
+
+
+        return render_template('manage_voting.html', results=results)  
+
+@app.route("/votedec/delete/<string:id>")
+@login_required
+def del_votedec(id):
+    delete_votedec(id)
+    return redirect(url_for('manage_votedec'))
+
+@app.route("/votedec/update", methods=["GET", "POST"])
+@login_required
+def edit_votedec():
+    if request.method == "POST" :
+        update_votedec(request.form.get('update_id'), request.form.get('update_code'), request.form.get('update_expansion'), request.form.get('update_display'))
+    return redirect(url_for('manage_votedec'))
+  
 
 ####################################################
 # START APPLICATION
