@@ -3391,9 +3391,29 @@ def itpvot(bodysession):
 
             lookup_stage = {
                 '$lookup': {
-                    'from': 'itp_codes', 
-                    'localField': '967.c', 
-                    'foreignField': 'code', 
+                    'from': 'itp_config', 
+                    'let': {
+                        'c': '$967.c', 
+                        'e': '$967.e'
+                    }, 
+                    'pipeline': [
+                        {
+                            '$match': {
+                                '$expr': {
+                                    '$and': [
+                                        {'$eq': ['$country_code', '$$c']}, 
+                                        {'$eq': ['$country_expansion', '$$e']}
+                                    ]
+                                }, 
+                                'type': 'votedec'
+                            }
+                        }, {
+                            '$project': {
+                                '_id': 0, 
+                                'itp_display': 1
+                            }
+                        }
+                    ], 
                     'as': 'country_info'
                 }
             }
@@ -3401,7 +3421,7 @@ def itpvot(bodysession):
             add_1 = {}
 
             add_1['order'] = '$967.a'
-            add_1['memberstate'] = {'$arrayElemAt': ['$country_info.text', 0]}
+            add_1['memberstate'] = {'$arrayElemAt': ['$country_info.itp_display', 0]}
             add_1['vote'] = {
                 '$cond': {
                     'if': '$967.d', 
@@ -3472,7 +3492,6 @@ def itpvot(bodysession):
             pipeline.append(merge_stage)
 
             inputCollection.aggregate(pipeline, collation=collation )
-
 
         #for the word collection
         copyPipeline = []

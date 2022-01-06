@@ -1,5 +1,6 @@
 from app.config import Config
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 ### connection
 myMongoURI=Config.connect_string
@@ -34,3 +35,43 @@ def delete_agenda(bodysession):
 
 def get_all_agendas():
     return list(configCollection.find( { "type": "agenda" }, {"_id": 0, "bodysession": 1, "agenda_symbol": 1} ))
+
+####Votedec
+def insert_votedec(code, expansion, display):
+    """
+    Deletes votedec entry
+    """
+    new_entry = {
+        "country_code": code,
+        "country_expansion": expansion,
+        "itp_display": display,
+        "type": "votedec"
+    }
+    response = configCollection.insert_one(new_entry)
+    return response
+
+def update_votedec(id, code, expansion, display):
+    """
+    Updates the votedec
+    """
+    response = configCollection.update_one(
+        { "_id": ObjectId(id) },
+        { "$set": { "country_code": code,
+                    "country_expansion": expansion,
+                    "itp_display": display, } }
+    )
+
+    return response
+
+def delete_votedec(id):
+    """
+    Deletes votedec entry
+    """
+    response = configCollection.delete_one( { "_id": ObjectId(id)} )
+    return response
+
+def get_all_votedec():
+    """
+    Returns list of Member States names and codes
+    """
+    return list(configCollection.find( { "type": "votedec" } ).sort("country_expansion"))
