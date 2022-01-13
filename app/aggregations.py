@@ -994,13 +994,22 @@ def itpres(bodysession):
             }
     
         if body == "A":
+            sp = re.search("sp", session)
+            em = re.search("em", session)
+
+            if em:
+                pv_prefix = "A/ES-" + session[:-4]
+            elif sp:
+                pv_prefix = "A/S-" + session[:-2]
+            else:
+                pv_prefix = "A/" + session
+
             transform['meeting'] = {
                 '$cond': {
                     'if': {'$gt': [{'$indexOfCP': ['$decision', 'plenary']}, -1]}, 
                     'then': {
                         '$concat': [
-                            '$191.b', 
-                            {'$substrCP': ['$191.c', 0, 4]}, 
+                            pv_prefix, 
                             '/PV.', 
                             {'$let': {
                                 'vars': {
