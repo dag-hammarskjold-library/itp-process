@@ -4934,39 +4934,39 @@ def insert_itpvot(section, bodysession):
     #retrieve the results and create a new Member State list with blank votes
 
     results = list(outputCollection.aggregate(pipeline, collation=collation))
-    i = 1
-    ms_list = []
-    newdict = {}
-    for r in results: 
-        newdict['order'] =  str(i)
-        newdict['memberstate'] = r['memberstate']
-        newdict['vote'] = ""
 
-        i = i + 1
-        ms_list.append(newdict)
-        newdict = {}
-    
-    #print(ms_list)
 
     #get all of the records from the db. Only project record_id & votelist
-    all_records = list(copyCollection.find({'bodysession': bodysession, 'section': section},{'_id': 0, 'record_id': 1, 'votelist': 1}))
+    all_records = list(outputCollection.find({'bodysession': bodysession, 'section': section},{'_id': 0, 'record_id': 1, 'votelist': 1}))
     
     new_votelist = []
+  
     #print(all_records)
     for record in all_records:
+        i = 1
+        ms_list = []
+        newdict = {}
+        for r in results: 
+            newdict['order'] =  str(i)
+            newdict['memberstate'] = r['memberstate']
+            newdict['vote'] = ""
+
+            i = i + 1
+            ms_list.append(newdict)
+            newdict = {}
 
         #iterate through both lists. If there is a match on member state name, then update the master MS list
         for item in ms_list:
             for ii in record["votelist"]:
                 if item['memberstate'] == ii['memberstate']:  
                     item['vote'] = ii['vote']
-            #print(record["record_id"])
             #print(item)
             new_votelist.append(item)
 
         #update the votelist record with that info in mongodb
         copyCollection.update_one({"record_id": record["record_id"]},{ "$set": { "votelist": new_votelist}})
         new_votelist = []
+      
 
     return "completed"
 
