@@ -49,6 +49,7 @@
             <th>ISO Code</th>
             <th>Member State</th>
             <th>ITP Display</th>
+            <th>Note</th>
             <th></th>
           </tr>
         </thead>
@@ -59,6 +60,7 @@
           <td>{{ result['country_code'] }}</td>
           <td>{{ result['country_expansion'] }}</td>
           <td>{{ result['itp_display'] }}</td>
+          <td>{{ result['note'] }}</td>
           <td><a
               class="btn btn-outline-secondary"
               role="button"
@@ -68,6 +70,7 @@
               data-code="{{ result['country_code'] }}"
               data-expansion="{{ result['country_expansion'] }}"
               data-display="{{ result['itp_display'] }}"
+              data-note="{{ result['note'] }}"
               ><i class="bi bi-pencil"></i
             ></a>
             <a class="btn btn-outline-secondary" href="votedec/delete/{{ result['_id'] }}" role="button"
@@ -104,6 +107,10 @@
             <div class="form-group">
               <label for="update_display" class="col-form-label">ITP Display:</label>
               <input type="text" class="form-control" placeholder="Enter ITP display" id="update_display" name="update_display" />
+            </div>
+            <div class="form-group">
+              <label for="update_note" class="col-form-label">Note:</label>
+              <input type="text" class="form-control" placeholder="Enter Note" id="update_note" name="update_note" />
             </div>
             <div class="form-group">
               <input type="text" class="form-control" id="update_id" name="update_id" hidden />
@@ -152,6 +159,7 @@
     $(update_code).val(button.data("code"));
     $(update_expansion).val(button.data("expansion"));
     $(update_display).val(button.data("display"));
+    $(update_note).val(button.data("note"));
     $(update_id).val(button.data("id"));
   });
 </script>

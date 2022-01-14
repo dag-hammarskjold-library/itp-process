@@ -1899,7 +1899,7 @@ def manage_votedec():
     else :
          # Insert or update the record    
 
-        insert_votedec(request.form.get('code'), request.form.get('expansion'), request.form.get('display')) 
+        insert_votedec(request.form.get('code'), request.form.get('expansion'), request.form.get('display'), request.form.get('note')) 
 
         # # Returning the view
         results = get_all_votedec()
@@ -1917,7 +1917,7 @@ def del_votedec(id):
 @login_required
 def edit_votedec():
     if request.method == "POST" :
-        update_votedec(request.form.get('update_id'), request.form.get('update_code'), request.form.get('update_expansion'), request.form.get('update_display'))
+        update_votedec(request.form.get('update_id'), request.form.get('update_code'), request.form.get('update_expansion'), request.form.get('update_display'), request.form.get('update_note') )
     return redirect(url_for('manage_votedec'))
   
 
