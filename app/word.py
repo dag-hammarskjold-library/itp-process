@@ -5135,7 +5135,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         add_page_number(document.sections[0].footer.paragraphs[0])
         return document
 
-        
+
     if (bodysession=="A/10emsp"):
         #start = time.perf_counter()
         # Retrieving the number of records
@@ -5223,7 +5223,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
             if myRow == 0:
                 if myOneTimeExec==False:
                     myResCounter=0
-                    table_cells[myRow+myCol*myNumColum].paragraphs[0].text=myRecords1[myIndex]["docsymbol"][:9]+"-"
+                    table_cells[myRow+myCol*myNumColum].paragraphs[0].text=myRecords1[myIndex]["docsymbol"][:12]+"-"
                     myOneTimeExec=True
                 # adding two additional row
                 
