@@ -3307,9 +3307,9 @@ def itpvot(bodysession):
 
             lookup_stage = {
                 '$lookup': {
-                    'from': 'itp_codes', 
-                    'localField': '967.c', 
-                    'foreignField': 'code', 
+                    'from': 'itp_config', 
+                    'localField': '967.e', 
+                    'foreignField': 'country_expansion', 
                     'as': 'country_info'
                 }
             }
@@ -3335,7 +3335,7 @@ def itpvot(bodysession):
                     'input': {
                         '$zip': {
                             'inputs': [
-                                '$country_info.text', 
+                                '$country_info.itp_display', 
                                 '$967.d'
                             ]
                         }
