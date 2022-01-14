@@ -3307,9 +3307,9 @@ def itpvot(bodysession):
 
             lookup_stage = {
                 '$lookup': {
-                    'from': 'itp_codes', 
-                    'localField': '967.c', 
-                    'foreignField': 'code', 
+                    'from': 'itp_config', 
+                    'localField': '967.e', 
+                    'foreignField': 'country_expansion', 
                     'as': 'country_info'
                 }
             }
@@ -3335,7 +3335,7 @@ def itpvot(bodysession):
                     'input': {
                         '$zip': {
                             'inputs': [
-                                '$country_info.text', 
+                                '$country_info.itp_display', 
                                 '$967.d'
                             ]
                         }
@@ -3430,7 +3430,13 @@ def itpvot(bodysession):
             add_1 = {}
 
             add_1['order'] = '$967.a'
-            add_1['memberstate'] = {'$arrayElemAt': ['$country_info.itp_display', 0]}
+            add_1['memberstate'] = {
+                '$cond': {
+                    'if': {'$gt': [{'$size': '$country_info'}, 0]}, 
+                    'then': {'$arrayElemAt': ['$country_info.itp_display', 0]}, 
+                    'else': '*Check Votedec*'
+                }
+            }
             add_1['vote'] = {
                 '$cond': {
                     'if': '$967.d', 
@@ -3525,7 +3531,6 @@ def itpvot(bodysession):
 
         if body == "A" and em:
             insert_itpvot('itpvot', bodysession)
-
 
         return "itpvot completed successfully"
 
@@ -4925,59 +4930,76 @@ def insert_itpvot(section, bodysession):
                 'path': '$votelist'
             }
         }, {
+            '$lookup': {
+                'from': 'itp_config', 
+                'localField': 'votelist.memberstate', 
+                'foreignField': 'itp_display', 
+                'as': 'country_info'
+            }
+        }, {
             '$group': {
-                '_id': '$votelist.memberstate'
+                '_id': {
+                    'ms': '$votelist.memberstate', 
+                    'ce': {
+                        '$arrayElemAt': [
+                            '$country_info.country_expansion', 0
+                        ]
+                    }
+                }
             }
         }, {
             '$sort': {
-                '_id': 1
+                '_id.ce': 1
             }
         }, {
             '$set': {
-                'memberstate': '$_id', 
+                'memberstate': '$_id.ms', 
                 '_id': '$$REMOVE'
             }
         }
     ]
 
-    #retrieve the results and create a new Member State list with blank votes
+    try:
 
-    results = list(outputCollection.aggregate(pipeline, collation=collation))
+        #retrieve the results and create a new Member State list with blank votes
+
+        results = list(outputCollection.aggregate(pipeline, collation=collation))
 
 
-    #get all of the records from the db. Only project record_id & votelist
-    all_records = list(outputCollection.find({'bodysession': bodysession, 'section': section},{'_id': 0, 'record_id': 1, 'votelist': 1}))
-    
-    new_votelist = []
-  
-    #print(all_records)
-    for record in all_records:
-        i = 1
-        ms_list = []
-        newdict = {}
-        for r in results: 
-            newdict['order'] =  str(i)
-            newdict['memberstate'] = r['memberstate']
-            newdict['vote'] = ""
-
-            i = i + 1
-            ms_list.append(newdict)
-            newdict = {}
-
-        #iterate through both lists. If there is a match on member state name, then update the master MS list
-        for item in ms_list:
-            for ii in record["votelist"]:
-                if item['memberstate'] == ii['memberstate']:  
-                    item['vote'] = ii['vote']
-            #print(item)
-            new_votelist.append(item)
-
-        #update the votelist record with that info in mongodb
-        copyCollection.update_one({"record_id": record["record_id"]},{ "$set": { "votelist": new_votelist}})
+        #get all of the records from the db. Only project record_id & votelist
+        all_records = list(outputCollection.find({'bodysession': bodysession, 'section': section},{'_id': 0, 'record_id': 1, 'votelist': 1}))
+        
         new_votelist = []
-      
+    
+        #print(all_records)
+        for record in all_records:
+            i = 1
+            ms_list = []
+            newdict = {}
+            for r in results: 
+                newdict['order'] =  str(i)
+                newdict['memberstate'] = r['memberstate']
+                newdict['vote'] = "-"
 
-    return "completed"
+                i = i + 1
+                ms_list.append(newdict)
+                newdict = {}
+
+            #iterate through both lists. If there is a match on member state name, then update the master MS list
+            for item in ms_list:
+                for ii in record["votelist"]:
+                    if item['memberstate'] == ii['memberstate']:  
+                        item['vote'] = ii['vote']
+                #print(item)
+                new_votelist.append(item)
+
+            #update the votelist record with that info in mongodb
+            copyCollection.update_one({"record_id": record["record_id"]},{ "$set": { "votelist": new_votelist}})
+            new_votelist = []
+        
+        return "Inserted items into votelist"
+    except Exception as e:
+        return e
 
 def clear_section(section, bodysession):
     """
