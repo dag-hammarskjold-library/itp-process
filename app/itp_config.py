@@ -37,7 +37,7 @@ def get_all_agendas():
     return list(configCollection.find( { "type": "agenda" }, {"_id": 0, "bodysession": 1, "agenda_symbol": 1} ))
 
 ####Votedec
-def insert_votedec(code, expansion, display):
+def insert_votedec(code, expansion, display, note):
     """
     Deletes votedec entry
     """
@@ -45,12 +45,13 @@ def insert_votedec(code, expansion, display):
         "country_code": code,
         "country_expansion": expansion,
         "itp_display": display,
-        "type": "votedec"
+        "type": "votedec",
+        "note": note
     }
     response = configCollection.insert_one(new_entry)
     return response
 
-def update_votedec(id, code, expansion, display):
+def update_votedec(id, code, expansion, display, note):
     """
     Updates the votedec
     """
@@ -58,7 +59,8 @@ def update_votedec(id, code, expansion, display):
         { "_id": ObjectId(id) },
         { "$set": { "country_code": code,
                     "country_expansion": expansion,
-                    "itp_display": display, } }
+                    "itp_display": display,
+                    "note": note } }
     )
 
     return response
