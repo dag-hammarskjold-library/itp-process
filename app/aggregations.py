@@ -4958,7 +4958,7 @@ def insert_itpvot(section, bodysession):
         for r in results: 
             newdict['order'] =  str(i)
             newdict['memberstate'] = r['memberstate']
-            newdict['vote'] = ""
+            newdict['vote'] = "-"
 
             i = i + 1
             ms_list.append(newdict)
