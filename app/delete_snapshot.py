@@ -64,7 +64,7 @@ def deleteSnapshot(bodysession):
     try:
         results = snapshotCollection.delete_many({'bodysession': bodysession})
 
-        msg = "Deleted " + str(results.deleted_count) + "from " + bodysession
+        msg = "Deleted " + str(results.deleted_count) + " records from " + bodysession
 
         return msg
 

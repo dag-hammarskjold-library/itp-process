@@ -1920,6 +1920,11 @@ def edit_votedec():
         update_votedec(request.form.get('update_id'), request.form.get('update_code'), request.form.get('update_expansion'), request.form.get('update_display'), request.form.get('update_note') )
     return redirect(url_for('manage_votedec'))
   
+@app.route("/compare/heading/")
+@login_required
+def compare_heading():
+    bodysessions = lookup_snapshots()
+    return render_template('compare_heading.html', bodysessions=bodysessions)
 
 ####################################################
 # START APPLICATION

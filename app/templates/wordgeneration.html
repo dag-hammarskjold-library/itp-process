@@ -46,7 +46,7 @@
                       </div>
                       <div class="form-group">
                         <label for="exampleFormControlInput1">Body / Session</label>
-                        <select class="form-control" id="bodysession" name="bodysession">
+                        <select class="form-control form-select" id="bodysession" name="bodysession">
                             {% for bodysession in bodysessions %}
                             <option>{{bodysession}}</option>
                             {% endfor %}
@@ -54,7 +54,7 @@
                       </div>
                       <div class="form-group">
                         <label for="exampleFormControlInput1">Section</label>
-                        <select class="form-control" id="paramSection" name="paramSection">
+                        <select class="form-control form-select" id="paramSection" name="paramSection">
                             {% for section in sections %}
                             <option>{{section}}</option>
                             {% endfor %}
