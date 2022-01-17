@@ -7,6 +7,7 @@ from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
+from app.comparison import get_heading_comparison
 from app.delete_snapshot import snapshotSummary, deleteSnapshot, snapshotDropdown
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
@@ -1920,11 +1921,51 @@ def edit_votedec():
         update_votedec(request.form.get('update_id'), request.form.get('update_code'), request.form.get('update_expansion'), request.form.get('update_display'), request.form.get('update_note') )
     return redirect(url_for('manage_votedec'))
   
-@app.route("/compare/heading/")
+@app.route("/compare/heading/", methods=["GET", "POST"])
 @login_required
 def compare_heading():
-    bodysessions = lookup_snapshots()
-    return render_template('compare_heading.html', bodysessions=bodysessions)
+    if request.method == "GET" :
+        bodysessions = lookup_snapshots()
+        
+        summary = {}
+        summary['o_total_headings'] = "XX"
+        summary['n_total_headings'] = "XX"
+        
+        summary['o_total_dif'] = "XX"
+        summary['n_total_dif'] = "XX"
+        summary['differences'] = [('', '')]
+
+        summary['o_only'] = {} #in old but not in new
+        summary['n_only'] = {} #in new but not in old
+
+        summary['full_list'] = []
+        return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
+
+    else :
+        #get the form entries
+
+        bs = request.form.get('bodysession')
+        s = request.form.get('section')
+        file_text = []
+
+        if s == 'itpsubj':
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%headstyle%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[13:].strip()
+                    file_text.append(headstyle)
+        else:
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%itshead%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[11:].strip()
+                    file_text.append(headstyle)
+        
+        summary = get_heading_comparison(bs, s, file_text)
+
+        bodysessions = lookup_snapshots()
+        return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
+
 
 ####################################################
 # START APPLICATION
