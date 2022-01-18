@@ -34,7 +34,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
-from app.itp_config import upsert_agenda, delete_agenda, get_all_agendas, get_all_votedec, delete_votedec, update_votedec, insert_votedec
+from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config
 
 
 ###############################################################################################
@@ -1859,32 +1859,41 @@ def wordGeneration():
         # Returning the view
         return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
 
-@app.route("/agenda", methods=["GET", "POST"])
+@app.route("/snapshot/configure", methods=["GET", "POST"])
 @login_required
-def manage_agenda():
+def configure_snapshot():
     if request.method == "GET" :
     
         # Returning the view
-        results = get_all_agendas()
+        results = get_snapshot_configs()
 
-        return render_template('manage_agenda.html', results=results)
+        return render_template('configure_snapshot.html', results=results)
 
     else :
          # Insert or update the record    
 
-        upsert_agenda(request.form.get('bodysession'), request.form.get('agenda_symbol')) 
+        create_snapshot_config(request.form.get('bodysession'), request.form.get('agenda_symbol'), request.form.get('product_code')) 
 
         # # Returning the view
-        results = get_all_agendas()
+        results = get_snapshot_configs()
 
 
-        return render_template('manage_agenda.html', results=results)
+        return render_template('configure_snapshot.html', results=results)
 
-@app.route("/agenda/delete/<path:bodysession>")
+@app.route("/snapshot/configure/update", methods=["GET", "POST"])
 @login_required
-def del_agenda(bodysession):
-    delete_agenda(bodysession)
-    return redirect(url_for('manage_agenda'))
+def update_configure_snapshot():
+    if request.method == "POST" :
+        update_snapshot_config(request.form.get('update_id'), request.form.get('update_bodysession'), request.form.get('update_agenda_symbol'), request.form.get('update_product_code') )
+    return redirect(url_for('configure_snapshot'))
+ 
+
+
+@app.route("/snapshot/configure/delete/<string:id>")
+@login_required
+def del_snapshot_config(id):
+    delete_snapshot_config(id)
+    return redirect(url_for('configure_snapshot'))
 
     
 @app.route("/votedec", methods=["GET", "POST"])
@@ -1966,6 +1975,122 @@ def compare_heading():
         bodysessions = lookup_snapshots()
         return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
 
+@app.route("/snapshot/dashboard")
+@login_required
+def snapshot_dashboard():
+    summary_A = [{ 'breakdown': 
+        [ { 'type': 'AUTH', 'total': 447 },
+            { 'type': 'BIB', 'total': 2544 },
+            { 'type': 'ITS', 'total': 4612 },
+            { 'type': 'VOT', 'total': 341 } ],
+        'bodysession': 'A/75',
+        'snapshot_name': 'A75',
+        'run_date': 
+        { 'year': 2022,
+            'month': 1,
+            'day': 18,
+            'hour': 15,
+            'minute': 59,
+            'second': 25,
+            'millisecond': 0 },
+        'status': 'false',
+        'duration': 6,
+        'total_num': 7944 },
+        { 'breakdown': 
+        [ { 'type': 'AUTH', 'total': 406 },
+            { 'type': 'BIB', 'total': 2535 },
+            { 'type': 'ITS', 'total': 5904 },
+            { 'type': 'VOT', 'total': 323 } ],
+        'bodysession': 'A/74',
+        'snapshot_name': 'A74',
+        'run_date': 
+        { 'year': 2022,
+            'month': 1,
+            'day': 17,
+            'hour': 10,
+            'minute': 46,
+            'second': 5,
+            'millisecond': 0 },
+        'status': 'false',
+        'duration': 4,
+        'total_num': 9168 }
+    ]
+    summary_E = [{ 'breakdown': 
+        [ { 'type': 'AUTH', 'total': 447 },
+            { 'type': 'BIB', 'total': 2544 },
+            { 'type': 'ITS', 'total': 4612 },
+            { 'type': 'VOT', 'total': 341 } ],
+        'bodysession': 'E/75',
+        'snapshot_name': 'E75',
+        'run_date': 
+        { 'year': 2022,
+            'month': 1,
+            'day': 18,
+            'hour': 15,
+            'minute': 59,
+            'second': 25,
+            'millisecond': 0 },
+        'status': 'false',
+        'duration': 6,
+        'total_num': 7944 },
+        { 'breakdown': 
+        [ { 'type': 'AUTH', 'total': 406 },
+            { 'type': 'BIB', 'total': 2535 },
+            { 'type': 'ITS', 'total': 5904 },
+            { 'type': 'VOT', 'total': 323 } ],
+        'bodysession': 'E/74',
+        'snapshot_name': 'E74',
+        'run_date': 
+        { 'year': 2022,
+            'month': 1,
+            'day': 17,
+            'hour': 10,
+            'minute': 46,
+            'second': 5,
+            'millisecond': 0 },
+        'status': 'false',
+        'duration': 4,
+        'total_num': 9168 }
+    ]
+    summary_S = [{ 'breakdown': 
+        [ { 'type': 'AUTH', 'total': 447 },
+            { 'type': 'BIB', 'total': 2544 },
+            { 'type': 'ITS', 'total': 4612 },
+            { 'type': 'VOT', 'total': 341 } ],
+        'bodysession': 'S/75',
+        'snapshot_name': 'S75',
+        'run_date': 
+        { 'year': 2022,
+            'month': 1,
+            'day': 18,
+            'hour': 15,
+            'minute': 59,
+            'second': 25,
+            'millisecond': 0 },
+        'status': 'false',
+        'duration': 6,
+        'total_num': 7944 },
+        { 'breakdown': 
+        [ { 'type': 'AUTH', 'total': 406 },
+            { 'type': 'BIB', 'total': 2535 },
+            { 'type': 'ITS', 'total': 5904 },
+            { 'type': 'VOT', 'total': 323 } ],
+        'bodysession': 'S/74',
+        'snapshot_name': 'S74',
+        'run_date': 
+        { 'year': 2022,
+            'month': 1,
+            'day': 17,
+            'hour': 10,
+            'minute': 46,
+            'second': 5,
+            'millisecond': 0 },
+        'status': 'false',
+        'duration': 4,
+        'total_num': 9168 }
+    ]
+    
+    return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E)
 
 ####################################################
 # START APPLICATION

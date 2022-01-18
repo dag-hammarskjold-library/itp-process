@@ -11,7 +11,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from app.models import Itpp_itp, Itpp_section, Itpp_rule#, list_all_sections
 from mongoengine import connect,disconnect
-from app.aggregations import fetch_agenda, fetch_itpcode
+from app.itp_config import fetch_agenda, fetch_itpcode
 from dateutil import tz
 import pytz
 
