@@ -10,6 +10,8 @@ myDatabase=myClient.undlFiles
 
 ## establish connections to collection
 configCollection=myDatabase["itp_config"]
+snapshotCollection=myDatabase["itpp_snapshot_test3"]
+devSnaphotCollection=myDatabase["dev_Itpp_snapshot"]
 
 def update_snapshot_config(id, bodysession, agenda_symbol, product_code):
     """
@@ -160,3 +162,191 @@ def fetch_itpcode(body, session):
         itpcode = result['product_code']
 
     return itpcode
+
+def snapshot_summary(body):
+    """
+    """
+    pipeline = []
+
+    if body == "A": 
+        match_stage = {
+            '$match': {
+                'bodysession': re.compile(r"^A")
+            }
+        }
+    elif body == "S":
+        match_stage = {
+            '$match': {
+                'bodysession': re.compile(r"^S")
+            }
+        }
+    else:
+        match_stage = {
+            '$match': {
+                'bodysession': re.compile(r"^E")
+            }
+        }
+
+    group_stage1 = {
+        '$group': {
+            '_id': {
+                'bodysession': '$bodysession', 
+                'record_type': '$record_type'
+            }, 
+            'count': {
+                '$sum': 1
+            }
+        }
+    }
+
+    sort_stage1 = {
+        '$sort': {
+            '_id.record_type': 1
+        }
+    }
+
+    group_stage2 = {
+        '$group': {
+            '_id': '$_id.bodysession', 
+            'breakdown': {
+                '$push': {
+                    'type': '$_id.record_type', 
+                    'total': {'$sum': '$count'}
+                }
+            }, 
+            'total': {'$sum': '$count'}
+        }
+    }
+
+    add_stage = {
+        '$addFields': {
+            'snap': {
+                '$reduce': {
+                    'input': {
+                        '$split': ['$_id', '/']
+                    }, 
+                    'initialValue': '', 
+                    'in': {
+                        '$concat': ['$$value', '$$this']
+                    }
+                }
+            }
+        }
+    }
+
+    lookup_stage = {
+        '$lookup': {
+            'from': 'dev_Itpp_snapshot', 
+            'localField': 'snap', 
+            'foreignField': 'snapshot_name', 
+            'as': 'snapshot'
+        }
+    }
+
+    project_stage = {
+        '$project': {
+            '_id': 0, 
+            'bodysession': '$_id', 
+            'run_date': {
+                '$dateToParts': {
+                    'date': {'$arrayElemAt': ['$snapshot.started', 0]}, 
+                    'timezone': 'America/New_York'
+                }
+            }, 
+            'status': {
+                '$cond': {
+                    'if': {'$arrayElemAt': ['$snapshot.currently_running', 0]}, 
+                    'then': 'Running', 
+                    'else': 'Completed'
+                }
+            }, 
+            'duration': {
+                '$round': [
+                    {'$divide': [
+                        {'$subtract': [
+                            {'$cond': {
+                                'if': {'$arrayElemAt': ['$snapshot.finished', 0]}, 
+                                'then': {'$arrayElemAt': ['$snapshot.finished', 0]}, 
+                                'else': '$$NOW'
+                                }
+                            }, 
+                            {'$arrayElemAt': ['$snapshot.started', 0]}
+                            ]
+                        }, 60000
+                        ]
+                    }, 1
+                ]
+            }, 
+            'total_num': '$total', 
+            'breakdown': 1,
+            'snapshot_name': {'$arrayElemAt': ['$snapshot.snapshot_name', 0]}
+        }
+    }
+
+    sort_stage2 = {
+        '$sort': {
+            'bodysession': -1
+        }
+    }
+
+    pipeline.append(match_stage)
+    pipeline.append(group_stage1)
+    pipeline.append(sort_stage1)
+    pipeline.append(group_stage2)
+    pipeline.append(add_stage)
+    pipeline.append(lookup_stage)
+    pipeline.append(project_stage)
+    pipeline.append(sort_stage2)
+
+    return list(snapshotCollection.aggregate(pipeline=pipeline))
+
+def deleteSnapshot(bodysession):
+    try:
+        bs = bodysession.split("/")
+        body = bs[0]
+        session = bs[1]
+        snapshot_name = body + session
+        
+        snapshotCollection.delete_many({'bodysession': bodysession})
+        devSnaphotCollection.delete_one({'snapshot_name': snapshot_name})
+
+        msg = "Deleted " + bodysession
+
+        return msg
+
+    except Exception as e:
+        return e
+
+def snapshotDropdown():
+    try:
+        pipeline = []
+
+        group_stage = {
+            '$group': {
+                '_id': '$bodysession'
+            }
+        }
+    
+        project_stage = {
+            '$project': {
+                '_id': 0, 
+                'bodysession': '$_id'
+            }
+        }
+
+        sort_stage = {
+            '$sort': {
+                'bodysession': 1
+            }
+        }
+
+        pipeline.append(group_stage)
+        pipeline.append(project_stage)
+        pipeline.append(sort_stage)
+
+        dropdown = list(snapshotCollection.aggregate(pipeline))
+
+        return dropdown
+
+    except Exception as e:
+        return e

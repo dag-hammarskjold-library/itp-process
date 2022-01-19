@@ -8,7 +8,6 @@ from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
 from app.comparison import get_heading_comparison
-from app.delete_snapshot import snapshotSummary, deleteSnapshot, snapshotDropdown
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms.validators import DataRequired
@@ -34,7 +33,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
-from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config
+from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config, snapshot_summary, deleteSnapshot, snapshotDropdown
 
 
 ###############################################################################################
@@ -308,30 +307,6 @@ def create_snapshot():
         return jsonify({'arguments':request.args})
     else:
         return jsonify({'status':'arguments required'})
-
-@app.route('/deleteSnapshots',methods=["GET", "POST"])
-@login_required
-def delete_snapshot():
-    if request.method == "GET" :
-    
-        # Returning the view
-        dropdown = snapshotDropdown()
-        summary = snapshotSummary()
-    
-        return render_template('delete_snapshot.html', results=summary, dropdown=dropdown)
-    else :
-         # Calling the logic to delete the snapshot     
-        
-        msg = deleteSnapshot(request.form.get('bodysession')) 
-
-        # Returning the view
-        dropdown = snapshotDropdown()
-        summary = snapshotSummary()
-
-        flash(msg)
-        
-        return render_template('delete_snapshot.html', results=summary, dropdown=dropdown)
-
 
 @app.route("/displaySnapshot")
 @login_required
@@ -1975,122 +1950,38 @@ def compare_heading():
         bodysessions = lookup_snapshots()
         return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
 
-@app.route("/snapshot/dashboard")
+
+@app.route("/snapshot/dashboard", methods=["GET", "POST"])
 @login_required
 def snapshot_dashboard():
-    summary_A = [{ 'breakdown': 
-        [ { 'type': 'AUTH', 'total': 447 },
-            { 'type': 'BIB', 'total': 2544 },
-            { 'type': 'ITS', 'total': 4612 },
-            { 'type': 'VOT', 'total': 341 } ],
-        'bodysession': 'A/75',
-        'snapshot_name': 'A75',
-        'run_date': 
-        { 'year': 2022,
-            'month': 1,
-            'day': 18,
-            'hour': 15,
-            'minute': 59,
-            'second': 25,
-            'millisecond': 0 },
-        'status': 'false',
-        'duration': 6,
-        'total_num': 7944 },
-        { 'breakdown': 
-        [ { 'type': 'AUTH', 'total': 406 },
-            { 'type': 'BIB', 'total': 2535 },
-            { 'type': 'ITS', 'total': 5904 },
-            { 'type': 'VOT', 'total': 323 } ],
-        'bodysession': 'A/74',
-        'snapshot_name': 'A74',
-        'run_date': 
-        { 'year': 2022,
-            'month': 1,
-            'day': 17,
-            'hour': 10,
-            'minute': 46,
-            'second': 5,
-            'millisecond': 0 },
-        'status': 'false',
-        'duration': 4,
-        'total_num': 9168 }
-    ]
-    summary_E = [{ 'breakdown': 
-        [ { 'type': 'AUTH', 'total': 447 },
-            { 'type': 'BIB', 'total': 2544 },
-            { 'type': 'ITS', 'total': 4612 },
-            { 'type': 'VOT', 'total': 341 } ],
-        'bodysession': 'E/75',
-        'snapshot_name': 'E75',
-        'run_date': 
-        { 'year': 2022,
-            'month': 1,
-            'day': 18,
-            'hour': 15,
-            'minute': 59,
-            'second': 25,
-            'millisecond': 0 },
-        'status': 'false',
-        'duration': 6,
-        'total_num': 7944 },
-        { 'breakdown': 
-        [ { 'type': 'AUTH', 'total': 406 },
-            { 'type': 'BIB', 'total': 2535 },
-            { 'type': 'ITS', 'total': 5904 },
-            { 'type': 'VOT', 'total': 323 } ],
-        'bodysession': 'E/74',
-        'snapshot_name': 'E74',
-        'run_date': 
-        { 'year': 2022,
-            'month': 1,
-            'day': 17,
-            'hour': 10,
-            'minute': 46,
-            'second': 5,
-            'millisecond': 0 },
-        'status': 'false',
-        'duration': 4,
-        'total_num': 9168 }
-    ]
-    summary_S = [{ 'breakdown': 
-        [ { 'type': 'AUTH', 'total': 447 },
-            { 'type': 'BIB', 'total': 2544 },
-            { 'type': 'ITS', 'total': 4612 },
-            { 'type': 'VOT', 'total': 341 } ],
-        'bodysession': 'S/75',
-        'snapshot_name': 'S75',
-        'run_date': 
-        { 'year': 2022,
-            'month': 1,
-            'day': 18,
-            'hour': 15,
-            'minute': 59,
-            'second': 25,
-            'millisecond': 0 },
-        'status': 'false',
-        'duration': 6,
-        'total_num': 7944 },
-        { 'breakdown': 
-        [ { 'type': 'AUTH', 'total': 406 },
-            { 'type': 'BIB', 'total': 2535 },
-            { 'type': 'ITS', 'total': 5904 },
-            { 'type': 'VOT', 'total': 323 } ],
-        'bodysession': 'S/74',
-        'snapshot_name': 'S74',
-        'run_date': 
-        { 'year': 2022,
-            'month': 1,
-            'day': 17,
-            'hour': 10,
-            'minute': 46,
-            'second': 5,
-            'millisecond': 0 },
-        'status': 'false',
-        'duration': 4,
-        'total_num': 9168 }
-    ]
+
+    if request.method == "POST" :
+        #delete the snapshot
+        msg = deleteSnapshot(request.form.get('bodysession')) 
+
+        flash(msg)
+
+    summary_A = snapshot_summary("A")
+    summary_E = snapshot_summary("E")
+    summary_S = snapshot_summary("S")
+
+    dropdown = []
+
+    for a in summary_A:
+        dropdown.append(a['bodysession'])
     
-    return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E)
+    for s in summary_S:
+        dropdown.append(s['bodysession'])
+
+    for e in summary_E:
+        dropdown.append(e['bodysession'])
+
+
+
+    return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, dropdown=dropdown)
+    # else:
+
+    #     return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, dropdown=dropdown)
 
 ####################################################
 # START APPLICATION

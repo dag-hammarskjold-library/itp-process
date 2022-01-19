@@ -5,6 +5,29 @@
     <h3>Snapshot Dashboard</h3>
     <hr />
     <p>The lists below show all current snapshots. Click on the body/session to view details.</p>
+    <p>If you wish to delete an existing snapshot, select it from the dropdown and click "Delete".</p>
+
+    <form method="POST" action="/snapshot/dashboard" >
+        <div class="row g-3">
+          <div class="col-auto">
+            <label class="col-form-label" for="bodysession">Body / Session</label>
+          </div>
+          <div class="col-auto">
+            <select class="form-control form-select mr-3" id="bodysession" name="bodysession">
+              {% for bodysession in dropdown %}
+              <option>{{ bodysession }}</option>
+              {% endfor %}
+          </select>
+          </div>
+          <div class="col-auto">
+            <button id="getResults" type="submit" class="btn btn-primary">Delete</button>
+          </div>
+        </div>
+        
+    </form>
+
+    <hr>
+
     <div class="container">
         <div class="row">
           <div class="col">
@@ -19,7 +42,37 @@
                   </h2>
                   <div id="collapse{{ s['snapshot_name'] }}" class="accordion-collapse collapse" aria-labelledby="{{ s['snapshot_name'] }}" data-bs-parent="#accordion_A">
                     <div class="accordion-body">
-                        {{ s['breakdown'] }} 
+                      <table class="table table-borderless table-sm">
+                        <tbody>
+                          <tr>
+                            <td>Snapshot Date:</td>
+                            <td>{{ s['run_date'].year }}-{{ s['run_date'].month }}-{{ s['run_date'].day }}</td>
+                          </tr>
+                          <tr>
+                            <td>Start Time:</td>
+                            <td>{{ s['run_date'].hour }}:{{ s['run_date'].minute }}</td>
+                          </tr>
+                          <tr>
+                            <td>Duration (min):</td>
+                            <td>{{ s['duration'] }}</td>
+                          </tr>
+                          <tr>
+                            <td>Status:</td>
+                            <td>{{ s['status'] }}</td>
+                          </tr>
+                          <tr>
+                            <td>Total Records:</td>
+                            <td>{{ s['total_num']}} </td>
+                          </tr>
+
+                          {% for b in s['breakdown'] %}
+                          <tr>
+                            <td>{{ b['type'] }} Records:</td>
+                            <td>{{ b['total'] }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -38,7 +91,37 @@
                   </h2>
                   <div id="collapse{{ s['snapshot_name'] }}" class="accordion-collapse collapse" aria-labelledby="{{ s['snapshot_name'] }}" data-bs-parent="#accordion_S">
                     <div class="accordion-body">
-                        {{ s['breakdown'] }} 
+                      <table class="table table-borderless table-sm">
+                        <tbody>
+                          <tr>
+                            <td>Snapshot Date:</td>
+                            <td>{{ s['run_date'].year }}-{{ s['run_date'].month }}-{{ s['run_date'].day }}</td>
+                          </tr>
+                          <tr>
+                            <td>Start Time:</td>
+                            <td>{{ s['run_date'].hour }}:{{ s['run_date'].minute }}</td>
+                          </tr>
+                          <tr>
+                            <td>Duration (min):</td>
+                            <td>{{ s['duration'] }}</td>
+                          </tr>
+                          <tr>
+                            <td>Status:</td>
+                            <td>{{ s['status'] }}</td>
+                          </tr>
+                          <tr>
+                            <td>Total Records:</td>
+                            <td>{{ s['total_num']}} </td>
+                          </tr>
+
+                          {% for b in s['breakdown'] %}
+                          <tr>
+                            <td>{{ b['type'] }} Records:</td>
+                            <td>{{ b['total'] }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -57,7 +140,37 @@
                   </h2>
                   <div id="collapse{{ s['snapshot_name'] }}" class="accordion-collapse collapse" aria-labelledby="{{ s['snapshot_name'] }}" data-bs-parent="#accordion_E">
                     <div class="accordion-body">
-                        {{ s['breakdown'] }} 
+                      <table class="table table-borderless table-sm">
+                        <tbody>
+                          <tr>
+                            <td>Snapshot Date:</td>
+                            <td>{{ s['run_date'].year }}-{{ s['run_date'].month }}-{{ s['run_date'].day }}</td>
+                          </tr>
+                          <tr>
+                            <td>Start Time:</td>
+                            <td>{{ s['run_date'].hour }}:{{ s['run_date'].minute }}</td>
+                          </tr>
+                          <tr>
+                            <td>Duration (min):</td>
+                            <td>{{ s['duration'] }}</td>
+                          </tr>
+                          <tr>
+                            <td>Status:</td>
+                            <td>{{ s['status'] }}</td>
+                          </tr>
+                          <tr>
+                            <td>Total Records:</td>
+                            <td>{{ s['total_num']}} </td>
+                          </tr>
+
+                          {% for b in s['breakdown'] %}
+                          <tr>
+                            <td>{{ b['type'] }} Records:</td>
+                            <td>{{ b['total'] }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
