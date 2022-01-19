@@ -1999,8 +1999,6 @@ def itpsubj(bodysession):
 
         #print(pipeline)
 
-     
-        
         inputCollection.aggregate(pipeline, collation=collation)
 
         group_itpsubj("itpsubj", bodysession)
@@ -3433,7 +3431,7 @@ def itpvot(bodysession):
                 '$cond': {
                     'if': {'$gt': [{'$size': '$country_info'}, 0]}, 
                     'then': {'$arrayElemAt': ['$country_info.itp_display', 0]}, 
-                    'else': '*Check Votedec*'
+                    'else': {'$concat': ['*Check ', '$967.e']}
                 }
             }
             add_1['vote'] = {
@@ -3527,9 +3525,8 @@ def itpvot(bodysession):
         copyPipeline.append(copyMerge_stage)
 
         outputCollection.aggregate(copyPipeline)
-
-        if body == "A" and em:
-            insert_itpvot('itpvot', bodysession)
+    
+        insert_itpvot('itpvot', bodysession)
 
         return "itpvot completed successfully"
 
