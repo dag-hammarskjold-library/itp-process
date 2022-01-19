@@ -4,6 +4,7 @@ import pprint
 import re
 from datetime import datetime
 import json
+from app.itp_config import fetch_agenda, fetch_itpcode
 
 ### connection
 myMongoURI=Config.connect_string
@@ -15,7 +16,6 @@ snapshot = "itpp_snapshot_test3"
 editorOutput = "itp_sample_output"
 wordOutput = "itp_sample_output_copy"
 lookup = "itp_codes"
-itp_config = "itp_config"
 snapshot_status = "dev_Itpp_snapshot"
 
 ## establish connections to collections
@@ -23,7 +23,6 @@ inputCollection=myDatabase[snapshot]
 outputCollection=myDatabase[editorOutput]
 copyCollection=myDatabase[wordOutput]
 lookupCollection=myDatabase[lookup]
-configCollection=myDatabase[itp_config]
 statusCollection=myDatabase[snapshot_status]
 
 
@@ -5085,52 +5084,3 @@ def section_summary():
 
     return list(outputCollection.aggregate(pipeline))
 
-def fetch_agenda(body, session):
-    
-    result = configCollection.find_one( { "type": "agenda", "bodysession": body + '/' + session }, {"_id": 0, "agenda_symbol": 1} )
-    
-    match_criteria = ""
-
-    if result == None:
-
-        if body == "A":
-            sp = re.search("sp", session)
-            em = re.search("em", session)
-
-            if em:
-                match_criteria = "A/ES-" + session[:-4] + "/2"
-            elif sp:
-                match_criteria = "A/S-" + session[:-2] + "/1"
-            else:
-                match_criteria = "A/" + session + "/251"
-
-        if body == "E":
-            year = session.split("-")
-            
-            if year[1] == "0":
-                match_criteria = "E/" + year[0] + "/2"
-            else:
-                match_criteria = "E/" + year[0] + "/100"
-
-    else:
-        match_criteria = result['agenda_symbol']
-
-    return match_criteria
-
-def fetch_itpcode(body, session):
-    
-    itpcode = 'ITP' + body + session
-
-    if body == "E" :
-        itpcode = 'ITP' + body + session[2:4] + session[-1]
-
-    if body == "A":
-        sp = re.search("sp", session)
-        em = re.search("em", session)
-
-        if em:
-            itpcode = 'ITP' + body + session[0:2] + "E"
-        elif sp:
-            itpcode = 'ITP' + body + session[0:2] + "S"
-
-    return itpcode

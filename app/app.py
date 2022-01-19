@@ -8,7 +8,6 @@ from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
 from app.comparison import get_heading_comparison
-from app.delete_snapshot import snapshotSummary, deleteSnapshot, snapshotDropdown
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms.validators import DataRequired
@@ -34,7 +33,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
-from app.itp_config import upsert_agenda, delete_agenda, get_all_agendas, get_all_votedec, delete_votedec, update_votedec, insert_votedec
+from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config, snapshot_summary, deleteSnapshot, snapshotDropdown
 
 
 ###############################################################################################
@@ -308,30 +307,6 @@ def create_snapshot():
         return jsonify({'arguments':request.args})
     else:
         return jsonify({'status':'arguments required'})
-
-@app.route('/deleteSnapshots',methods=["GET", "POST"])
-@login_required
-def delete_snapshot():
-    if request.method == "GET" :
-    
-        # Returning the view
-        dropdown = snapshotDropdown()
-        summary = snapshotSummary()
-    
-        return render_template('delete_snapshot.html', results=summary, dropdown=dropdown)
-    else :
-         # Calling the logic to delete the snapshot     
-        
-        msg = deleteSnapshot(request.form.get('bodysession')) 
-
-        # Returning the view
-        dropdown = snapshotDropdown()
-        summary = snapshotSummary()
-
-        flash(msg)
-        
-        return render_template('delete_snapshot.html', results=summary, dropdown=dropdown)
-
 
 @app.route("/displaySnapshot")
 @login_required
@@ -1859,32 +1834,41 @@ def wordGeneration():
         # Returning the view
         return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
 
-@app.route("/agenda", methods=["GET", "POST"])
+@app.route("/snapshot/configure", methods=["GET", "POST"])
 @login_required
-def manage_agenda():
+def configure_snapshot():
     if request.method == "GET" :
     
         # Returning the view
-        results = get_all_agendas()
+        results = get_snapshot_configs()
 
-        return render_template('manage_agenda.html', results=results)
+        return render_template('configure_snapshot.html', results=results)
 
     else :
          # Insert or update the record    
 
-        upsert_agenda(request.form.get('bodysession'), request.form.get('agenda_symbol')) 
+        create_snapshot_config(request.form.get('bodysession'), request.form.get('agenda_symbol'), request.form.get('product_code')) 
 
         # # Returning the view
-        results = get_all_agendas()
+        results = get_snapshot_configs()
 
 
-        return render_template('manage_agenda.html', results=results)
+        return render_template('configure_snapshot.html', results=results)
 
-@app.route("/agenda/delete/<path:bodysession>")
+@app.route("/snapshot/configure/update", methods=["GET", "POST"])
 @login_required
-def del_agenda(bodysession):
-    delete_agenda(bodysession)
-    return redirect(url_for('manage_agenda'))
+def update_configure_snapshot():
+    if request.method == "POST" :
+        update_snapshot_config(request.form.get('update_id'), request.form.get('update_bodysession'), request.form.get('update_agenda_symbol'), request.form.get('update_product_code') )
+    return redirect(url_for('configure_snapshot'))
+ 
+
+
+@app.route("/snapshot/configure/delete/<string:id>")
+@login_required
+def del_snapshot_config(id):
+    delete_snapshot_config(id)
+    return redirect(url_for('configure_snapshot'))
 
     
 @app.route("/votedec", methods=["GET", "POST"])
@@ -1966,6 +1950,38 @@ def compare_heading():
         bodysessions = lookup_snapshots()
         return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
 
+
+@app.route("/snapshot/dashboard", methods=["GET", "POST"])
+@login_required
+def snapshot_dashboard():
+
+    if request.method == "POST" :
+        #delete the snapshot
+        msg = deleteSnapshot(request.form.get('bodysession')) 
+
+        flash(msg)
+
+    summary_A = snapshot_summary("A")
+    summary_E = snapshot_summary("E")
+    summary_S = snapshot_summary("S")
+
+    dropdown = []
+
+    for a in summary_A:
+        dropdown.append(a['bodysession'])
+    
+    for s in summary_S:
+        dropdown.append(s['bodysession'])
+
+    for e in summary_E:
+        dropdown.append(e['bodysession'])
+
+
+
+    return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, dropdown=dropdown)
+    # else:
+
+    #     return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, dropdown=dropdown)
 
 ####################################################
 # START APPLICATION

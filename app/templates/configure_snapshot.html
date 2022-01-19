@@ -1,0 +1,190 @@
+{% extends 'base.html' %} {% block content %}
+
+<div id="content">
+  <div class="container shadow mt-4 mb-4">
+    <div class="container mt-4 mb-4">
+      <h3>Congifure Body/Session</h3>
+      <hr />
+      <p>Set the pattern for the Agenda Document Symbol and Product Code for each Issuing Body and Session prior to running the snapshot. 
+        If the values are not set prior to running the snapshot then the default patterns will be used. In the table below, XX represents the session.</p>
+
+      <table class="table table-striped table-sm">
+        <thead>
+          <tr>
+            <th scope="col">Issuing Body and Session</th>
+            <th scope="col">Agenda Document Symbol</th>
+            <th scope="col">Product Code</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A/XXemsp</td>
+            <td>A/ES-XX/2</td>
+            <td>ITPAXXE</td>
+          </tr>
+          <tr>
+            <td>A/XXsp</td>
+            <td>A/S-XX/1</td>
+            <td>ITPAXXS</td>
+          </tr>
+          <tr>
+            <td>A/XX</td>
+            <td>A/XX/251</td>
+            <td>ITPAXX</td>
+          </tr>
+          <tr>
+            <td>E/XXXX-0</td>
+            <td>E/XXXX/2</td>
+            <td>ITPEXX0</td>
+          </tr>
+          <tr>
+            <td>E/XXXX-S</td>
+            <td>E/XXXX/100</td>
+            <td>ITPEXXS</td>
+          </tr>
+          <tr>
+            <td>S/XX</td>
+            <td>S/XX</td>
+            <td>ITPSXX</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form  method="POST" action="{{url_for('configure_snapshot')}}">
+        <div class="row">
+          <div class="col">
+            <input type="text" class="form-control" placeholder="Enter Body/Session" id="bodysession" name="bodysession"/>
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" placeholder="Enter Agenda Symbol" id="agenda_symbol" name="agenda_symbol" />
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" placeholder="Enter Product Code" id="product_code" name="product_code" />
+          </div>
+          <div class="col">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+      </form>
+      <br />
+    </div>
+  </div>
+
+  <div class="container customize1 shadow">
+    <div class="container mt-4 mb-4" id="results">
+      <h3>Existing List</h3>
+
+      <table class="table table-sm table-hover">
+        <thead>
+          <tr>
+            <th>Body/Session</th>
+            <th>Agenda Symbol</th>
+            <th>Product Code</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        {% for result in results %}
+          <tr>
+              <td>{{ result['bodysession'] }}</td>
+              <td>{{ result['agenda_symbol'] }}</td>
+              <td>{{ result['product_code'] }}</td>
+              <!-- Have to update the results and the modal. Also the delete -->
+              <td>
+                <a
+                  class="btn btn-outline-secondary"
+                  role="button"
+                  data-toggle="modal"
+                  data-id="{{ result['_id'] }}"
+                  data-target="#updateModal"
+                  data-bs="{{ result['bodysession'] }}"
+                  data-as="{{ result['agenda_symbol'] }}"
+                  data-pc="{{ result['product_code'] }}">
+                  <i class="bi bi-pencil"></i>
+              </a>
+                <a class="btn btn-outline-secondary" href="/snapshot/configure/delete/{{ result['_id'] }}" role="button"><i class="bi bi-trash"></i></a>
+              </td>
+          </tr>
+          {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  
+</div>
+
+<div>
+  <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateModalLabel">Update Configuration</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="update_form" method="POST" action="/snapshot/configure/update">
+            <div class="form-group">
+              <label for="update_bodysession" class="col-form-label">Issuing Body/Session:</label>
+              <input type="text" class="form-control" placeholder="Enter Body/Session" id="update_bodysession" name="update_bodysession" />
+            </div>
+            <div class="form-group">
+              <label for="update_agenda_symbol" class="col-form-label">Agenda Symbol:</label>
+              <input type="text" class="form-control update_agenda_symbol" placeholder="Enter Agenda Symbol" id="update_agenda_symbol" name="update_agenda_symbol" />
+            </div>
+            <div class="form-group">
+              <label for="update_product_code" class="col-form-label">Product Code:</label>
+              <input type="text" class="form-control" placeholder="Enter Product Code" id="update_product_code" name="update_product_code" />
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-control" id="update_id" name="update_id" hidden />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" form="update_form">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+  function myFunction() {
+    // Declare variables
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById("myInput");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("results");
+    tr = table.getElementsByTagName("tr");
+
+    // Loop through all table rows, and hide those who don't match the search query
+    for (i = 0; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName("td")[0];
+      if (td) {
+        txtValue = td.textContent || td.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
+
+  //Update Modal
+  $("#updateModal").on("show.bs.modal", function (event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    $(update_bodysession).val(button.data("bs"));
+    $(update_agenda_symbol).val(button.data("as"));
+    $(update_product_code).val(button.data("pc"));
+    $(update_id).val(button.data("id"));
+  });
+</script>
+{% endblock %}
