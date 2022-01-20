@@ -105,11 +105,17 @@
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"> </span></button>
         </nav>
         <div class="container text-right">
-            <a href="{{url_for('main')}}"> Main Menu </a>
-            <a href="https://unitednations.sharepoint.com/:w:/s/dpi_od_dhl_iss/Ed8g3y22w4dGssNeq78LOV0BjaSE-pwOWngUDwWBnQpFRw?e=vVY3Ph">User Manual</a>
+            <ul class="nav justify-content-end">
+                <li class="nav-item">
+                  <a class="nav-link" href="https://unitednations.sharepoint.com/:w:/s/dpi_od_dhl_iss/Ed8g3y22w4dGssNeq78LOV0BjaSE-pwOWngUDwWBnQpFRw?e=vVY3Ph" target="_blank">User Manual</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{{url_for('main')}}">Main Menu</a>
+                </li>
+            </ul>
         </div>
 
-
+        
 
     </header>
 
