@@ -3,7 +3,7 @@
 <div id="content">
   <div class="container shadow mt-4 mb-4">
     <div class="container mt-4 mb-4">
-      <h3>Congifure Body/Session</h3>
+      <h3>Congifure Snapshot</h3>
       <hr />
       <p>Set the pattern for the Agenda Document Symbol and Product Code for each Issuing Body and Session prior to running the snapshot. 
         If the values are not set prior to running the snapshot then the default patterns will be used. In the table below, XX represents the session.</p>
@@ -45,7 +45,17 @@
           <tr>
             <td>S/XX</td>
             <td>S/XX</td>
-            <td>ITPSXX</td>
+            <td>ITPTXX</td>
+          </tr>
+          <tr>
+            <td>T/XX</td>
+            <td>--</td>
+            <td>ITPTXX</td>
+          </tr>
+          <tr>
+            <td>T/XXsp</td>
+            <td>--</td>
+            <td>ITPTXXS</td>
           </tr>
         </tbody>
       </table>
@@ -74,7 +84,7 @@
     <div class="container mt-4 mb-4" id="results">
       <h3>Existing List</h3>
 
-      <table class="table table-sm table-hover">
+      <table class="table table-sm table-hover sortable">
         <thead>
           <tr>
             <th>Body/Session</th>

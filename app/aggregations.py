@@ -3502,7 +3502,7 @@ def itpvot(bodysession):
             pipeline.append(transform_stage)
             pipeline.append(sort_stage)
             pipeline.append(merge_stage)
-
+            
             inputCollection.aggregate(pipeline, collation=collation )
 
         #for the word collection
