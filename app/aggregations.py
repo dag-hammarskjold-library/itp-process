@@ -3286,89 +3286,6 @@ def itpvot(bodysession):
             'numericOrdering': True
         }
 
-        if body == "S":
-            match_stage = {
-                '$match': {
-                    'bodysession': bodysession, 
-                    'record_type': 'VOT', 
-                    '591.a': {
-                        '$ne': 'ADOPTED WITHOUT VOTE'
-                    }, 
-                    '791.a': {
-                        '$regex': re.compile(r"RES")
-                    }, 
-                    '791.b': body + "/", 
-                    '791.c': session
-                }
-            }
-
-            lookup_stage = {
-                '$lookup': {
-                    'from': 'itp_config', 
-                    'localField': '967.e', 
-                    'foreignField': 'country_expansion', 
-                    'as': 'country_info'
-                }
-            }
-        
-            transform = {}
-            transform['_id'] = 0
-            transform['record_id'] = 1
-            transform['section'] = "itpvot"
-            transform['bodysession'] = 1
-            
-            transform['docsymbol'] = '$791.a'
-
-            transform['resnum'] = {
-                '$substrCP': [
-                    '$791.a', 
-                    {'$add': [1, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
-                    4
-                ]
-            }
-
-            transform['votelist'] = {
-                '$map': {
-                    'input': {
-                        '$zip': {
-                            'inputs': [
-                                '$country_info.itp_display', 
-                                '$967.d'
-                            ]
-                        }
-                    }, 
-                    'as': 'list', 
-                    'in': {
-                        'memberstate': {'$arrayElemAt': ['$$list', 0]}, 
-                        'vote': {'$arrayElemAt': ['$$list', 1]
-                        }
-                    }
-                }
-            }
-
-            transform['sortkey1'] = '$791.a'
-
-            transform_stage = {}
-            transform_stage['$project'] = transform
-
-            sort_stage = {
-                '$sort': {
-                    'sortkey1': 1
-                }
-            }
-
-            merge_stage = {
-                '$merge': { 'into': editorOutput}
-            }
-
-            pipeline.append(match_stage)
-            pipeline.append(lookup_stage)
-            pipeline.append(transform_stage)
-            pipeline.append(sort_stage)
-            pipeline.append(merge_stage)
-
-            inputCollection.aggregate(pipeline)
-
         if body == 'A':
 
             em = re.search("em", session)
@@ -3378,132 +3295,144 @@ def itpvot(bodysession):
             else:
                 offset = 4
 
-            match_stage = {
-                '$match': {
-                    'bodysession': bodysession, 
-                    'record_type': 'VOT', 
-                    '591.a': {
-                        '$ne': 'ADOPTED WITHOUT VOTE'
-                    }, 
-                    '791.a': {
-                        '$regex': re.compile(r"RES")
-                    }, 
-                    '791.b': body + "/", 
-                    '791.c': session
-                }
+        if body == 'S':
+            offset = 1
+
+        match_stage = {
+            '$match': {
+                'bodysession': bodysession, 
+                'record_type': 'VOT', 
+                '591.a': {
+                    '$ne': 'ADOPTED WITHOUT VOTE'
+                }, 
+                '791.a': {
+                    '$regex': re.compile(r"RES")
+                }, 
+                '791.b': body + "/", 
+                '791.c': session
             }
+        }
 
-            unwind_stage = { '$unwind': '$967'}
+        unwind_stage = { '$unwind': '$967'}
 
-            lookup_stage = {
-                '$lookup': {
-                    'from': 'itp_config', 
-                    'let': {
-                        'c': '$967.c', 
-                        'e': '$967.e'
-                    }, 
-                    'pipeline': [
-                        {
-                            '$match': {
-                                '$expr': {
-                                    '$and': [
-                                        {'$eq': ['$country_code', '$$c']}, 
-                                        {'$eq': ['$country_expansion', '$$e']}
-                                    ]
-                                }, 
-                                'type': 'votedec'
-                            }
-                        }, {
-                            '$project': {
-                                '_id': 0, 
-                                'itp_display': 1
-                            }
+        lookup_stage = {
+            '$lookup': {
+                'from': 'itp_config', 
+                'let': {
+                    'c': '$967.c', 
+                    'e': '$967.e'
+                }, 
+                'pipeline': [
+                    {
+                        '$match': {
+                            '$expr': {
+                                '$and': [
+                                    {'$eq': ['$country_code', '$$c']}, 
+                                    {'$eq': ['$country_expansion', '$$e']}
+                                ]
+                            }, 
+                            'type': 'votedec'
                         }
-                    ], 
-                    'as': 'country_info'
-                }
-            }
-
-            add_1 = {}
-
-            add_1['order'] = '$967.a'
-            add_1['memberstate'] = {
-                '$cond': {
-                    'if': {'$gt': [{'$size': '$country_info'}, 0]}, 
-                    'then': {'$arrayElemAt': ['$country_info.itp_display', 0]}, 
-                    'else': {'$concat': ['*Check ', '$967.e']}
-                }
-            }
-            add_1['vote'] = {
-                '$cond': {
-                    'if': '$967.d', 
-                    'then': '$967.d', 
-                    'else': ''
-                }
-            }
-
-            add_stage1 = {}
-
-            add_stage1['$addFields'] = add_1
-
-            group_stage =  {
-                '$group': {
-                    '_id': {
-                        'r': '$record_id', 
-                        'docsymbol': '$791.a', 
-                        'resnum': {
-                            '$substrCP': [
-                                '$791.a', 
-                                {'$add': [offset, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
-                                4
-                            ]
+                    }, {
+                        '$project': {
+                            '_id': 0, 
+                            'itp_display': 1
                         }
-                    }, 
-                    'votelist': {
-                        '$push': {
-                            'order': '$order', 
-                            'memberstate': '$memberstate', 
-                            'vote': '$vote'
-                        }
+                    }
+                ], 
+                'as': 'country_info'
+            }
+        }
+
+        add_1 = {}
+
+        add_1['order'] = '$967.a'
+        add_1['memberstate'] = {
+            '$cond': {
+                'if': {'$gt': [{'$size': '$country_info'}, 0]}, 
+                'then': {'$arrayElemAt': ['$country_info.itp_display', 0]}, 
+                'else': {'$concat': ['*Check ', '$967.e']}
+            }
+        }
+        add_1['vote'] = {
+            '$cond': {
+                'if': '$967.d', 
+                'then': '$967.d', 
+                'else': ''
+            }
+        }
+
+        add_1['docsymbol'] = {
+            '$cond': {
+                'if': {'$isArray': ['$791.a']}, 
+                'then': {'$arrayElemAt': ['$791.a', 0]}, 
+                'else': '$791.a'
+            }
+        }
+        
+
+        add_stage1 = {}
+
+        add_stage1['$addFields'] = add_1
+
+        group_stage =  {
+            '$group': {
+                '_id': {
+                    'r': '$record_id', 
+                    'docsymbol': '$docsymbol', 
+                    'resnum': {
+                        '$substrCP': [
+                            '$docsymbol', 
+                            {'$add': [offset, {'$indexOfCP': ['$docsymbol', '/', 2]}]}, 
+                            4
+                        ]
+                    }
+                }, 
+                'votelist': {
+                    '$push': {
+                        'order': '$order', 
+                        'memberstate': '$memberstate', 
+                        'vote': '$vote'
                     }
                 }
             }
+        }
 
-            transform = {}
+        transform = {}
 
-            transform['_id'] = 0
-            transform['record_id'] = '$_id.r'
-            transform['section'] = "itpvot"
-            transform['bodysession'] = bodysession
-            
-            transform['docsymbol'] = '$_id.docsymbol'
-            transform['resnum'] = '$_id.resnum'
-            transform['votelist'] = 1
-            transform['sortkey1'] = '$_id.resnum'
+        transform['_id'] = 0
+        transform['record_id'] = '$_id.r'
+        transform['section'] = "itpvot"
+        transform['bodysession'] = bodysession
+        
+        transform['docsymbol'] = '$_id.docsymbol'
+        transform['resnum'] = '$_id.resnum'
+        transform['votelist'] = 1
+        transform['sortkey1'] = '$_id.resnum'
 
-            transform_stage = {}
-            transform_stage['$project'] = transform
+        transform_stage = {}
+        transform_stage['$project'] = transform
 
-            sort_stage = {
-                '$sort': {
-                    'sortkey1': 1
-                }
+        sort_stage = {
+            '$sort': {
+                'sortkey1': 1
             }
+        }
 
-            merge_stage = {
-                '$merge': { 'into': editorOutput}
-            }
+        merge_stage = {
+            '$merge': { 'into': editorOutput}
+        }
 
-            pipeline.append(match_stage)
-            pipeline.append(unwind_stage)
-            pipeline.append(lookup_stage)
-            pipeline.append(add_stage1)
-            pipeline.append(group_stage)
-            pipeline.append(transform_stage)
-            pipeline.append(sort_stage)
-            pipeline.append(merge_stage)
-
-            inputCollection.aggregate(pipeline, collation=collation )
+        pipeline.append(match_stage)
+        pipeline.append(unwind_stage)
+        pipeline.append(lookup_stage)
+        pipeline.append(add_stage1)
+        pipeline.append(group_stage)
+        pipeline.append(transform_stage)
+        pipeline.append(sort_stage)
+        pipeline.append(merge_stage)
+        
+        inputCollection.aggregate(pipeline, collation=collation )
 
         #for the word collection
         copyPipeline = []

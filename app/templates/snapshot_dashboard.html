@@ -31,6 +31,55 @@
     <div class="container">
         <div class="row">
           <div class="col">
+            <h5 class="text-center">ECOSOC</h5>
+            <div class="accordion" id="accordion_E">
+              {% for s in summary_E %}
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="heading{{ s['snapshot_name'] }}">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ s['snapshot_name'] }}" aria-expanded="false" aria-controls="collapse{{ s['snapshot_name'] }}">
+                      {{ s['bodysession'] }}
+                  </button>
+                </h2>
+                <div id="collapse{{ s['snapshot_name'] }}" class="accordion-collapse collapse" aria-labelledby="{{ s['snapshot_name'] }}" data-bs-parent="#accordion_E">
+                  <div class="accordion-body">
+                    <table class="table table-borderless table-sm">
+                      <tbody>
+                        <tr>
+                          <td>Snapshot Date:</td>
+                          <td>{{ s['run_date'].year }}-{{ s['run_date'].month }}-{{ s['run_date'].day }}</td>
+                        </tr>
+                        <tr>
+                          <td>Start Time:</td>
+                          <td>{{ s['run_date'].hour }}:{{ s['run_date'].minute }}</td>
+                        </tr>
+                        <tr>
+                          <td>Duration (min):</td>
+                          <td>{{ s['duration'] }}</td>
+                        </tr>
+                        <tr>
+                          <td>Status:</td>
+                          <td>{{ s['status'] }}</td>
+                        </tr>
+                        <tr>
+                          <td>Total Records:</td>
+                          <td>{{ s['total_num']}} </td>
+                        </tr>
+
+                        {% for b in s['breakdown'] %}
+                        <tr>
+                          <td>{{ b['type'] }} Records:</td>
+                          <td>{{ b['total'] }}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+        </div>
+          <div class="col">
               <h5 class="text-center">General Assembly</h5>
             <div class="accordion" id="accordion_A">
                 {% for s in summary_A %}
@@ -129,16 +178,16 @@
               </div>
           </div>
           <div class="col">
-              <h5 class="text-center">ECOSOC</h5>
-            <div class="accordion" id="accordion_E">
-                {% for s in summary_E %}
+            <h5 class="text-center">Trusteeship Council</h5>
+            <div class="accordion" id="accordion_T">
+                {% for s in summary_T %}
                 <div class="accordion-item">
                   <h2 class="accordion-header" id="heading{{ s['snapshot_name'] }}">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ s['snapshot_name'] }}" aria-expanded="false" aria-controls="collapse{{ s['snapshot_name'] }}">
                         {{ s['bodysession'] }}
                     </button>
                   </h2>
-                  <div id="collapse{{ s['snapshot_name'] }}" class="accordion-collapse collapse" aria-labelledby="{{ s['snapshot_name'] }}" data-bs-parent="#accordion_E">
+                  <div id="collapse{{ s['snapshot_name'] }}" class="accordion-collapse collapse" aria-labelledby="{{ s['snapshot_name'] }}" data-bs-parent="#accordion_T">
                     <div class="accordion-body">
                       <table class="table table-borderless table-sm">
                         <tbody>

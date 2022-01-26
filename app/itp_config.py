@@ -1,7 +1,9 @@
 from app.config import Config
 from pymongo import MongoClient
+from pymongo.collation import Collation
 from bson.objectid import ObjectId
 import re
+
 
 ### connection
 myMongoURI=Config.connect_string
@@ -59,7 +61,7 @@ def get_snapshot_configs():
     Returns list of all configuration elements related to a snapshot.
     Bodysession, Agenda Document Symbol, & Product Code
     """
-    return list(configCollection.find( { "type": "snapshot" } ).sort("bodysession"))
+    return list(configCollection.find( { "type": "snapshot" } ).sort("bodysession").collation(Collation(locale='en', numericOrdering=True)))
 
 ####Votedec
 def insert_votedec(code, expansion, display, note):
@@ -147,16 +149,19 @@ def fetch_itpcode(body, session):
 
         itpcode = 'ITP' + body + session
 
+        sp = re.search("sp", session)
+        em = re.search("em", session)
+
         if body == "E" :
             itpcode = 'ITP' + body + session[2:4] + session[-1]
 
         if body == "A":
-            sp = re.search("sp", session)
-            em = re.search("em", session)
-
             if em:
                 itpcode = 'ITP' + body + session[0:2] + "E"
             elif sp:
+                itpcode = 'ITP' + body + session[0:2] + "S"
+        if body == "T":
+            if sp:
                 itpcode = 'ITP' + body + session[0:2] + "S"
     else:
         itpcode = result['product_code']
@@ -167,6 +172,10 @@ def snapshot_summary(body):
     """
     """
     pipeline = []
+    collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
 
     if body == "A": 
         match_stage = {
@@ -178,6 +187,12 @@ def snapshot_summary(body):
         match_stage = {
             '$match': {
                 'bodysession': re.compile(r"^S")
+            }
+        }
+    elif body == "T":
+        match_stage = {
+            '$match': {
+                'bodysession': re.compile(r"^T")
             }
         }
     else:
@@ -298,7 +313,7 @@ def snapshot_summary(body):
     pipeline.append(project_stage)
     pipeline.append(sort_stage2)
 
-    return list(snapshotCollection.aggregate(pipeline=pipeline))
+    return list(snapshotCollection.aggregate(pipeline=pipeline, collation=collation))
 
 def deleteSnapshot(bodysession):
     try:

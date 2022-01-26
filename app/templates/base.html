@@ -82,6 +82,7 @@
     <!-- Custom js 01 -->
 
     <script src="{{url_for('static',filename='js/custom.js')}}"></script>
+    <script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
 
 
 </head>
@@ -107,10 +108,10 @@
         <div class="container text-right">
             <ul class="nav justify-content-end">
                 <li class="nav-item">
-                  <a class="nav-link" href="https://unitednations.sharepoint.com/:w:/s/dpi_od_dhl_iss/Ed8g3y22w4dGssNeq78LOV0BjaSE-pwOWngUDwWBnQpFRw?e=vVY3Ph" target="_blank">User Manual</a>
-                </li>
+                    <a class="nav-link" href="{{url_for('main')}}">Main Menu</a>
+                  </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="{{url_for('main')}}">Main Menu</a>
+                  <a class="nav-link" href="https://unitednations.sharepoint.com/:w:/s/dpi_od_dhl_iss/Ed8g3y22w4dGssNeq78LOV0BjaSE-pwOWngUDwWBnQpFRw?e=vVY3Ph" target="_blank">User Manual</a>
                 </li>
             </ul>
         </div>
