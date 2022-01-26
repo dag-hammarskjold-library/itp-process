@@ -1961,11 +1961,15 @@ def snapshot_dashboard():
 
         flash(msg)
 
-    summary_A = snapshot_summary("A")
     summary_E = snapshot_summary("E")
+    summary_A = snapshot_summary("A")
     summary_S = snapshot_summary("S")
+    summary_T = snapshot_summary("T")
 
     dropdown = []
+
+    for e in summary_E:
+        dropdown.append(e['bodysession'])
 
     for a in summary_A:
         dropdown.append(a['bodysession'])
@@ -1973,12 +1977,10 @@ def snapshot_dashboard():
     for s in summary_S:
         dropdown.append(s['bodysession'])
 
-    for e in summary_E:
-        dropdown.append(e['bodysession'])
+    for t in summary_T:
+        dropdown.append(t['bodysession'])
 
-
-
-    return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, dropdown=dropdown)
+    return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, summary_T=summary_T, dropdown=dropdown)
     # else:
 
     #     return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, dropdown=dropdown)

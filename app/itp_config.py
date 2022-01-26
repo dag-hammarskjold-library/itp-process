@@ -172,6 +172,10 @@ def snapshot_summary(body):
     """
     """
     pipeline = []
+    collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
 
     if body == "A": 
         match_stage = {
@@ -183,6 +187,12 @@ def snapshot_summary(body):
         match_stage = {
             '$match': {
                 'bodysession': re.compile(r"^S")
+            }
+        }
+    elif body == "T":
+        match_stage = {
+            '$match': {
+                'bodysession': re.compile(r"^T")
             }
         }
     else:
@@ -303,7 +313,7 @@ def snapshot_summary(body):
     pipeline.append(project_stage)
     pipeline.append(sort_stage2)
 
-    return list(snapshotCollection.aggregate(pipeline=pipeline))
+    return list(snapshotCollection.aggregate(pipeline=pipeline, collation=collation))
 
 def deleteSnapshot(bodysession):
     try:
