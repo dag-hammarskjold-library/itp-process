@@ -112,7 +112,7 @@
                   data-pc="{{ result['product_code'] }}">
                   <i class="bi bi-pencil"></i>
               </a>
-                <a class="btn btn-outline-secondary" href="/snapshot/configure/delete/{{ result['_id'] }}" role="button"><i class="bi bi-trash"></i></a>
+                <a class="btn btn-outline-secondary" href="{{url_for('del_snapshot_config', id=result['_id'])}}" role="button"><i class="bi bi-trash"></i></a>
               </td>
           </tr>
           {% endfor %}
@@ -134,7 +134,7 @@
           </button>
         </div>
         <div class="modal-body">
-          <form id="update_form" method="POST" action="/snapshot/configure/update">
+          <form id="update_form" method="POST" action="{{url_for('update_configure_snapshot')}}">
             <div class="form-group">
               <label for="update_bodysession" class="col-form-label">Issuing Body/Session:</label>
               <input type="text" class="form-control" placeholder="Enter Body/Session" id="update_bodysession" name="update_bodysession" />
