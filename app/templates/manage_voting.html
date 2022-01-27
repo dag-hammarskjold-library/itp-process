@@ -73,7 +73,7 @@
               data-note="{{ result['note'] }}"
               ><i class="bi bi-pencil"></i
             ></a>
-            <a class="btn btn-outline-secondary" href="votedec/delete/{{ result['_id'] }}" role="button"
+            <a class="btn btn-outline-secondary" href="{{url_for('del_votedec', id=result['_id'])}}" role="button"
               ><i class="bi bi-trash"></i
             ></a>
           </td>
@@ -95,7 +95,7 @@
           </button>
         </div>
         <div class="modal-body">
-          <form id="update_form" method="POST" action="/votedec/update">
+          <form id="update_form" method="POST" action="{{url_for('edit_votedec')}}">
             <div class="form-group">
               <label for="update_code" class="col-form-label">ISO Code:</label>
               <input type="text" class="form-control" placeholder="Enter ISO Code" id="update_code" name="update_code" />
