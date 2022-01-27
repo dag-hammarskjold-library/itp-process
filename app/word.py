@@ -4963,7 +4963,8 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         myCol = 0
         myNumColum=15
         myNumTable=0
-        myNumRow=193 # number of countries that have a vote
+        #myNumRow=193 # number of countries that have a vote
+        myNumRow=len(countries)
         myIndex=0
         
 
@@ -5175,7 +5176,8 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         myCol = 0
         myNumColum=15
         myNumTable=0
-        myNumRow=206 # number of countries that have a vote
+        #myNumRow=206 # number of countries that have a vote
+        myNumRow=len(countries)
         myIndex=0
         
 
