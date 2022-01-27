@@ -3351,7 +3351,7 @@ def itpvot(bodysession):
             '$cond': {
                 'if': {'$gt': [{'$size': '$country_info'}, 0]}, 
                 'then': {'$arrayElemAt': ['$country_info.itp_display', 0]}, 
-                'else': {'$concat': ['*Check ', '$967.e']}
+                'else': {'$concat': ['*Check ', '$967.c', ' ', '$967.e']}
             }
         }
         add_1['vote'] = {
@@ -4866,12 +4866,14 @@ def insert_itpvot(section, bodysession):
                 '_id': {
                     'ms': '$votelist.memberstate', 
                     'ce': {
-                        '$arrayElemAt': [
-                            '$country_info.country_expansion', 0
-                        ]
+                        '$cond': {
+                            'if': {'$gt': [{'$size': '$country_info'}, 0]}, 
+                            'then': {'$arrayElemAt': ['$country_info.country_expansion', 0]}, 
+                            'else': '$votelist.memberstate'
+                        }
                     }
-                }
-            }
+                }   
+            }   
         }, {
             '$sort': {
                 '_id.ce': 1
