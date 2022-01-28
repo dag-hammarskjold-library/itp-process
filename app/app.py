@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
-from app.comparison import get_heading_comparison
+from app.comparison import get_heading_comparison, get_sorting_comparison
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms.validators import DataRequired
@@ -1950,6 +1950,52 @@ def compare_heading():
         bodysessions = lookup_snapshots()
         return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
 
+@app.route("/compare/sort/", methods=["GET", "POST"])
+@login_required
+def compare_sort():
+    if request.method == "GET" :
+        bodysessions = lookup_snapshots()
+        
+        # summary = {}
+        # summary['o_total_headings'] = "XX"
+        # summary['n_total_headings'] = "XX"
+        
+        # summary['o_total_dif'] = "XX"
+        # summary['n_total_dif'] = "XX"
+        # summary['differences'] = [('', '')]
+
+        # summary['o_only'] = {} #in old but not in new
+        # summary['n_only'] = {} #in new but not in old
+
+        # summary['full_list'] = []
+
+        differences = []
+        return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
+
+    else :
+        #get the form entries
+
+        bs = request.form.get('bodysession')
+        s = request.form.get('section')
+        file_text = []
+
+        if s == 'itpsubj':
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%headstyle%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[13:].strip()
+                    file_text.append(headstyle)
+        else:
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%itshead%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[11:].strip()
+                    file_text.append(headstyle)
+        
+        differences = get_sorting_comparison(bs, s, file_text)
+
+        bodysessions = lookup_snapshots()
+        return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
 
 @app.route("/snapshot/dashboard", methods=["GET", "POST"])
 @login_required

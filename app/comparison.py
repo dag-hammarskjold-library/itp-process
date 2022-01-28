@@ -1,7 +1,9 @@
+import itertools
 import re
 from app.config import Config
 from pymongo import MongoClient
-from itertools import zip_longest
+from itertools import zip_longest, groupby
+from unidecode import unidecode
 
 ### connection
 myMongoURI=Config.connect_string
@@ -63,3 +65,65 @@ def get_heading_comparison(bodysession, section, file_text):
     summary['full_list'] = full_list
       
     return summary
+
+def get_sorting_comparison(bodysession, section, file_text): 
+    
+    if section == 'itpsubj':
+        heading = "$head"
+
+    else:
+        heading = "$itshead"
+
+    pipeline = [
+        {
+            '$match': {
+                'bodysession': bodysession, 
+                'section': section
+            }
+        }, {
+            '$group': {
+                '_id': {'$substrCP': [heading, 0, 1]}, 
+                'head': {'$push': heading}
+            }
+        }, {
+            '$sort': {
+                '_id': 1
+            }
+        }
+    ]
+
+    collation={
+            'locale': 'en', 
+            'strength': 1,
+            'numericOrdering': True
+        }
+
+    new_script = wordCollection.aggregate(pipeline, collation=collation)
+
+    an_iterator = itertools.groupby(file_text, lambda x : unidecode(x[0][0]))
+
+    old_script = []
+    record = {}
+
+    for key, group in an_iterator:
+
+        record['_id'] =  key
+        record['head'] = list(group)
+
+        old_script.append(record)
+        record = {}
+
+    differences = []
+    dif = {}
+
+    for x, y in zip(old_script, new_script):
+        if x != y:
+            #dif = (x, y)
+            dif['letter'] = x['_id']
+            zipped = zip_longest(x['head'], y['head'], fillvalue='')
+            dif['set_dif'] = (list(zipped))
+            
+            differences.append(dif)
+            dif = {}
+
+    return differences
