@@ -127,3 +127,122 @@ def get_sorting_comparison(bodysession, section, file_text):
             dif = {}
 
     return differences
+
+def get_detail_comparison(bodysession, section, file_text): 
+
+    if section == 'itpsubj':
+        h_txt = "head"
+        s_txt = "subhead"
+        e_txt = ""
+
+    else:
+        head_txt = "itshead"
+        subhead_txt = "itssubhead"
+        entries_txt = "itsentries"
+        entry_txt = "itsentry"
+        docsymbol_txt = "docsymbols"
+
+    pipeline = [
+        {
+            '$match': {
+                'bodysession': bodysession, 
+                'section': section
+            }
+        }
+    ]
+
+    new_script = wordCollection.aggregate(pipeline)
+    
+    new_details = []
+
+    num = 1
+    for n in new_script:
+        record = {}
+
+        record['num'] = num
+        record['head'] = n[head_txt]
+
+        table_group = []
+
+        subheading = {}
+
+        for s in n['subheading']:
+            subheading['subhead'] = s[subhead_txt]
+
+            entries = []
+            for e in s[entries_txt]:
+                full_entry = e[entry_txt]
+
+                for i in range(len(e[docsymbol_txt])):
+                    if i == 0:
+                        full_entry = full_entry + ' — ' +  e[docsymbol_txt][i]
+                    else: 
+                        full_entry = full_entry + "; " + e[docsymbol_txt][i]
+
+                entries.append(full_entry)
+                full_entry = ""
+
+                
+            subheading['entries'] = entries
+
+            table_group.append(subheading)
+            subheading = {}
+            
+        record['table_group'] = table_group
+
+
+        num = num + 1
+        new_details.append(record)
+    
+    details = []
+
+    for x, y in zip(file_text, new_details):
+        if x != y:
+            #print(x, y)
+            detail = {}
+
+            detail['num'] = x['num']
+            detail['head'] = x['head']
+
+            zipped = zip_longest(x['table_group'], y['table_group'], fillvalue='')
+
+            #use the tuple() function to display a readable version of the result:
+            l = list(zipped)
+
+            table_group = []
+            subheading = {}
+            entries = []
+
+
+            for old, new in l:
+                if old == '':
+                    old = {}
+                    old['subhead'] = ''
+                    old['entries'] = []
+                
+                if new == '':
+                    new = {}
+                    new['subhead'] = ''
+                    new['entries'] = []
+
+                subheading['subhead'] = (old['subhead'],new['subhead'])
+
+                for o, n in list(zip_longest(old['entries'], new['entries'], fillvalue='')): #zip longest
+                    entry = (o, n)
+                    entries.append(entry)
+                
+                subheading['entries'] = entries
+                entries = []
+                table_group.append(subheading)
+                subheading = {}
+            
+            detail['table_group'] = table_group
+
+            details.append(detail)
+
+
+    
+
+    #print(details)
+
+    return details

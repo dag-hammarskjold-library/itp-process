@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
-from app.comparison import get_heading_comparison, get_sorting_comparison
+from app.comparison import get_heading_comparison, get_sorting_comparison, get_detail_comparison
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms.validators import DataRequired
@@ -1955,19 +1955,6 @@ def compare_heading():
 def compare_sort():
     if request.method == "GET" :
         bodysessions = lookup_snapshots()
-        
-        # summary = {}
-        # summary['o_total_headings'] = "XX"
-        # summary['n_total_headings'] = "XX"
-        
-        # summary['o_total_dif'] = "XX"
-        # summary['n_total_dif'] = "XX"
-        # summary['differences'] = [('', '')]
-
-        # summary['o_only'] = {} #in old but not in new
-        # summary['n_only'] = {} #in new but not in old
-
-        # summary['full_list'] = []
 
         differences = []
         return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
@@ -1996,6 +1983,76 @@ def compare_sort():
 
         bodysessions = lookup_snapshots()
         return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
+
+
+@app.route("/compare/details/", methods=["GET", "POST"])
+@login_required
+def compare_details():
+    if request.method == "GET" :
+        bodysessions = lookup_snapshots()
+
+        details = []
+        return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
+
+    else :
+        #get the form entries
+
+        bs = request.form.get('bodysession')
+        s = request.form.get('section')
+        file_text = []
+        record = {}
+        num = 1
+        table_group = []
+
+        if s == 'itpsubj':
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%headstyle%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[13:].strip()
+                    file_text.append(headstyle)
+        else:
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+
+                #new record
+                if "%$newhead$%" in line_txt:
+                    if len(record) > 0:
+                        record['table_group'] = table_group
+                        file_text.append(record)
+
+                        table_group = []
+                
+                if "%$keepon$%" in line_txt:
+                    subheading = {}
+
+                #new heading
+                if "!%itshead%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[11:].strip()
+                    record = {}
+
+                    record['num'] = num
+                    record['head'] = headstyle
+
+                    num = num + 1
+                
+                if "!%itssubhead%!" in line_txt:
+                    subhead = line_txt.replace("--", '—')[14:].strip()
+                    subheading['subhead'] = subhead
+
+                    entries = []
+                
+                if "!%itsentry%!" in line_txt:
+                    entry = line_txt.replace("--", '—')[12:].strip()
+                    entries.append(entry)
+                
+                if "%$keepoff$%" in line_txt:
+                    subheading['entries'] = entries
+                    table_group.append(subheading)
+        
+        details = get_detail_comparison(bs, s, file_text)
+
+        bodysessions = lookup_snapshots()
+        return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
 
 @app.route("/snapshot/dashboard", methods=["GET", "POST"])
 @login_required
