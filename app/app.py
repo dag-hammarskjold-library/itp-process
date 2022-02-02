@@ -1780,7 +1780,7 @@ def newDownload(filename):
 @login_required
 def selectSection():
     sections= lookup_code("section")
-    bodysessions = lookup_snapshots()
+    bodysessions = snapshotDropdown()
     
 
     if request.method == "GET" :
@@ -1909,7 +1909,7 @@ def edit_votedec():
 @login_required
 def compare_heading():
     if request.method == "GET" :
-        bodysessions = lookup_snapshots()
+        bodysessions = snapshotDropdown()
         
         summary = {}
         summary['o_total_headings'] = "XX"
@@ -1954,7 +1954,7 @@ def compare_heading():
 @login_required
 def compare_sort():
     if request.method == "GET" :
-        bodysessions = lookup_snapshots()
+        bodysessions = snapshotDropdown()
 
         differences = []
         return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
@@ -1981,7 +1981,7 @@ def compare_sort():
         
         differences = get_sorting_comparison(bs, s, file_text)
 
-        bodysessions = lookup_snapshots()
+        bodysessions = snapshotDropdown()
         return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
 
 
@@ -1989,7 +1989,7 @@ def compare_sort():
 @login_required
 def compare_details():
     if request.method == "GET" :
-        bodysessions = lookup_snapshots()
+        bodysessions = snapshotDropdown()
 
         details = []
         return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
@@ -2003,13 +2003,67 @@ def compare_details():
         record = {}
         num = 1
         table_group = []
+        entries = []
 
         if s == 'itpsubj':
             for line in request.files.get('file'):
                 line_txt = str(line, 'ISO-8859-1')
+
+                #new record
+                if "%$newhead$%" in line_txt:
+                    if len(record) > 0:
+                        subheading['entries'] = entries
+                        table_group.append(subheading)
+                        record['table_group'] = table_group
+                        file_text.append(record)
+
+                        table_group = []
+                        entries = []
+                
+                if "%$keepon$%" in line_txt:
+                    full_entry = {
+                        "entry": "",
+                        "note": ""
+                    }
+
+                #new heading
                 if "!%headstyle%!" in line_txt and "%$newhead$%" not in line_txt:
                     headstyle = line_txt.replace("--", '—')[13:].strip()
-                    file_text.append(headstyle)
+                    record = {}
+
+                    record['num'] = num
+                    record['head'] = headstyle
+
+                    num = num + 1
+                
+                if "!%subhstyle%!" in line_txt:
+                    if len(entries) > 0:
+                        subheading['entries'] = entries
+                        table_group.append(subheading)
+
+                    subheading = {}
+                    subhead = line_txt.replace("--", '—')[13:].strip()
+                    subheading['subhead'] = subhead
+
+                    entries = []
+                
+                if "!%entrystyle%!" in line_txt:
+                    e = line_txt.replace("--", '—')[14:].strip()
+                    e = e.replace("$BboldleftB$ ", '')
+
+                    full_entry['entry'] = e
+
+                    
+                if "!%Notearea%!" in line_txt:
+                    full_entry['note'] = line_txt.replace("--", '—')[12:].strip()
+                
+                if "%$keepoff$%" in line_txt:
+                    entries.append(full_entry)
+
+            subheading['entries'] = entries
+            table_group.append(subheading)
+            record['table_group'] = table_group
+            file_text.append(record)
         else:
             for line in request.files.get('file'):
                 line_txt = str(line, 'ISO-8859-1')
@@ -2051,7 +2105,7 @@ def compare_details():
         
         details = get_detail_comparison(bs, s, file_text)
 
-        bodysessions = lookup_snapshots()
+        bodysessions = snapshotDropdown()
         return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
 
 @app.route("/snapshot/dashboard", methods=["GET", "POST"])
@@ -2069,19 +2123,7 @@ def snapshot_dashboard():
     summary_S = snapshot_summary("S")
     summary_T = snapshot_summary("T")
 
-    dropdown = []
-
-    for e in summary_E:
-        dropdown.append(e['bodysession'])
-
-    for a in summary_A:
-        dropdown.append(a['bodysession'])
-    
-    for s in summary_S:
-        dropdown.append(s['bodysession'])
-
-    for t in summary_T:
-        dropdown.append(t['bodysession'])
+    dropdown = snapshotDropdown()
 
     return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, summary_T=summary_T, dropdown=dropdown)
     # else:

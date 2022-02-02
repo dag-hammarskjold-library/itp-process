@@ -45,7 +45,7 @@
             <div class="col">
                 <!-- <label for="section">Section</label> -->
                 <select class="form-control form-select" id="section" name="section">
-                  <!-- <option>itpsubj</option> -->
+                  <option>itpsubj</option>
                   <option>itpitsc</option>
                   <option>itpitsp</option>
                   <option>itpitss</option>
@@ -68,7 +68,7 @@
     <div class="container mt-4 mb-4">
       <h3>Summary</h3>
       <hr />
-      <p>Headings are grouped by alphabetcial order for comparison. The sections below represent differences in sorting. If there are none, there will be no results.</p>
+      <p>Headings are grouped for comparison. If there no differences, there will be no results.</p>
       <div class="accordion" id="accordionExample">
         {% for d in details %}
         <div class="accordion-item">
@@ -91,8 +91,8 @@
                 </thead>
                   {% for old, new in t['entries'] %}
                   <tr {% if old != new %} class="table-primary" {% endif %} >
-                    <td>{{ old }}</td>
-                    <td>{{ new }}</td>
+                    <td><p>{{ old['entry'] }}</p><p>{{ old['note'] }}</p></td>
+                    <td><p>{{ new['entry'] }}</p><p>{{ new['note'] }}</p></td>
                   </tr>
                   {% endfor %}
               </table>

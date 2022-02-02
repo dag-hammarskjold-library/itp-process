@@ -131,9 +131,11 @@ def get_sorting_comparison(bodysession, section, file_text):
 def get_detail_comparison(bodysession, section, file_text): 
 
     if section == 'itpsubj':
-        h_txt = "head"
-        s_txt = "subhead"
-        e_txt = ""
+        head_txt = "head"
+        subhead_txt = "subhead"
+        entries_txt = "entries"
+        entry_txt = "entry"
+        docsymbol_txt = "docsymbol"
 
     else:
         head_txt = "itshead"
@@ -171,17 +173,37 @@ def get_detail_comparison(bodysession, section, file_text):
 
             entries = []
             for e in s[entries_txt]:
-                full_entry = e[entry_txt]
 
-                for i in range(len(e[docsymbol_txt])):
-                    if i == 0:
-                        full_entry = full_entry + ' — ' +  e[docsymbol_txt][i]
-                    else: 
-                        full_entry = full_entry + "; " + e[docsymbol_txt][i]
+                if section == "itpitsc" or section == "itpitss":
+                    full_entry = e[entry_txt]
 
-                entries.append(full_entry)
-                full_entry = ""
+                    for i in range(len(e[docsymbol_txt])):
+                        if i == 0:
+                            full_entry = full_entry + ' — ' +  e[docsymbol_txt][i]
+                        else: 
+                            full_entry = full_entry + "; " + e[docsymbol_txt][i]
 
+                    entries.append(full_entry)
+                    full_entry = ""
+
+                if section == "itpitsp":
+                    for i in range(len(e[docsymbol_txt])):
+                        if i == 0:
+                            full_entry = e[docsymbol_txt][i]
+                        else: 
+                            full_entry = full_entry + "; " + e[docsymbol_txt][i]
+
+                    entries.append(full_entry)
+                    full_entry = ""
+
+                if section == "itpsubj":
+                    full_entry = {
+                        "entry": e[docsymbol_txt] + " " + e[entry_txt],
+                        "note": e['note']
+                    }
+
+                    entries.append(full_entry)
+                    full_entry = ""
                 
             subheading['entries'] = entries
 
@@ -189,7 +211,6 @@ def get_detail_comparison(bodysession, section, file_text):
             subheading = {}
             
         record['table_group'] = table_group
-
 
         num = num + 1
         new_details.append(record)

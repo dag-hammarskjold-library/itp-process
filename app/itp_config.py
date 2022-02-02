@@ -336,30 +336,63 @@ def snapshotDropdown():
     try:
         pipeline = []
 
+        collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
+
         group_stage = {
             '$group': {
-                '_id': '$bodysession'
+                '_id': {
+                    'bs': '$bodysession', 
+                    'sort_order': {
+                        '$let': {
+                            'vars': {
+                                'letter': {'$substrCP': ['$bodysession', 0, 1]}
+                            }, 
+                            'in': {
+                                '$switch': {
+                                    'branches': [
+                                        {'case': {'$eq': ['$$letter', 'E']}, 'then': '01'},
+                                        {'case': {'$eq': ['$$letter', 'A']}, 'then': '02'},
+                                        {'case': {'$eq': ['$$letter', 'S']}, 'then': '03'},
+                                        {'case': {'$eq': ['$$letter', 'T']}, 'then': '04'},
+                                    ], 
+                                    'default': 'XX'
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     
-        project_stage = {
-            '$project': {
-                '_id': 0, 
-                'bodysession': '$_id'
-            }
-        }
+        
 
         sort_stage = {
             '$sort': {
-                'bodysession': 1
+                '_id.sort_order': 1, 
+                '_id.bs': -1
+            }
+        }
+
+        project_stage = {
+            '$project': {
+                '_id': 0, 
+                'bodysession': '$_id.bs'
             }
         }
 
         pipeline.append(group_stage)
-        pipeline.append(project_stage)
         pipeline.append(sort_stage)
+        pipeline.append(project_stage)
 
-        dropdown = list(snapshotCollection.aggregate(pipeline))
+        results = list(snapshotCollection.aggregate(pipeline, collation=collation))
+
+        dropdown = []
+
+        for r in results:
+            dropdown.append(r['bodysession'])
 
         return dropdown
 
