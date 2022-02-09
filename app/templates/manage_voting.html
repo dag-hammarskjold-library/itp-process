@@ -40,7 +40,18 @@
 
       <hr />
 
-      <p>Filter by ISO Code: <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Ex. AFG" /></p>
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <p>Filter by ISO Code: <input type="text" id="filter_code" onkeyup="filterFunction('filter_code')" placeholder="Ex. AFG" /></p>
+          </div>
+          <div class="col">
+            <p>Filter by ITP Display: <input type="text" id="filter_display" onkeyup="filterFunction('filter_display')" placeholder="Ex. Afghanistan" /></p>
+          </div>
+        </div>
+      </div>
+      
+      
 
       <table class="table table-sm table-hover sortable">
         <thead>
@@ -50,6 +61,7 @@
             <th>Member State</th>
             <th>ITP Display</th>
             <th>Note</th>
+            <th>Verification</th>
             <th></th>
           </tr>
         </thead>
@@ -61,6 +73,7 @@
           <td>{{ result['country_expansion'] }}</td>
           <td>{{ result['itp_display'] }}</td>
           <td>{{ result['note'] }}</td>
+          <td>{{ result['verification'] }}</td>
           <td><a
               class="btn btn-outline-secondary"
               role="button"
@@ -71,6 +84,7 @@
               data-expansion="{{ result['country_expansion'] }}"
               data-display="{{ result['itp_display'] }}"
               data-note="{{ result['note'] }}"
+              data-verification="{{ result['verification'] }}"
               ><i class="bi bi-pencil"></i
             ></a>
             <a class="btn btn-outline-secondary" href="{{url_for('del_votedec', id=result['_id'])}}" role="button"
@@ -113,6 +127,10 @@
               <input type="text" class="form-control" placeholder="Enter Note" id="update_note" name="update_note" />
             </div>
             <div class="form-group">
+              <label for="update_note" class="col-form-label">Verification:</label>
+              <input type="text" class="form-control" placeholder="Enter Verification" id="update_verification" name="update_verification" />
+            </div>
+            <div class="form-group">
               <input type="text" class="form-control" id="update_id" name="update_id" hidden />
             </div>
           </form>
@@ -126,26 +144,35 @@
   </div>
 </div>
 
-<script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+<!-- <script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script> -->
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
 <script type="text/javascript">
-  function myFunction() {
+  function filterFunction(filter_name) {
     // Declare variables
     var input, filter, table, tr, td, i, txtValue;
-    input = document.getElementById("myInput");
-    filter = input.value.toUpperCase();
+    input = document.getElementById(filter_name);
+    filter = input.value
     table = document.getElementById("results");
     tr = table.getElementsByTagName("tr");
 
+    if (filter_name == "filter_code"){
+      filter = filter.toUpperCase();
+      row = 0
+    }
+    else {
+      row = 2
+    }
+
     // Loop through all table rows, and hide those who don't match the search query
     for (i = 0; i < tr.length; i++) {
-      td = tr[i].getElementsByTagName("td")[0];
+      td = tr[i].getElementsByTagName("td")[row];
       if (td) {
         txtValue = td.textContent || td.innerText;
-        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+
+        if (txtValue.indexOf(filter) > -1) {
           tr[i].style.display = "";
         } else {
           tr[i].style.display = "none";
@@ -161,7 +188,9 @@
     $(update_expansion).val(button.data("expansion"));
     $(update_display).val(button.data("display"));
     $(update_note).val(button.data("note"));
+    $(update_verification).val(button.data("verification"));
     $(update_id).val(button.data("id"));
   });
+
 </script>
 {% endblock %}
