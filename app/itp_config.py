@@ -64,7 +64,7 @@ def get_snapshot_configs():
     return list(configCollection.find( { "type": "snapshot" } ).sort("bodysession").collation(Collation(locale='en', numericOrdering=True)))
 
 ####Votedec
-def insert_votedec(code, expansion, display, note):
+def insert_votedec(code, expansion, display, note, verification):
     """
     Deletes votedec entry
     """
@@ -73,12 +73,13 @@ def insert_votedec(code, expansion, display, note):
         "country_expansion": expansion,
         "itp_display": display,
         "type": "votedec",
-        "note": note
+        "note": note,
+        "verification": verification
     }
     response = configCollection.insert_one(new_entry)
     return response
 
-def update_votedec(id, code, expansion, display, note):
+def update_votedec(id, code, expansion, display, note, verification):
     """
     Updates the votedec
     """
@@ -87,7 +88,8 @@ def update_votedec(id, code, expansion, display, note):
         { "$set": { "country_code": code,
                     "country_expansion": expansion,
                     "itp_display": display,
-                    "note": note } }
+                    "note": note,
+                    "verification": verification } }
     )
 
     return response
