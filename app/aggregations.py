@@ -1708,24 +1708,6 @@ def itpsubj(bodysession):
             }
         }
 
-        # #modified
-        # add_2['code'] = {
-        #     '$cond': {
-        #         'if': {'$isArray': '$191'},
-        #         'then': {
-        #             '$let': {
-        #                 'vars': {
-        #                     'a': {'$arrayElemAt': ['$191.b', 0]},
-        #                     'b': {'$arrayElemAt': ['$191.c', 0]},
-        #                     'first': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 0]},'chars': ' '}},
-        #                     'second': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 1]},'chars': ' '}}},
-        #                 'in': {'$cond': {
-        #                     'if': {'$and': [
-        #                         {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
-        #                         {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
-        #                     'then': '$$first','else': '$$second'}}}},
-        #         'else': {'$trim': {'input': '$191.9','chars': ' '}}}
-        # }
         add_2['code'] = { 
             '$cond': { 
                 'if': '$991.f', 
