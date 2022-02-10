@@ -42,15 +42,35 @@
 
       <div class="container">
         <div class="row">
-          <div class="col">
-            <p>Filter by ISO Code: <input type="text" id="filter_code" onkeyup="filterFunction('filter_code')" placeholder="Ex. AFG" /></p>
+          <div class="col-md-4">
+            <label for="filter_code" class="form-label">Filter by ISO Code:</label>
+            <!-- <input type="text" id="filter_code" onkeyup="filterFunction('filter_code')" placeholder="Ex. AFG" /> -->
           </div>
           <div class="col">
-            <p>Filter by ITP Display: <input type="text" id="filter_display" onkeyup="filterFunction('filter_display')" placeholder="Ex. Afghanistan" /></p>
+            <label for="filter_ms" class="form-label">Filter by Member State:</label>
+            <!-- <input type="text" id="filter_ms" onkeyup="filterFunction('filter_ms')" placeholder="Ex. AFGHANISTAN" /> -->
+          </div>
+          <div class="col">
+            <label for="filter_display" class="form-label">Filter by ITP Display:</label>
+            <!-- <input type="text" id="filter_display" onkeyup="filterFunction('filter_display')" placeholder="Ex. Afghanistan" /> -->
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <!-- <label for="filter_code" class="form-label">Filter by ISO Code:</label> -->
+            <input type="text" id="filter_code" onkeyup="filterFunction('filter_code')" placeholder="Ex. AFG" />
+          </div>
+          <div class="col">
+            <!-- <label for="filter_ms" class="form-label">Filter by Member State:</label> -->
+            <input type="text" id="filter_ms" onkeyup="filterFunction('filter_ms')" placeholder="Ex. AFGHANISTAN" />
+          </div>
+          <div class="col">
+            <!-- <label for="filter_display" class="form-label">Filter by ITP Display:</label> -->
+            <input type="text" id="filter_display" onkeyup="filterFunction('filter_display')" placeholder="Ex. Afghanistan" />
           </div>
         </div>
       </div>
-      
+      <br />
       
 
       <table class="table table-sm table-hover sortable">
@@ -161,6 +181,10 @@
     if (filter_name == "filter_code"){
       filter = filter.toUpperCase();
       row = 0
+    }
+    else if (filter_name == "filter_ms"){
+      filter = filter.toUpperCase();
+      row = 1
     }
     else {
       row = 2
