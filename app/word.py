@@ -4924,7 +4924,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         return document
 
 
-    if (bodysession[0]=="A"):
+    if (bodysession[0]=="A" and not bodysession=="A/10emsp"):
         #start = time.perf_counter()
         # Retrieving the number of records
         recordNumber = 0
@@ -4963,7 +4963,8 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         myCol = 0
         myNumColum=15
         myNumTable=0
-        myNumRow=193 # number of countries that have a vote
+        #myNumRow=193 # number of countries that have a vote
+        myNumRow=len(countries)
         myIndex=0
         
 
@@ -5134,6 +5135,220 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         
         add_page_number(document.sections[0].footer.paragraphs[0])
         return document
+
+
+    if (bodysession=="A/10emsp"):
+        #start = time.perf_counter()
+        # Retrieving the number of records
+        recordNumber = 0
+
+        #bg - 
+        myRecords=lstVotes
+        myRecords1=lstVotes
+        myRecords2=lstVotes
+        for record in myRecords:
+            recordNumber+=1
+        
+
+        # two columns display
+
+        # Country list
+        countries=[]     
+        for datax in myRecords2[0]["votelist"]:
+            countries.append(datax["memberstate"])
+
+        # Adding the Header to the document
+
+        section = document.sections[0]
+        sectPr = section._sectPr
+        cols = sectPr.xpath('./w:cols')[0]
+        cols.set(qn('w:num'),'2')
+        
+        # Marging of the document
+
+        section.top_margin = Inches(0.81)
+        section.bottom_margin = Inches(1)
+        section.left_margin = Inches(1)
+        section.right_margin = Inches(1) 
+
+        # set some variables
+        myRow = 0
+        myCol = 0
+        myNumColum=15
+        myNumTable=0
+        #myNumRow=206 # number of countries that have a vote
+        myNumRow=len(countries)
+        myIndex=0
+        
+
+        # generate the number of table
+        myNumTable=math.ceil(recordNumber/myNumColum)
+
+        # creation of the table
+        table = document.add_table(rows=myNumRow+3, cols=myNumColum)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        table_cells=table._cells
+        # write the memberstates in the first (0) column
+        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
+        myRow+=1
+        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
+        myRow+=1
+        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
+        
+        for country in countries:
+            myRow+=1
+            table_cells[myRow*myNumColum].paragraphs[0].text=country
+            
+        myRow=0
+
+
+        # Flip
+        myFlip=0
+
+        # set the header visible
+        set_repeat_table_header(table.rows[0])
+        set_repeat_table_header(table.rows[1])
+        set_repeat_table_header(table.rows[2])
+
+        
+        myOneTimeExec=False
+        vlCounter=0
+        
+        ts1=time.time()
+        while myIndex<recordNumber:
+            # for 1 row which is a header populate resolution numbers. Votes start from idx=3 and and with idx=195
+            
+            vlLen=len(myRecords1[myIndex]["votelist"])
+            myRow=0
+            
+            
+            if myRow == 0:
+                if myOneTimeExec==False:
+                    myResCounter=0
+                    table_cells[myRow+myCol*myNumColum].paragraphs[0].text=myRecords1[myIndex]["docsymbol"][:12]+"-"
+                    myOneTimeExec=True
+                # adding two additional row
+                
+                if myFlip==0:
+                    myFlip=1
+                    #table_cells[myCol+1+myNflask runumColum].paragraphs[0].text=myRecords1[myIndex]["resnum"]
+                    paragraph=table_cells[myCol+1+myNumColum].paragraphs[0]
+                    add_hyperlink(paragraph,myRecords1[myIndex]["resnum"],"http://undocs.org/"+myRecords1[myIndex]["docsymbol"])
+                    myResCounter+=1   
+                else:
+                    myFlip=0
+                    #table_cells[myCol+1].paragraphs[0].text=myRecords1[myIndex]["resnum"]
+                    paragraph=table_cells[myCol+1].paragraphs[0]
+                    add_hyperlink(paragraph,myRecords1[myIndex]["resnum"],"http://undocs.org/"+myRecords1[myIndex]["docsymbol"])
+                    myResCounter+=1
+                    
+
+                myRow+=1
+                myRow+=1
+                myRow+=1
+            #write 1 column of votes
+            
+            for myVoteList in myRecords1[myIndex]["votelist"]: 
+                table_cells[(myRow)*(myNumColum)+myCol+1].paragraphs[0].text=myVoteList["vote"]
+                myRow+=1
+                vlCounter+=1    
+                if vlCounter==vlLen and myCol+1==14:
+                    # check if we need to create a new table
+                        myCol=0
+                        myRow=0
+                        myIndex+=1
+                        vlCounter=0
+                        #create a new table
+                        p=document.add_paragraph()
+                        run = p.add_run()
+                        myBreak = run.add_break(WD_BREAK.PAGE)
+                        table = document.add_table(rows=myNumRow+3, cols=myNumColum)
+                        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+                        table_cells=table._cells
+                        # write the memberstates in the first (0) column
+                        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
+                        myRow+=1
+                        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
+                        myRow+=1
+                        table_cells[myCol+myRow*myNumColum].paragraphs[0].text=""
+
+
+                        # set the header visible
+                        set_repeat_table_header(table.rows[0])
+                        set_repeat_table_header(table.rows[1])
+                        set_repeat_table_header(table.rows[2])
+
+                        
+                        for country in countries:
+                            myRow+=1
+                            table_cells[myRow*myNumColum].paragraphs[0].text=country
+                        
+                        myOneTimeExec=False
+
+                    #write next column 
+                elif vlCounter==vlLen:    
+                        myCol+=1
+                        myRow=0
+                        myIndex+=1
+                        vlCounter=0
+                        
+                    
+            
+        stl_itp_vot_cell= document.styles.add_style('itpvotcell', WD_STYLE_TYPE.PARAGRAPH)
+        stl_itp_vot_cell_font=stl_itp_vot_cell.font
+        stl_itp_vot_cell_font.name = 'Arial'
+        stl_itp_vot_cell_font.size = Pt(8)
+        stl_itp_vot_cell_font.bold = False
+        #pf_stl_itp_vot_cell = stl_itp_vot_cell.paragraph_format
+
+        for table in document.tables:
+            table.autofit = False
+            table.allow_autofit = False
+            table_cells=table._cells
+            for cell in table_cells:
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                set_cell_margins(cell, top=0, start=0, bottom=0, end=0)
+                paragraphs = cell.paragraphs
+                for paragraph in paragraphs:
+                    paragraph.style=stl_itp_vot_cell
+                    ##pass
+                    # Adding styling
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    paragraph_format = paragraph.paragraph_format
+                    paragraph_format.space_after = Pt(0)
+                    paragraph_format.space_before = Pt(0)
+                    paragraph_format.line_spacing =  1
+                    paragraph_format.left_indent = Inches(0.00)
+                    paragraph_format.right_indent = Inches(0.00)
+                    
+                    for run in paragraph.runs:
+                        font = run.font
+                        font.name="Arial"
+                        font.size= Pt(8)
+            for ii, cell in enumerate(table_cells[30:45]):
+                paragraphs = cell.paragraphs
+                for paragraph in paragraphs:
+                    # Adding styling        
+                    set_cell_border(cell, bottom={"color": "#000000", "val": "single"})
+            for cell in table_cells:
+                table.cell=cell
+
+            for cell in table.columns[0].cells:
+                cell.width=Inches(1.4)
+                for paragraph in cell.paragraphs:
+                    ##pass
+                    paragraph.alignment=WD_ALIGN_PARAGRAPH.LEFT
+            for i in range(myNumColum-1):
+                for cell in table.columns[i+1].cells:
+                    cell.width=Inches(0.2)
+            
+            #table.columns[0].style=document.styles['itpvottabcol1']  
+            
+        print(f"time to generate itpvot is {time.time()-ts1}")
+        
+        add_page_number(document.sections[0].footer.paragraphs[0])
+        return document
+
 
 def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,paramNameFileOutput):
     

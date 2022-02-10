@@ -4,6 +4,7 @@ import pprint
 import re
 from datetime import datetime
 import json
+from app.itp_config import fetch_agenda, fetch_itpcode
 
 ### connection
 myMongoURI=Config.connect_string
@@ -15,12 +16,14 @@ snapshot = "itpp_snapshot_test3"
 editorOutput = "itp_sample_output"
 wordOutput = "itp_sample_output_copy"
 lookup = "itp_codes"
+snapshot_status = "dev_Itpp_snapshot"
 
 ## establish connections to collections
 inputCollection=myDatabase[snapshot]
 outputCollection=myDatabase[editorOutput]
 copyCollection=myDatabase[wordOutput]
 lookupCollection=myDatabase[lookup]
+statusCollection=myDatabase[snapshot_status]
 
 
 #### Data transformations for each section ####
@@ -990,13 +993,22 @@ def itpres(bodysession):
             }
     
         if body == "A":
+            sp = re.search("sp", session)
+            em = re.search("em", session)
+
+            if em:
+                pv_prefix = "A/ES-" + session[:-4]
+            elif sp:
+                pv_prefix = "A/S-" + session[:-2]
+            else:
+                pv_prefix = "A/" + session
+
             transform['meeting'] = {
                 '$cond': {
                     'if': {'$gt': [{'$indexOfCP': ['$decision', 'plenary']}, -1]}, 
                     'then': {
                         '$concat': [
-                            '$191.b', 
-                            {'$substrCP': ['$191.c', 0, 4]}, 
+                            pv_prefix, 
                             '/PV.', 
                             {'$let': {
                                 'vars': {
@@ -2005,8 +2017,6 @@ def itpsubj(bodysession):
 
         #print(pipeline)
 
-     
-        
         inputCollection.aggregate(pipeline, collation=collation)
 
         ####new####
@@ -3370,89 +3380,6 @@ def itpvot(bodysession):
             'numericOrdering': True
         }
 
-        if body == "S":
-            match_stage = {
-                '$match': {
-                    'bodysession': bodysession, 
-                    'record_type': 'VOT', 
-                    '591.a': {
-                        '$ne': 'ADOPTED WITHOUT VOTE'
-                    }, 
-                    '791.a': {
-                        '$regex': re.compile(r"RES")
-                    }, 
-                    '791.b': body + "/", 
-                    '791.c': session
-                }
-            }
-
-            lookup_stage = {
-                '$lookup': {
-                    'from': 'itp_codes', 
-                    'localField': '967.c', 
-                    'foreignField': 'code', 
-                    'as': 'country_info'
-                }
-            }
-        
-            transform = {}
-            transform['_id'] = 0
-            transform['record_id'] = 1
-            transform['section'] = "itpvot"
-            transform['bodysession'] = 1
-            
-            transform['docsymbol'] = '$791.a'
-
-            transform['resnum'] = {
-                '$substrCP': [
-                    '$791.a', 
-                    {'$add': [1, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
-                    4
-                ]
-            }
-
-            transform['votelist'] = {
-                '$map': {
-                    'input': {
-                        '$zip': {
-                            'inputs': [
-                                '$country_info.text', 
-                                '$967.d'
-                            ]
-                        }
-                    }, 
-                    'as': 'list', 
-                    'in': {
-                        'memberstate': {'$arrayElemAt': ['$$list', 0]}, 
-                        'vote': {'$arrayElemAt': ['$$list', 1]
-                        }
-                    }
-                }
-            }
-
-            transform['sortkey1'] = '$791.a'
-
-            transform_stage = {}
-            transform_stage['$project'] = transform
-
-            sort_stage = {
-                '$sort': {
-                    'sortkey1': 1
-                }
-            }
-
-            merge_stage = {
-                '$merge': { 'into': editorOutput}
-            }
-
-            pipeline.append(match_stage)
-            pipeline.append(lookup_stage)
-            pipeline.append(transform_stage)
-            pipeline.append(sort_stage)
-            pipeline.append(merge_stage)
-
-            inputCollection.aggregate(pipeline)
-
         if body == 'A':
 
             em = re.search("em", session)
@@ -3462,107 +3389,144 @@ def itpvot(bodysession):
             else:
                 offset = 4
 
-            match_stage = {
-                '$match': {
-                    'bodysession': bodysession, 
-                    'record_type': 'VOT', 
-                    '591.a': {
-                        '$ne': 'ADOPTED WITHOUT VOTE'
-                    }, 
-                    '791.a': {
-                        '$regex': re.compile(r"RES")
-                    }, 
-                    '791.b': body + "/", 
-                    '791.c': session
-                }
+        if body == 'S':
+            offset = 1
+
+        match_stage = {
+            '$match': {
+                'bodysession': bodysession, 
+                'record_type': 'VOT', 
+                '591.a': {
+                    '$ne': 'ADOPTED WITHOUT VOTE'
+                }, 
+                '791.a': {
+                    '$regex': re.compile(r"RES")
+                }, 
+                '791.b': body + "/", 
+                '791.c': session
             }
+        }
 
-            unwind_stage = { '$unwind': '$967'}
+        unwind_stage = { '$unwind': '$967'}
 
-            lookup_stage = {
-                '$lookup': {
-                    'from': 'itp_codes', 
-                    'localField': '967.c', 
-                    'foreignField': 'code', 
-                    'as': 'country_info'
-                }
-            }
-
-            add_1 = {}
-
-            add_1['order'] = '$967.a'
-            add_1['memberstate'] = {'$arrayElemAt': ['$country_info.text', 0]}
-            add_1['vote'] = {
-                '$cond': {
-                    'if': '$967.d', 
-                    'then': '$967.d', 
-                    'else': ''
-                }
-            }
-
-            add_stage1 = {}
-
-            add_stage1['$addFields'] = add_1
-
-            group_stage =  {
-                '$group': {
-                    '_id': {
-                        'r': '$record_id', 
-                        'docsymbol': '$791.a', 
-                        'resnum': {
-                            '$substrCP': [
-                                '$791.a', 
-                                {'$add': [offset, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
-                                4
-                            ]
+        lookup_stage = {
+            '$lookup': {
+                'from': 'itp_config', 
+                'let': {
+                    'c': '$967.c', 
+                    'e': '$967.e'
+                }, 
+                'pipeline': [
+                    {
+                        '$match': {
+                            '$expr': {
+                                '$and': [
+                                    {'$eq': ['$country_code', '$$c']}, 
+                                    {'$eq': ['$country_expansion', '$$e']}
+                                ]
+                            }, 
+                            'type': 'votedec'
                         }
-                    }, 
-                    'votelist': {
-                        '$push': {
-                            'order': '$order', 
-                            'memberstate': '$memberstate', 
-                            'vote': '$vote'
+                    }, {
+                        '$project': {
+                            '_id': 0, 
+                            'itp_display': 1
                         }
+                    }
+                ], 
+                'as': 'country_info'
+            }
+        }
+
+        add_1 = {}
+
+        add_1['order'] = '$967.a'
+        add_1['memberstate'] = {
+            '$cond': {
+                'if': {'$gt': [{'$size': '$country_info'}, 0]}, 
+                'then': {'$arrayElemAt': ['$country_info.itp_display', 0]}, 
+                'else': {'$concat': ['*Check ', '$967.c', ' ', '$967.e']}
+            }
+        }
+        add_1['vote'] = {
+            '$cond': {
+                'if': '$967.d', 
+                'then': '$967.d', 
+                'else': ''
+            }
+        }
+
+        add_1['docsymbol'] = {
+            '$cond': {
+                'if': {'$isArray': ['$791.a']}, 
+                'then': {'$arrayElemAt': ['$791.a', 0]}, 
+                'else': '$791.a'
+            }
+        }
+        
+
+        add_stage1 = {}
+
+        add_stage1['$addFields'] = add_1
+
+        group_stage =  {
+            '$group': {
+                '_id': {
+                    'r': '$record_id', 
+                    'docsymbol': '$docsymbol', 
+                    'resnum': {
+                        '$substrCP': [
+                            '$docsymbol', 
+                            {'$add': [offset, {'$indexOfCP': ['$docsymbol', '/', 2]}]}, 
+                            4
+                        ]
+                    }
+                }, 
+                'votelist': {
+                    '$push': {
+                        'order': '$order', 
+                        'memberstate': '$memberstate', 
+                        'vote': '$vote'
                     }
                 }
             }
+        }
 
-            transform = {}
+        transform = {}
 
-            transform['_id'] = 0
-            transform['record_id'] = '$_id.r'
-            transform['section'] = "itpvot"
-            transform['bodysession'] = bodysession
-            
-            transform['docsymbol'] = '$_id.docsymbol'
-            transform['resnum'] = '$_id.resnum'
-            transform['votelist'] = 1
-            transform['sortkey1'] = '$_id.resnum'
+        transform['_id'] = 0
+        transform['record_id'] = '$_id.r'
+        transform['section'] = "itpvot"
+        transform['bodysession'] = bodysession
+        
+        transform['docsymbol'] = '$_id.docsymbol'
+        transform['resnum'] = '$_id.resnum'
+        transform['votelist'] = 1
+        transform['sortkey1'] = '$_id.resnum'
 
-            transform_stage = {}
-            transform_stage['$project'] = transform
+        transform_stage = {}
+        transform_stage['$project'] = transform
 
-            sort_stage = {
-                '$sort': {
-                    'sortkey1': 1
-                }
+        sort_stage = {
+            '$sort': {
+                'sortkey1': 1
             }
+        }
 
-            merge_stage = {
-                '$merge': { 'into': editorOutput}
-            }
+        merge_stage = {
+            '$merge': { 'into': editorOutput}
+        }
 
-            pipeline.append(match_stage)
-            pipeline.append(unwind_stage)
-            pipeline.append(lookup_stage)
-            pipeline.append(add_stage1)
-            pipeline.append(group_stage)
-            pipeline.append(transform_stage)
-            pipeline.append(sort_stage)
-            pipeline.append(merge_stage)
-
-            inputCollection.aggregate(pipeline, collation=collation )
-
+        pipeline.append(match_stage)
+        pipeline.append(unwind_stage)
+        pipeline.append(lookup_stage)
+        pipeline.append(add_stage1)
+        pipeline.append(group_stage)
+        pipeline.append(transform_stage)
+        pipeline.append(sort_stage)
+        pipeline.append(merge_stage)
+        
+        inputCollection.aggregate(pipeline, collation=collation )
 
         #for the word collection
         copyPipeline = []
@@ -3584,6 +3548,8 @@ def itpvot(bodysession):
         copyPipeline.append(copyMerge_stage)
 
         outputCollection.aggregate(copyPipeline)
+    
+        insert_itpvot('itpvot', bodysession)
 
         return "itpvot completed successfully"
 
@@ -4017,33 +3983,39 @@ def process_section(bodysession, section):
     """ 
     bs = bodysession.split("/")
     body = bs[0]
+    session = bs[1]
 
-    if section == "itpsubj" : 
-        s = itpsubj(bodysession) #subject index 
-    elif section == "itpitsp" : 
-        s = itpitsp(bodysession) #speaker
-    elif section == "itpitsc" : 
-        s = itpitsc(bodysession) #country
-    elif section == "itpitss" : 
-        s = itpitss(bodysession) #subject speaker
-    elif section == "itpage" : 
-        s = itpage(bodysession) #agenda
-    elif section == "itpdsl" : 
-        s = itpdsl(bodysession) #doc symbol list
-    elif section == "itpmeet" : 
-        s = itpmeet(bodysession) #meeting
-    elif section == "itpres" : 
-        s = itpres(bodysession) #list of resolutions
-    elif section == "itpvot" and body != "E": 
-        s = itpvot(bodysession) #vote
-    elif section == "itpsor" and body != "S": 
-        s = itpsor(bodysession) #suppliments to official records
-    elif section == "itpreps" and body == "A": 
-        s = itpreps(bodysession) #reports
-    else: 
-        s = section + ": This section cannot be executed for this body (" + body + ")."
+    status = statusCollection.find_one( { "snapshot_name": body + session }, {"_id": 0, "currently_running": 1} )
 
-    print(section, ": " , s)
+    if status != None and status['currently_running'] == True:
+        s = "The snapshot for " + bodysession + " is still running. Once complete you can run a section."
+    else:
+        if section == "itpsubj" : 
+            s = itpsubj(bodysession) #subject index 
+        elif section == "itpitsp" : 
+            s = itpitsp(bodysession) #speaker
+        elif section == "itpitsc" : 
+            s = itpitsc(bodysession) #country
+        elif section == "itpitss" : 
+            s = itpitss(bodysession) #subject speaker
+        elif section == "itpage" : 
+            s = itpage(bodysession) #agenda
+        elif section == "itpdsl" : 
+            s = itpdsl(bodysession) #doc symbol list
+        elif section == "itpmeet" : 
+            s = itpmeet(bodysession) #meeting
+        elif section == "itpres" : 
+            s = itpres(bodysession) #list of resolutions
+        elif section == "itpvot" and body != "E": 
+            s = itpvot(bodysession) #vote
+        elif section == "itpsor" and body != "S": 
+            s = itpsor(bodysession) #suppliments to official records
+        elif section == "itpreps" and body == "A": 
+            s = itpreps(bodysession) #reports
+        else: 
+            s = section + ": This section cannot be executed for this body (" + body + ")."
+
+    # print(section, ": " , s)
 
     return s
 
@@ -4959,6 +4931,96 @@ def insert_itpsor(section, bodysession):
 
             outputCollection.insert_one(x)
     
+def insert_itpvot(section, bodysession):
+    collation={
+            'locale': 'en', 
+            'numericOrdering': True
+        }
+
+    #get the list of all member states who have an entry in the votelist
+    pipeline = [
+        {
+            '$match': {
+                'bodysession': bodysession, 
+                'section': section
+            }
+        }, {
+            '$unwind': {
+                'path': '$votelist'
+            }
+        }, {
+            '$lookup': {
+                'from': 'itp_config', 
+                'localField': 'votelist.memberstate', 
+                'foreignField': 'itp_display', 
+                'as': 'country_info'
+            }
+        }, {
+            '$group': {
+                '_id': {
+                    'ms': '$votelist.memberstate', 
+                    'ce': {
+                        '$cond': {
+                            'if': {'$gt': [{'$size': '$country_info'}, 0]}, 
+                            'then': {'$arrayElemAt': ['$country_info.country_expansion', 0]}, 
+                            'else': '$votelist.memberstate'
+                        }
+                    }
+                }   
+            }   
+        }, {
+            '$sort': {
+                '_id.ce': 1
+            }
+        }, {
+            '$set': {
+                'memberstate': '$_id.ms', 
+                '_id': '$$REMOVE'
+            }
+        }
+    ]
+
+    try:
+
+        #retrieve the results and create a new Member State list with blank votes
+
+        results = list(outputCollection.aggregate(pipeline, collation=collation))
+
+
+        #get all of the records from the db. Only project record_id & votelist
+        all_records = list(outputCollection.find({'bodysession': bodysession, 'section': section},{'_id': 0, 'record_id': 1, 'votelist': 1}))
+        
+        new_votelist = []
+    
+        #print(all_records)
+        for record in all_records:
+            i = 1
+            ms_list = []
+            newdict = {}
+            for r in results: 
+                newdict['order'] =  str(i)
+                newdict['memberstate'] = r['memberstate']
+                newdict['vote'] = "-"
+
+                i = i + 1
+                ms_list.append(newdict)
+                newdict = {}
+
+            #iterate through both lists. If there is a match on member state name, then update the master MS list
+            for item in ms_list:
+                for ii in record["votelist"]:
+                    if item['memberstate'] == ii['memberstate']:  
+                        item['vote'] = ii['vote']
+                #print(item)
+                new_votelist.append(item)
+
+            #update the votelist record with that info in mongodb
+            copyCollection.update_one({"record_id": record["record_id"]},{ "$set": { "votelist": new_votelist}})
+            new_votelist = []
+        
+        return "Inserted items into votelist"
+    except Exception as e:
+        return e
 
 def clear_section(section, bodysession):
     """
@@ -5044,44 +5106,3 @@ def section_summary():
 
     return list(outputCollection.aggregate(pipeline))
 
-def fetch_agenda(body, session):
-    match_criteria = ""
-
-    if body == "A":
-        sp = re.search("sp", session)
-        em = re.search("em", session)
-
-        if em:
-            match_criteria = "A/ES-" + session[:-4] + "/2"
-        elif sp:
-            match_criteria = "A/S-" + session[:-2] + "/1"
-        else:
-            match_criteria = "A/" + session + "/251"
-
-    if body == "E":
-        year = session.split("-")
-        
-        if year[1] == "0":
-            match_criteria = "E/" + year[0] + "/2"
-        else:
-            match_criteria = "E/" + year[0] + "/100"
-
-    return match_criteria
-
-def fetch_itpcode(body, session):
-    
-    itpcode = 'ITP' + body + session
-
-    if body == "E" :
-        itpcode = 'ITP' + body + session[2:4] + session[-1]
-
-    if body == "A":
-        sp = re.search("sp", session)
-        em = re.search("em", session)
-
-        if em:
-            itpcode = 'ITP' + body + session[0:2] + "E"
-        elif sp:
-            itpcode = 'ITP' + body + session[0:2] + "S"
-
-    return itpcode

@@ -17,9 +17,10 @@
             <div class="card-body">
                 
                     <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                        
-                        <li> <a href="{{url_for('displaySnapshot')}}"><span class="text-dark text-left">* Snapshot Management</span></a></li>
-                        <li> <a href="{{url_for('delete_snapshot')}}"><span class="text-dark text-left">* Delete Snapshots</span></a></li>
+                        <li> <a href="{{url_for('configure_snapshot')}}"><span class="text-dark text-left">* Configure Snapshot</span></a></li>
+                        <li> <a href="{{url_for('displaySnapshot')}}"><span class="text-dark text-left">* Execute Snapshot</span></a></li>
+                        <li> <a href="{{url_for('snapshot_dashboard')}}"><span class="text-dark text-left">* Snapshot Dashboard</span></a></li>
+                        <li> <a href="{{url_for('manage_votedec')}}"><span class="text-dark text-left">* Manage Voting List</span></a></li>
 
                     </ul>
               
@@ -33,7 +34,7 @@
                 
                     <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
                         <li> <a href="{{url_for('selectSection')}}"><span class="text-dark text-left">* Generate Sections</span></a></li>
-
+                        <li> <a href="https://unitednations.sharepoint.com/:w:/s/dpi_od_dhl_iss/EazJ6JbaDKRCjDYPeRcsUtgBDwEFOPRo8Vc0El7Zo5VJXQ?e=I3DGJQ" target="_blank"><span class="text-dark text-left">* Sections Business Logic</span></a></li>
                     </ul>
               
             </div>
@@ -45,8 +46,8 @@
             <div class="card-body">
                 
                     <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                        <li> <a href="{{url_for('wordGeneration')}}"><span class="text-dark text-left">* Generate word document based on section </span></a></li>
-                        <li> <a href="{{url_for('list_files')}}"><span class="text-dark text-left">* List of word document generated </span></a></li>
+                        <li> <a href="{{url_for('wordGeneration')}}"><span class="text-dark text-left">* Generate Word Documents </span></a></li>
+                        <li> <a href="{{url_for('list_files')}}"><span class="text-dark text-left">* List of Generated Word Documents </span></a></li>
 
                     </ul>
               
@@ -59,7 +60,9 @@
             <div class="card-body">
                 
                     <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
-                        <li> <a href="#"><span class="text-dark text-left">* Compare</span></a></li>
+                        <li> <a href="{{url_for('compare_heading')}}"><span class="text-dark text-left">* Compare Headings</span></a></li>
+                        <li> <a href="{{url_for('compare_sort')}}"><span class="text-dark text-left">* Compare Sorting</span></a></li>
+                        <li> <a href="{{url_for('compare_details')}}"><span class="text-dark text-left">* Compare Detailed Content</span></a></li>
 
 
                     </ul>

@@ -1,0 +1,196 @@
+{% extends 'base.html' %} {% block content %}
+
+<div id="content">
+  <div class="container shadow mt-4 mb-4">
+    <div class="container mt-4 mb-4">
+      <h3>Manage Voting List</h3>
+      <hr />
+      <p>Enter new authorized Member State info below. To update or delete entries, click on the corresponding icons
+        next to the entry. Fill out the ISO 3-character country code, authorized Member State name, and ITP Display for
+        the Member State.
+      </p>
+      <form method="POST" action="{{url_for('manage_votedec')}}">
+        <div class="row">
+          <div class="col">
+            <input type="text" class="form-control" placeholder="Enter ISO Code" id="code" name="code" />
+          </div>
+          <div class="col">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Enter Member State name"
+              id="expansion"
+              name="expansion"
+            />
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" placeholder="Enter ITP display" id="display" name="display" />
+          </div>
+          <div class="col">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+      </form>
+      <br />
+    </div>
+  </div>
+  <div class="container customize1 shadow">
+    <div class="container mt-4 mb-4" id="results">
+      <h3>Existing List</h3>
+
+      <hr />
+
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <p>Filter by ISO Code: <input type="text" id="filter_code" onkeyup="filterFunction('filter_code')" placeholder="Ex. AFG" /></p>
+          </div>
+          <div class="col">
+            <p>Filter by ITP Display: <input type="text" id="filter_display" onkeyup="filterFunction('filter_display')" placeholder="Ex. Afghanistan" /></p>
+          </div>
+        </div>
+      </div>
+      
+      
+
+      <table class="table table-sm table-hover sortable">
+        <thead>
+          <tr>
+            <!-- <th>ID</th> -->
+            <th>ISO Code</th>
+            <th>Member State</th>
+            <th>ITP Display</th>
+            <th>Note</th>
+            <th>Verification</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        {% for result in results %}
+        <tr>
+          <!-- <td>{{ result['_id'] }}</td> -->
+          <td>{{ result['country_code'] }}</td>
+          <td>{{ result['country_expansion'] }}</td>
+          <td>{{ result['itp_display'] }}</td>
+          <td>{{ result['note'] }}</td>
+          <td>{{ result['verification'] }}</td>
+          <td><a
+              class="btn btn-outline-secondary"
+              role="button"
+              data-toggle="modal"
+              data-id="{{ result['_id'] }}"
+              data-target="#updateModal"
+              data-code="{{ result['country_code'] }}"
+              data-expansion="{{ result['country_expansion'] }}"
+              data-display="{{ result['itp_display'] }}"
+              data-note="{{ result['note'] }}"
+              data-verification="{{ result['verification'] }}"
+              ><i class="bi bi-pencil"></i
+            ></a>
+            <a class="btn btn-outline-secondary" href="{{url_for('del_votedec', id=result['_id'])}}" role="button"
+              ><i class="bi bi-trash"></i
+            ></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateModalLabel">Update Voting List</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="update_form" method="POST" action="{{url_for('edit_votedec')}}">
+            <div class="form-group">
+              <label for="update_code" class="col-form-label">ISO Code:</label>
+              <input type="text" class="form-control" placeholder="Enter ISO Code" id="update_code" name="update_code" />
+            </div>
+            <div class="form-group">
+              <label for="update_expansion" class="col-form-label">Member State Name:</label>
+              <input type="text" class="form-control update_expansion" placeholder="Enter Member State name" id="update_expansion" name="update_expansion" />
+            </div>
+            <div class="form-group">
+              <label for="update_display" class="col-form-label">ITP Display:</label>
+              <input type="text" class="form-control" placeholder="Enter ITP display" id="update_display" name="update_display" />
+            </div>
+            <div class="form-group">
+              <label for="update_note" class="col-form-label">Note:</label>
+              <input type="text" class="form-control" placeholder="Enter Note" id="update_note" name="update_note" />
+            </div>
+            <div class="form-group">
+              <label for="update_note" class="col-form-label">Verification:</label>
+              <input type="text" class="form-control" placeholder="Enter Verification" id="update_verification" name="update_verification" />
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-control" id="update_id" name="update_id" hidden />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" form="update_form">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- <script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script> -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+  function filterFunction(filter_name) {
+    // Declare variables
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById(filter_name);
+    filter = input.value
+    table = document.getElementById("results");
+    tr = table.getElementsByTagName("tr");
+
+    if (filter_name == "filter_code"){
+      filter = filter.toUpperCase();
+      row = 0
+    }
+    else {
+      row = 2
+    }
+
+    // Loop through all table rows, and hide those who don't match the search query
+    for (i = 0; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName("td")[row];
+      if (td) {
+        txtValue = td.textContent || td.innerText;
+
+        if (txtValue.indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
+
+  //Update Modal
+  $("#updateModal").on("show.bs.modal", function (event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    $(update_code).val(button.data("code"));
+    $(update_expansion).val(button.data("expansion"));
+    $(update_display).val(button.data("display"));
+    $(update_note).val(button.data("note"));
+    $(update_verification).val(button.data("verification"));
+    $(update_id).val(button.data("id"));
+  });
+
+</script>
+{% endblock %}

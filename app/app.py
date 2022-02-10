@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
-from app.delete_snapshot import snapshotSummary, deleteSnapshot, snapshotDropdown
+from app.comparison import get_heading_comparison, get_sorting_comparison, get_detail_comparison
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms.validators import DataRequired
@@ -33,6 +33,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
+from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config, snapshot_summary, deleteSnapshot, snapshotDropdown
 
 
 ###############################################################################################
@@ -306,30 +307,6 @@ def create_snapshot():
         return jsonify({'arguments':request.args})
     else:
         return jsonify({'status':'arguments required'})
-
-@app.route('/deleteSnapshots',methods=["GET", "POST"])
-@login_required
-def delete_snapshot():
-    if request.method == "GET" :
-    
-        # Returning the view
-        dropdown = snapshotDropdown()
-        summary = snapshotSummary()
-    
-        return render_template('delete_snapshot.html', results=summary, dropdown=dropdown)
-    else :
-         # Calling the logic to delete the snapshot     
-        
-        msg = deleteSnapshot(request.form.get('bodysession')) 
-
-        # Returning the view
-        dropdown = snapshotDropdown()
-        summary = snapshotSummary()
-
-        flash(msg)
-        
-        return render_template('delete_snapshot.html', results=summary, dropdown=dropdown)
-
 
 @app.route("/displaySnapshot")
 @login_required
@@ -1803,7 +1780,7 @@ def newDownload(filename):
 @login_required
 def selectSection():
     sections= lookup_code("section")
-    bodysessions = lookup_snapshots()
+    bodysessions = snapshotDropdown()
     
 
     if request.method == "GET" :
@@ -1856,6 +1833,302 @@ def wordGeneration():
 
         # Returning the view
         return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
+
+@app.route("/snapshot/configure", methods=["GET", "POST"])
+@login_required
+def configure_snapshot():
+    if request.method == "GET" :
+    
+        # Returning the view
+        results = get_snapshot_configs()
+
+        return render_template('configure_snapshot.html', results=results)
+
+    else :
+         # Insert or update the record    
+
+        create_snapshot_config(request.form.get('bodysession'), request.form.get('agenda_symbol'), request.form.get('product_code')) 
+
+        # # Returning the view
+        results = get_snapshot_configs()
+
+
+        return render_template('configure_snapshot.html', results=results)
+
+@app.route("/snapshot/configure/update", methods=["GET", "POST"])
+@login_required
+def update_configure_snapshot():
+    if request.method == "POST" :
+        update_snapshot_config(request.form.get('update_id'), request.form.get('update_bodysession'), request.form.get('update_agenda_symbol'), request.form.get('update_product_code') )
+    return redirect(url_for('configure_snapshot'))
+ 
+
+
+@app.route("/snapshot/configure/delete/<string:id>")
+@login_required
+def del_snapshot_config(id):
+    delete_snapshot_config(id)
+    return redirect(url_for('configure_snapshot'))
+
+    
+@app.route("/votedec", methods=["GET", "POST"])
+@login_required
+def manage_votedec():
+    if request.method == "GET" :
+    
+        # Returning the view
+        results = get_all_votedec()
+
+        return render_template('manage_voting.html', results=results)
+
+    else :
+         # Insert or update the record    
+
+        insert_votedec(request.form.get('code'), request.form.get('expansion'), request.form.get('display'), request.form.get('note'),  request.form.get('verification')) 
+
+        # # Returning the view
+        results = get_all_votedec()
+
+
+        return render_template('manage_voting.html', results=results)  
+
+@app.route("/votedec/delete/<string:id>")
+@login_required
+def del_votedec(id):
+    delete_votedec(id)
+    return redirect(url_for('manage_votedec'))
+
+@app.route("/votedec/update", methods=["GET", "POST"])
+@login_required
+def edit_votedec():
+    if request.method == "POST" :
+        update_votedec(request.form.get('update_id'), request.form.get('update_code'), request.form.get('update_expansion'), request.form.get('update_display'), request.form.get('update_note'), request.form.get('update_verification') )
+    return redirect(url_for('manage_votedec'))
+  
+@app.route("/compare/heading/", methods=["GET", "POST"])
+@login_required
+def compare_heading():
+    if request.method == "GET" :
+        bodysessions = snapshotDropdown()
+        
+        summary = {}
+        summary['o_total_headings'] = "XX"
+        summary['n_total_headings'] = "XX"
+        
+        summary['o_total_dif'] = "XX"
+        summary['n_total_dif'] = "XX"
+        summary['differences'] = [('', '')]
+
+        summary['o_only'] = {} #in old but not in new
+        summary['n_only'] = {} #in new but not in old
+
+        summary['full_list'] = []
+        return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
+
+    else :
+        #get the form entries
+
+        bs = request.form.get('bodysession')
+        s = request.form.get('section')
+        file_text = []
+
+        if s == 'itpsubj':
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%headstyle%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[13:].strip()
+                    file_text.append(headstyle)
+        else:
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%itshead%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[11:].strip()
+                    file_text.append(headstyle)
+        
+        summary = get_heading_comparison(bs, s, file_text)
+
+        bodysessions = lookup_snapshots()
+        return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
+
+@app.route("/compare/sort/", methods=["GET", "POST"])
+@login_required
+def compare_sort():
+    if request.method == "GET" :
+        bodysessions = snapshotDropdown()
+
+        differences = []
+        return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
+
+    else :
+        #get the form entries
+
+        bs = request.form.get('bodysession')
+        s = request.form.get('section')
+        file_text = []
+
+        if s == 'itpsubj':
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%headstyle%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[13:].strip()
+                    file_text.append(headstyle)
+        else:
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+                if "!%itshead%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[11:].strip()
+                    file_text.append(headstyle)
+        
+        differences = get_sorting_comparison(bs, s, file_text)
+
+        bodysessions = snapshotDropdown()
+        return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
+
+
+@app.route("/compare/details/", methods=["GET", "POST"])
+@login_required
+def compare_details():
+    if request.method == "GET" :
+        bodysessions = snapshotDropdown()
+
+        details = []
+        return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
+
+    else :
+        #get the form entries
+
+        bs = request.form.get('bodysession')
+        s = request.form.get('section')
+        file_text = []
+        record = {}
+        num = 1
+        table_group = []
+        entries = []
+
+        if s == 'itpsubj':
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+
+                #new record
+                if "%$newhead$%" in line_txt:
+                    if len(record) > 0:
+                        subheading['entries'] = entries
+                        table_group.append(subheading)
+                        record['table_group'] = table_group
+                        file_text.append(record)
+
+                        table_group = []
+                        entries = []
+                
+                if "%$keepon$%" in line_txt:
+                    full_entry = {
+                        "entry": "",
+                        "note": ""
+                    }
+
+                #new heading
+                if "!%headstyle%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[13:].strip()
+                    record = {}
+
+                    record['num'] = num
+                    record['head'] = headstyle
+
+                    num = num + 1
+                
+                if "!%subhstyle%!" in line_txt:
+                    if len(entries) > 0:
+                        subheading['entries'] = entries
+                        table_group.append(subheading)
+
+                    subheading = {}
+                    subhead = line_txt.replace("--", '—')[13:].strip()
+                    subheading['subhead'] = subhead
+
+                    entries = []
+                
+                if "!%entrystyle%!" in line_txt:
+                    e = line_txt.replace("--", '—')[14:].strip()
+                    e = e.replace("$BboldleftB$ ", '')
+
+                    full_entry['entry'] = e
+
+                    
+                if "!%Notearea%!" in line_txt:
+                    full_entry['note'] = line_txt.replace("--", '—')[12:].strip()
+                
+                if "%$keepoff$%" in line_txt:
+                    entries.append(full_entry)
+
+            subheading['entries'] = entries
+            table_group.append(subheading)
+            record['table_group'] = table_group
+            file_text.append(record)
+        else:
+            for line in request.files.get('file'):
+                line_txt = str(line, 'ISO-8859-1')
+
+                #new record
+                if "%$newhead$%" in line_txt:
+                    if len(record) > 0:
+                        record['table_group'] = table_group
+                        file_text.append(record)
+
+                        table_group = []
+                
+                if "%$keepon$%" in line_txt:
+                    subheading = {}
+
+                #new heading
+                if "!%itshead%!" in line_txt and "%$newhead$%" not in line_txt:
+                    headstyle = line_txt.replace("--", '—')[11:].strip()
+                    record = {}
+
+                    record['num'] = num
+                    record['head'] = headstyle
+
+                    num = num + 1
+                
+                if "!%itssubhead%!" in line_txt:
+                    subhead = line_txt.replace("--", '—')[14:].strip()
+                    subheading['subhead'] = subhead
+
+                    entries = []
+                
+                if "!%itsentry%!" in line_txt:
+                    entry = line_txt.replace("--", '—')[12:].strip()
+                    entries.append(entry)
+                
+                if "%$keepoff$%" in line_txt:
+                    subheading['entries'] = entries
+                    table_group.append(subheading)
+        
+        details = get_detail_comparison(bs, s, file_text)
+
+        bodysessions = snapshotDropdown()
+        return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
+
+@app.route("/snapshot/dashboard", methods=["GET", "POST"])
+@login_required
+def snapshot_dashboard():
+
+    if request.method == "POST" :
+        #delete the snapshot
+        msg = deleteSnapshot(request.form.get('bodysession')) 
+
+        flash(msg)
+
+    summary_E = snapshot_summary("E")
+    summary_A = snapshot_summary("A")
+    summary_S = snapshot_summary("S")
+    summary_T = snapshot_summary("T")
+
+    dropdown = snapshotDropdown()
+
+    return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, summary_T=summary_T, dropdown=dropdown)
+    # else:
+
+    #     return render_template('snapshot_dashboard.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, dropdown=dropdown)
 
 ####################################################
 # START APPLICATION
