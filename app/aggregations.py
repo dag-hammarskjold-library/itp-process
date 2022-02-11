@@ -1923,7 +1923,7 @@ def itpsubj(bodysession):
                 #
                 {
                     '$cond':{
-                        'if': {'$ne': ['$agendanote', '']},
+                        'if': {'$and': [{"$ne": ["$agendanote", ""]}, {'$ne': ['$code', 'X27']}]},
                         'then': {'$concat': [' - ', '$agendanote' ]},
                         'else': ''
                     }
