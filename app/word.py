@@ -3596,13 +3596,23 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
                     if (index0==(nbrRecPerCol1-1) or index0==nbrRecPerCol1) and col1_recs[index0][2]=='' and col1_recs[index0+1][1]=='Date, ':  
                         new_page=1
                         continue
+                    elif (index0==(nbrRecPerCol1+nbrRecPerCol2-1) or index0==nbrRecPerCol1+nbrRecPerCol2) and col1_recs[index0][2]=='':  
+                        new_page=1
+                        continue
                     elif new_page==1 and (index0==(nbrRecPerCol1) or index0==(nbrRecPerCol1+1)):
                         continue
                     elif index0==(nbrRecPerCol1+nbrRecPerCol2-1) and col1_recs[index0][2]=='' and (col1_recs[index0+1][1]=='Date, ' or col1_recs[index0+1][1]==''): 
                         new_page=1
                         continue
                     elif new_page==1 and (index0==nbrRecPerCol1+nbrRecPerCol2 or index0==(nbrRecPerCol1+nbrRecPerCol2+1)):
-                        continue
+                        if col1_recs[index0][2]=='':
+                            continue
+                        else:
+                            hdr_cells = table.rows[line].cells
+                            hdr_cells[0].text=col1_recs[index0][1]
+                            hdr_cells[1].text=col1_recs[index0][2]
+                            myActualYear=col1_recs[index0][0]
+                            new_page=0
                     elif col1_recs[index0][1]=='Date, ':
                         if not new_page==1:
                             hdr_cells = table.rows[line].cells
