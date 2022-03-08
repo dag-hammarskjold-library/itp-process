@@ -3178,6 +3178,26 @@ def itpmeet(bodysession):
         
         inputCollection.aggregate(pipeline, collation=collation)
 
+        ###Insert blank record for Credentials Comittee"
+        x = {}
+        
+        x['record_id'] = 0
+        x['bodysession'] = bodysession
+        x['section'] = "itpmeet"
+        x['docsymbol'] = ""
+        x['symbol'] = ""
+        x['committee1'] = "Credentials Committee"
+        x['committee2'] = ""
+        x['meetingdate'] = "DD MMM."
+        x['meetingnum'] = "1"
+        x['meetingyear'] = "YYYY"
+        x['sortkey1'] = "01a"
+        x['sortkey2'] = "YYYY"
+        x['sortkey3'] = "1"
+
+        outputCollection.insert_one(x)
+        ####
+
         group_itpmeet("itpmeet", bodysession)
 
         return "itpmeet completed successfully"
