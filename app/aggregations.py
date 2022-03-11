@@ -3477,11 +3477,16 @@ def itpvot(bodysession):
                     'r': '$record_id', 
                     'docsymbol': '$docsymbol', 
                     'resnum': {
-                        '$substrCP': [
-                            '$docsymbol', 
-                            {'$add': [offset, {'$indexOfCP': ['$docsymbol', '/', 2]}]}, 
-                            4
-                        ]
+                        '$let': {
+                            'vars': {
+                                'ds': '$docsymbol', 
+                                'len': {'$strLenCP': '$docsymbol'}, 
+                                'start': {'$add': [offset, {'$indexOfCP': ['$docsymbol', '/', 2]}]}
+                            }, 
+                            'in': {
+                                '$substrCP': ['$$ds', '$$start', {'$subtract': ['$$len', '$$start']}]
+                            }
+                        }
                     }
                 }, 
                 'votelist': {
