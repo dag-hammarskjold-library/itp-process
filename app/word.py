@@ -4935,7 +4935,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
 
     if (bodysession[0]=="A" and not bodysession=="A/10emsp"):
-        #start = time.perf_counter()
+            #start = time.perf_counter()
         # Retrieving the number of records
         recordNumber = 0
 
@@ -4965,13 +4965,18 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
 
         section.top_margin = Inches(0.81)
         section.bottom_margin = Inches(1)
-        section.left_margin = Inches(1)
-        section.right_margin = Inches(1) 
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5) 
 
         # set some variables
         myRow = 0
         myCol = 0
-        myNumColum=15
+        try:    
+            smyNumColum=config_coll.find_one({'bodysession':bodysession,'section':paramSection,'type':'section'})['no_of_columns']
+            print(f"number of columns is {smyNumColum}")
+        except:
+            smyNumColum='10'
+        myNumColum=int(smyNumColum)
         myNumTable=0
         #myNumRow=193 # number of countries that have a vote
         myNumRow=len(countries)
@@ -4979,10 +4984,10 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         
 
         # generate the number of table
-        myNumTable=math.ceil(recordNumber/myNumColum)
+        myNumTable=math.ceil(recordNumber/int(myNumColum))
 
         # creation of the table
-        table = document.add_table(rows=myNumRow+3, cols=myNumColum)
+        table = document.add_table(rows=myNumRow+3, cols=int(myNumColum))
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table_cells=table._cells
         # write the memberstates in the first (0) column
@@ -5049,7 +5054,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                 table_cells[(myRow)*(myNumColum)+myCol+1].paragraphs[0].text=myVoteList["vote"]
                 myRow+=1
                 vlCounter+=1    
-                if vlCounter==vlLen and myCol+1==14:
+                if vlCounter==vlLen and myCol+1==myNumColum-1:
                     # check if we need to create a new table
                         myCol=0
                         myRow=0
@@ -5099,8 +5104,8 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         #pf_stl_itp_vot_cell = stl_itp_vot_cell.paragraph_format
 
         for table in document.tables:
-            table.autofit = False
-            table.allow_autofit = False
+            #table.autofit = False
+            #table.allow_autofit = False
             table_cells=table._cells
             for cell in table_cells:
                 cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
@@ -5122,7 +5127,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                         font = run.font
                         font.name="Arial"
                         font.size= Pt(8)
-            for ii, cell in enumerate(table_cells[30:45]):
+            for ii, cell in enumerate(table_cells[myNumColum*2:myNumColum*3]):
                 paragraphs = cell.paragraphs
                 for paragraph in paragraphs:
                     # Adding styling        
@@ -5131,14 +5136,19 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                 table.cell=cell
 
             for cell in table.columns[0].cells:
+                table.autofit = False
+                table.allow_autofit = False
                 cell.width=Inches(1.4)
+                #table.autofit = True
+                #table.allow_autofit = True
                 for paragraph in cell.paragraphs:
                     ##pass
                     paragraph.alignment=WD_ALIGN_PARAGRAPH.LEFT
             for i in range(myNumColum-1):
                 for cell in table.columns[i+1].cells:
-                    cell.width=Inches(0.2)
-            
+                    cell.width=Inches(0.38)
+                    #pass
+
             #table.columns[0].style=document.styles['itpvottabcol1']  
             
         print(f"time to generate itpvot is {time.time()-ts1}")
