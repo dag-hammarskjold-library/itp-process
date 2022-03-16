@@ -4583,6 +4583,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
     myClient = MongoClient(myMongoURI)
     myDatabase=myClient.undlFiles
     myCollection=myDatabase['itp_sample_output_copy']
+    config_coll=myDatabase['itp_config']
     myTitle=paramTitle
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
     setOfData1=myCollection.find({'bodysession': bodysession,'section': paramSection})
@@ -4961,21 +4962,30 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
         cols = sectPr.xpath('./w:cols')[0]
         cols.set(qn('w:num'),'2')
         
-        # Marging of the document
-
-        section.top_margin = Inches(0.81)
-        section.bottom_margin = Inches(1)
-        section.left_margin = Inches(0.5)
-        section.right_margin = Inches(0.5) 
+      
 
         # set some variables
         myRow = 0
         myCol = 0
+        print(f"bodysession is {bodysession} and paramSection is {paramSection}")
         try:    
             smyNumColum=config_coll.find_one({'bodysession':bodysession,'section':paramSection,'type':'section'})['no_of_columns']
+            scell_width=config_coll.find_one({'bodysession':bodysession,'section':paramSection,'type':'section'})['cell_width']
+            sleft_margin=config_coll.find_one({'bodysession':bodysession,'section':paramSection,'type':'section'})['left_margin']
+            sright_margin=config_coll.find_one({'bodysession':bodysession,'section':paramSection,'type':'section'})['right_margin']
             print(f"number of columns is {smyNumColum}")
         except:
             smyNumColum='10'
+            scell_width='0.38'
+            sleft_margin='0.5'
+            sright_margin='0.5'
+
+          # Marging of the document
+
+        section.top_margin = Inches(0.81)
+        section.bottom_margin = Inches(1)
+        section.left_margin = Inches(float(sleft_margin))
+        section.right_margin = Inches(float(sright_margin)) 
         myNumColum=int(smyNumColum)
         myNumTable=0
         #myNumRow=193 # number of countries that have a vote
@@ -5146,7 +5156,7 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
                     paragraph.alignment=WD_ALIGN_PARAGRAPH.LEFT
             for i in range(myNumColum-1):
                 for cell in table.columns[i+1].cells:
-                    cell.width=Inches(0.38)
+                    cell.width=Inches(float(scell_width))
                     #pass
 
             #table.columns[0].style=document.styles['itpvottabcol1']  
