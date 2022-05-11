@@ -196,7 +196,7 @@ def itpitsc(bodysession):
                             '$replaceAll': {
                                 'input': {
                                     '$replaceAll': {
-                                        'input': {'$toUpper':'$itssubhead'}, #subject
+                                        'input': {'$concat': [{'$toUpper': '$agendasubject'}, '—', '$agendanum']},#{'$toUpper':'$itssubhead'}, #subject
                                         'find': '. ', 
                                         'replacement': ' .'
                                     }
@@ -434,7 +434,7 @@ def itpitsp(bodysession):
                     '$replaceAll': {
                         'input': {
                             '$replaceAll': {
-                                'input': {'$toUpper': '$itssubhead'}, #subject 
+                                'input': {'$concat': [{'$toUpper': '$agendasubject'}, '—', '$agendanum']},#{'$toUpper': '$itssubhead'}, #subject 
                                 'find': '. ', 
                                 'replacement': ' .'
                             }
