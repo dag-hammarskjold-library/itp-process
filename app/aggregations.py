@@ -1953,7 +1953,7 @@ def itpsubj(bodysession):
                 'subhead': 1,
                 'docsymbol': 1, 
                 'entry': 1, 
-                'note': {"$trim": {"input": '$note', "chars": " - "}}, 
+                'note': {"$trim": {"input": '$note', "chars": "– "}}, 
                 'sortkey1': {'$concat': [
                     {
                     '$replaceAll': {
