@@ -1965,10 +1965,10 @@ def itpsubj(bodysession):
                             }
                         }, 
                         'find': '—', 
-                        'replacement': ' $'
+                        'replacement': ' $'#' —' 
                     }
                 },
-                ' ', '$agendanum'
+                ' $', '$agendanum'
                 ]},#'$head',
                 'sortkey2': '$code',
                 'sortkey3': '$docsymbol'
