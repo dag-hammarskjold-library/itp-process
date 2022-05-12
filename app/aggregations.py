@@ -1359,7 +1359,18 @@ def itpsubj(bodysession):
                             { '$eq': ['$191.9', 'G55' ]}, 
                             { '$eq': ['$191.9', 'G66' ]}, 
                             { '$eq': ['$191.9', 'G1A' ]}]}] }, 
-                'then': {'$concat': [{'$toUpper': {'$substr': [ '$245.b', 0, 1]}}, {'$substr': ['$245.b', 1, { '$add': [{'$indexOfCP': ['$245.b', 'Committee']}, 8 ]}]}, '.'] }, 
+                'then': {
+                    '$concat': [
+                        {'$toUpper': {'$substr': [ '$245.b', 0, 1]}}, 
+                        {'$cond': 
+                            {
+                            'if': {'$gt': [{'$indexOfCP': ['$245.b', 'Committee)']}, -1] }, 
+                            'then': {'$substr': ['$245.b', 1, {'$add': [{'$indexOfCP': ['$245.b', 'Committee)']}, 9]}] }, 
+                            'else': {'$substr': ['$245.b', 1, {'$add': [{'$indexOfCP': ['$245.b', 'Committee']}, 8]}] }
+                            }
+                        }, 
+                        '.'] 
+                        }, 
                 'else': ''}
             }
 
