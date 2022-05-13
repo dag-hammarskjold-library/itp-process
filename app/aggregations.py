@@ -1195,6 +1195,36 @@ def itpsubj(bodysession):
                 }
             }
 
+        #moving the code field up
+        add_0 = {}
+
+        add_0['code'] = { 
+            '$cond': { 
+                'if': '$991.f', 
+                'then': '$991.f', 
+                'else': {
+                    '$cond': {
+                        'if': {'$isArray': '$191'},
+                        'then': {
+                            '$let': {
+                                'vars': {
+                                    'a': {'$arrayElemAt': ['$191.b', 0]},
+                                    'b': {'$arrayElemAt': ['$191.c', 0]},
+                                    'first': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 0]},'chars': ' '}},
+                                    'second': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 1]},'chars': ' '}}},
+                                'in': {'$cond': {
+                                    'if': {'$and': [
+                                        {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
+                                        {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
+                                    'then': '$$first','else': '$$second'}}}},
+                        'else': {'$trim': {'input': '$191.9','chars': ' '}}}
+                }
+            }
+        }
+
+        add_stage0 = {}
+        add_stage0['$addFields'] = add_0
+
         add_1 = {}
 
         ##In order of precence##
@@ -1297,7 +1327,7 @@ def itpsubj(bodysession):
         #body == S
         add_1['unique_case1'] = {
             '$cond': { 
-                'if': {'$eq': ['$191.9', 'X99'] }, 
+                'if': {'$eq': ['$code', 'X99'] }, 
                 'then': {'$let': {
                     'vars': {
                         'a': {'$indexOfCP': [ '$239.a', '[']},
@@ -1315,9 +1345,9 @@ def itpsubj(bodysession):
             '$cond': { 
                 'if': {'$and': [
                     {'$or': [
-                        { '$eq': ['$191.9', 'C10' ]}, 
-                        { '$eq': ['$191.9', 'G10' ]}, 
-                        { '$eq': ['$191.9', 'X10' ]}]}, 
+                        { '$eq': ['$code', 'C10' ]}, 
+                        { '$eq': ['$code', 'G10' ]}, 
+                        { '$eq': ['$code', 'X10' ]}]}, 
                         {'$gt': [{ '$indexOfCP': ['$191.a', '/Add.' ]}, -1]},
                         {'$ne': ['$239', ""]}
                         ] }, 
@@ -1352,13 +1382,13 @@ def itpsubj(bodysession):
                         { '$gt': [{'$indexOfCP': ['$245.b', 'Committee']}, -1 ]}, 
                         { '$gt': [{'$indexOfCP': ['$245.b', 'General']}, -1 ]}]}, 
                         {'$or': [
-                            { '$eq': ['$191.9', 'G11' ]}, 
-                            { '$eq': ['$191.9', 'G22' ]}, 
-                            { '$eq': ['$191.9', 'G33' ]}, 
-                            { '$eq': ['$191.9', 'G14' ]}, 
-                            { '$eq': ['$191.9', 'G55' ]}, 
-                            { '$eq': ['$191.9', 'G66' ]}, 
-                            { '$eq': ['$191.9', 'G1A' ]}]}] }, 
+                            { '$eq': ['$code', 'G11' ]}, 
+                            { '$eq': ['$code', 'G22' ]}, 
+                            { '$eq': ['$code', 'G33' ]}, 
+                            { '$eq': ['$code', 'G14' ]}, 
+                            { '$eq': ['$code', 'G55' ]}, 
+                            { '$eq': ['$code', 'G66' ]}, 
+                            { '$eq': ['$code', 'G1A' ]}]}] }, 
                 'then': {
                     '$concat': [
                         {'$toUpper': {'$substr': [ '$245.b', 0, 1]}}, 
@@ -1377,7 +1407,7 @@ def itpsubj(bodysession):
             #body == A
             add_1['title_case2'] = {
                 '$cond': { 
-                    'if': {'$eq': ['$191.9', 'G99'] }, 
+                    'if': {'$eq': ['$code', 'G99'] }, 
                     'then': {'$concat': [
                         { '$trim': { 'input': '$245.a',  'chars': ' :' } },
                         '.'] }, 
@@ -1392,9 +1422,9 @@ def itpsubj(bodysession):
             '$cond': { 
                 'if': {'$and': [
                     {'$or': [
-                        { '$eq': ['$191.9', 'C10' ]}, 
-                        { '$eq': ['$191.9', 'G10' ]}, 
-                        { '$eq': ['$191.9', 'X10' ]}]}, 
+                        { '$eq': ['$code', 'C10' ]}, 
+                        { '$eq': ['$code', 'G10' ]}, 
+                        { '$eq': ['$code', 'X10' ]}]}, 
                         {'$gt': [{ '$indexOfCP': ['$191.a', '/Add.' ]}, -1]}] }, 
                 'then': {'$concat': ['$245.a', ' ', {'$trim': {'input': '$245.b','chars': '/ '}}, '. '] }, 
                 'else': ''}
@@ -1719,30 +1749,6 @@ def itpsubj(bodysession):
             }
         }
 
-        add_2['code'] = { 
-            '$cond': { 
-                'if': '$991.f', 
-                'then': '$991.f', 
-                'else': {
-                    '$cond': {
-                        'if': {'$isArray': '$191'},
-                        'then': {
-                            '$let': {
-                                'vars': {
-                                    'a': {'$arrayElemAt': ['$191.b', 0]},
-                                    'b': {'$arrayElemAt': ['$191.c', 0]},
-                                    'first': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 0]},'chars': ' '}},
-                                    'second': {'$trim': {'input': {'$arrayElemAt': ['$191.9', 1]},'chars': ' '}}},
-                                'in': {'$cond': {
-                                    'if': {'$and': [
-                                        {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
-                                        {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
-                                    'then': '$$first','else': '$$second'}}}},
-                        'else': {'$trim': {'input': '$191.9','chars': ' '}}}
-                }
-            }
-        }
-
         add_stage2 = {}
         add_stage2['$addFields'] = add_2
 
@@ -2011,6 +2017,7 @@ def itpsubj(bodysession):
         pipeline.append(match_stage)
         pipeline.append(unwind_stage)
         pipeline.append(match_stage2)
+        pipeline.append(add_stage0)
         pipeline.append(add_stage1)
         pipeline.append(add_stage2)
         pipeline.append(transform_stage)
