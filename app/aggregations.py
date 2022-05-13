@@ -1981,22 +1981,19 @@ def itpsubj(bodysession):
                         'chars': '- ' #regular dash
                     }
                 }, 
-                'sortkey1': {'$concat': [
-                    {
+                'sortkey1': {
                     '$replaceAll': {
                         'input': {
                             '$replaceAll': {
-                                'input': '$agendasubject', #'$head'
+                                'input': {'$concat': [{'$toUpper': '$agendasubject'}, '—', '$agendanum']},#subject
                                 'find': '. ', 
                                 'replacement': ' .'
                             }
                         }, 
                         'find': '—', 
-                        'replacement': ' $'#' —' 
+                        'replacement': ' —'
                     }
                 },
-                ' $', '$agendanum'
-                ]},#'$head',
                 'sortkey2': '$code',
                 'sortkey3': '$docsymbol'
             }
