@@ -2209,7 +2209,7 @@ def itpage(bodysession):
                         }
                     }, 
                     'find': '—', 
-                    'replacement': ' $' #' —'
+                    'replacement': ' —' #' $'
                 }
             }
             #'$_id'
@@ -2381,7 +2381,7 @@ def itpage(bodysession):
                         }
                     }, 
                     'find': '—', 
-                    'replacement': ' $' #' —' 
+                    'replacement': ' —' #' $'
                 }
             }
 
