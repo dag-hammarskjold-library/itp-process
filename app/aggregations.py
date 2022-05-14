@@ -1195,7 +1195,7 @@ def itpsubj(bodysession):
                 }
             }
 
-        #moving the code field up
+        #moving the code and docsymbol fields up
         add_0 = {}
 
         add_0['code'] = { 
@@ -1221,6 +1221,55 @@ def itpsubj(bodysession):
                 }
             }
         }
+
+        add_0['docsymbol'] = {
+            '$cond': { 
+                'if': {'$isArray': '$191' }, 
+                'then': {
+                    '$let': {  
+                        'vars': {
+                            'a': {'$arrayElemAt': [ '$191.b', 0]},
+                            'b': {'$arrayElemAt': [ '$191.c', 0]},
+                            'x': {'$arrayElemAt': [ '$191.b', 1]},
+                            'y': {'$arrayElemAt': [ '$191.c', 1]},
+                            'first': {'$arrayElemAt': [ '$191.a', 0]},
+                            'second': {'$arrayElemAt': [ '$191.a', 1]}  },  
+                    'in': {
+                        '$cond': {
+                            'if': { 
+                                '$and': [
+                                    {  '$eq': ['$$a', fullbody  ]}, 
+                                    {  '$eq': ['$$b', session  ]}, 
+                                    '$$second' ]},
+                            'then': { 
+                                '$concat': [
+                                    '$$first', 
+                                    ' (', 
+                                    '$$second', 
+                                    ')' ]},
+                            'else': {
+                                '$cond': {
+                                    'if': {
+                                        '$and': [
+                                            {'$eq': ['$$x', fullbody]}, 
+                                            {'$eq': ['$$y', session]}, 
+                                            '$$second']
+                                    }, 
+                                    'then': {
+                                        '$concat': [
+                                            '$$second', 
+                                            ' (', 
+                                            '$$first', ')'
+                                        ]
+                                    }, 
+                                    'else': '$$first'
+                                }
+                            }
+                        }  
+                    }
+                } 
+            }, 
+        'else': '$191.a'}}
 
         add_stage0 = {}
         add_stage0['$addFields'] = add_0
@@ -1348,7 +1397,7 @@ def itpsubj(bodysession):
                         { '$eq': ['$code', 'C10' ]}, 
                         { '$eq': ['$code', 'G10' ]}, 
                         { '$eq': ['$code', 'X10' ]}]}, 
-                        {'$gt': [{ '$indexOfCP': ['$191.a', '/Add.' ]}, -1]},
+                        {'$gt': [{ '$indexOfCP': ['$docsymbol', '/Add.' ]}, -1]},
                         {'$ne': ['$239', ""]}
                         ] }, 
                 'then': '$239.a', 
@@ -1425,7 +1474,7 @@ def itpsubj(bodysession):
                         { '$eq': ['$code', 'C10' ]}, 
                         { '$eq': ['$code', 'G10' ]}, 
                         { '$eq': ['$code', 'X10' ]}]}, 
-                        {'$gt': [{ '$indexOfCP': ['$191.a', '/Add.' ]}, -1]}] }, 
+                        {'$gt': [{ '$indexOfCP': ['$docsymbol', '/Add.' ]}, -1]}] }, 
                 'then': {'$concat': ['$245.a', ' ', {'$trim': {'input': '$245.b','chars': '/ '}}, '. '] }, 
                 'else': ''}
         }
@@ -1691,55 +1740,6 @@ def itpsubj(bodysession):
                 'then': {'$concat': [{"$trim": {"input": '$991.e', "chars": "."}}, '.']},
                 'else': '' }
         } 
-
-        add_2['docsymbol'] = {
-            '$cond': { 
-                'if': {'$isArray': '$191' }, 
-                'then': {
-                    '$let': {  
-                        'vars': {
-                            'a': {'$arrayElemAt': [ '$191.b', 0]},
-                            'b': {'$arrayElemAt': [ '$191.c', 0]},
-                            'x': {'$arrayElemAt': [ '$191.b', 1]},
-                            'y': {'$arrayElemAt': [ '$191.c', 1]},
-                            'first': {'$arrayElemAt': [ '$191.a', 0]},
-                            'second': {'$arrayElemAt': [ '$191.a', 1]}  },  
-                    'in': {
-                        '$cond': {
-                            'if': { 
-                                '$and': [
-                                    {  '$eq': ['$$a', fullbody  ]}, 
-                                    {  '$eq': ['$$b', session  ]}, 
-                                    '$$second' ]},
-                            'then': { 
-                                '$concat': [
-                                    '$$first', 
-                                    ' (', 
-                                    '$$second', 
-                                    ')' ]},
-                            'else': {
-                                '$cond': {
-                                    'if': {
-                                        '$and': [
-                                            {'$eq': ['$$x', fullbody]}, 
-                                            {'$eq': ['$$y', session]}, 
-                                            '$$second']
-                                    }, 
-                                    'then': {
-                                        '$concat': [
-                                            '$$second', 
-                                            ' (', 
-                                            '$$first', ')'
-                                        ]
-                                    }, 
-                                    'else': '$$first'
-                                }
-                            }
-                        }  
-                    }
-                } 
-            }, 
-                'else': '$191.a'}}
          
         add_2['agendanum'] = {
             '$cond': {
@@ -2061,7 +2061,7 @@ def itpsubj(bodysession):
             copyAdd_1['endYY'] = add_1['endYY']
 
             copyAdd_1['code'] = '$191.9'
-            copyAdd_1['docsymbol'] = add_2['docsymbol']
+            copyAdd_1['docsymbol'] = add_0['docsymbol']
             copyAdd_1['agendanote'] = add_2['agendanote']
             copyAdd_1['agendanum'] = add_2['agendanum']
 
