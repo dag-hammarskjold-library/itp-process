@@ -3534,7 +3534,14 @@ def itpvot(bodysession):
         transform['docsymbol'] = '$_id.docsymbol'
         transform['resnum'] = '$_id.resnum'
         transform['votelist'] = 1
-        transform['sortkey1'] = '$_id.resnum'
+        transform['sortkey1'] = {
+            '$replaceAll': {
+                'input': '$_id.resnum', 
+                'find': '[', 
+                'replacement': ''
+            }
+        }
+        #'$_id.resnum'
 
         transform_stage = {}
         transform_stage['$project'] = transform
