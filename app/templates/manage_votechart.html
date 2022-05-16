@@ -1,0 +1,202 @@
+{% extends 'base.html' %} {% block content %}
+
+<div id="content">
+  <div class="container shadow mt-4 mb-4">
+    <div class="container mt-4 mb-4">
+      <h3>Manage Voting Chart Parameters</h3>
+      <hr />
+      <p>Enter the parameters for the voting chart display. Column width, Left and Right Margins should be in inches.
+      </p>
+      <form method="POST" action="{{url_for('manage_votechart')}}">
+        <div class="row">
+          <div class="col">
+            <label>Body/Session</label>
+          </div>
+          <div class="col">
+            <label># of columns</label>
+          </div>
+          <div class="col">
+            <label>Column Width</label>
+          </div>
+          <div class="col">
+            <label>Left Margin</label>
+          </div>
+          <div class="col">
+            <label>Right Margin</label>
+          </div>
+          <div class="col">
+            <label></label>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <input type="text" class="form-control" placeholder="Body/Session" id="bodysession" name="bodysession" />
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" placeholder="columns" id="columns" name="columns" />
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" placeholder="width" id="width" name="width" />
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" placeholder="left margin" id="left" name="left" />
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" placeholder="right margin" id="right" name="right" />
+          </div>
+          <div class="col">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+      </form>
+      <br />
+    </div>
+  </div>
+  <div class="container customize1 shadow">
+    <div class="container mt-4 mb-4" id="results">
+      <h3>Existing List</h3>
+
+      <hr />
+
+      <div class="container">
+        <p>Filter by Body/Session: <input type="text" id="filter_bodysession" onkeyup="filterFunction('filter_bodysession')" placeholder="Ex. A/75" /></p>
+      </div>
+      <br />
+      
+
+      <table class="table table-sm table-hover sortable">
+        <thead>
+          <tr>
+            <!-- <th>ID</th> -->
+            <th>Body/Session</th>
+            <th>Columns</th>
+            <th>Width</th>
+            <th>Left Margin</th>
+            <th>Right Margin</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        {% for result in results %}
+        <tr>
+          <!-- <td>{{ result['_id'] }}</td> -->
+          <td>{{ result['bodysession'] }}</td>
+          <td>{{ result['no_of_columns'] }}</td>
+          <td>{{ result['cell_width'] }}</td>
+          <td>{{ result['left_margin'] }}</td>
+          <td>{{ result['right_margin'] }}</td>
+          <td><a
+              class="btn btn-outline-secondary"
+              role="button"
+              data-toggle="modal"
+              data-id="{{ result['_id'] }}"
+              data-target="#updateModal"
+              data-bodysession="{{ result['bodysession'] }}"
+              data-columns="{{ result['no_of_columns'] }}"
+              data-width="{{ result['cell_width'] }}"
+              data-left="{{ result['left_margin'] }}"
+              data-right="{{ result['right_margin'] }}"
+              ><i class="bi bi-pencil"></i
+            ></a>
+            <a class="btn btn-outline-secondary" href="{{url_for('del_votechart', id=result['_id'])}}" role="button"
+              ><i class="bi bi-trash"></i
+            ></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true" >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateModalLabel">Update Voting List</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="update_form" method="POST" action="{{url_for('edit_votechart')}}">
+            <div class="form-group">
+              <label for="update_bodysession" class="col-form-label">ISO bodysession:</label>
+              <input type="text" class="form-control" placeholder="Enter ISO bodysession" id="update_bodysession" name="update_bodysession" />
+            </div>
+            <div class="form-group">
+              <label for="update_columns" class="col-form-label">Member State Name:</label>
+              <input type="text" class="form-control update_columns" placeholder="Enter Member State name" id="update_columns" name="update_columns" />
+            </div>
+            <div class="form-group">
+              <label for="update_width" class="col-form-label">ITP width:</label>
+              <input type="text" class="form-control" placeholder="Enter ITP width" id="update_width" name="update_width" />
+            </div>
+            <div class="form-group">
+              <label for="update_note" class="col-form-label">Note:</label>
+              <input type="text" class="form-control" placeholder="Enter Note" id="update_left" name="update_left" />
+            </div>
+            <div class="form-group">
+              <label for="update_note" class="col-form-label">Verification:</label>
+              <input type="text" class="form-control" placeholder="Enter Verification" id="update_right" name="update_right" />
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-control" id="update_id" name="update_id" hidden />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary" form="update_form">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- <script src="https://www.kryogenix.org/bodysession/browser/sorttable/sorttable.js"></script> -->
+<script src="https://bodysession.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+  function filterFunction(filter_name) {
+    // Declare variables
+    var input, filter, table, tr, td, i, txtValue;
+    input = document.getElementById(filter_name);
+    filter = input.value
+    table = document.getElementById("results");
+    tr = table.getElementsByTagName("tr");
+
+    row = 0
+
+    // Loop through all table rows, and hide those who don't match the search query
+    for (i = 1; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName("td")[row];
+
+      if (td) {
+        txtValue = td.textContent || td.innerText;
+
+        if (txtValue.indexOf(filter) > -1) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
+
+  //Update Modal
+  $("#updateModal").on("show.bs.modal", function (event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    $(update_bodysession).val(button.data("bodysession"));
+    $(update_columns).val(button.data("columns"));
+    $(update_width).val(button.data("width"));
+    $(update_left).val(button.data("left"));
+    $(update_right).val(button.data("right"));
+    $(update_id).val(button.data("id"));
+  });
+
+</script>
+{% endblock %}

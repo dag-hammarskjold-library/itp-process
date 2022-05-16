@@ -107,6 +107,53 @@ def get_all_votedec():
     """
     return list(configCollection.find( { "type": "votedec" } ).sort("country_expansion"))
 
+##Vote Chart
+
+def insert_votechart(bodysession, columns, width, left, right):
+    """
+    Inserts votechart entry
+    """
+    new_entry = {
+        "bodysession": bodysession,
+		  "no_of_columns": columns,
+		  "section": "itpvot",
+		  "type": "section",
+		  "cell_width": width,
+		  "left_margin": left,
+		  "right_margin": right
+    }
+    response = configCollection.insert_one(new_entry)
+    return response
+
+def update_votechart(id, bodysession, columns, width, left, right):
+    """
+    Updates the votechart config
+    """
+    response = configCollection.update_one(
+        { "_id": ObjectId(id) },
+        { "$set": { "bodysession": bodysession,
+					  "no_of_columns": columns,
+					  "cell_width": width,
+					  "left_margin": left,
+					  "right_margin": right} }
+    )
+
+    return response
+
+def delete_votechart(id):
+    """
+    Deletes votechart entry
+    """
+    response = configCollection.delete_one( { "_id": ObjectId(id)} )
+    return response
+
+def get_all_votechart():
+    """
+    Returns list of all voting chart configurations
+    """
+    return list(configCollection.find( { "type": "section", "section": "itpvot" } ))
+
+
 def fetch_agenda(body, session):
     """
     Return the agenda for a particular body and session
