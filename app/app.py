@@ -33,8 +33,8 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
-from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config, snapshot_summary, deleteSnapshot, snapshotDropdown
-
+#from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config, snapshot_summary, deleteSnapshot, snapshotDropdown
+from app.itp_config import *
 
 ###############################################################################################
 # Create FLASK APPLICATION
@@ -1905,6 +1905,40 @@ def edit_votedec():
         update_votedec(request.form.get('update_id'), request.form.get('update_code'), request.form.get('update_expansion'), request.form.get('update_display'), request.form.get('update_note'), request.form.get('update_verification') )
     return redirect(url_for('manage_votedec'))
   
+@app.route("/votechart", methods=["GET", "POST"])
+@login_required
+def manage_votechart():
+    if request.method == "GET" :
+    
+        # Returning the view
+        results = get_all_votechart()
+
+        return render_template('manage_votechart.html', results=results)
+
+    else :
+         # Insert or update the record    
+
+        insert_votechart(request.form.get('bodysession'), request.form.get('columns'), request.form.get('width'), request.form.get('left'),  request.form.get('right')) 
+
+        # # Returning the view
+        results = get_all_votechart()
+
+
+        return render_template('manage_votechart.html', results=results)  
+
+@app.route("/votechart/delete/<string:id>")
+@login_required
+def del_votechart(id):
+    delete_votechart(id)
+    return redirect(url_for('manage_votechart'))
+
+@app.route("/votechart/update", methods=["GET", "POST"])
+@login_required
+def edit_votechart():
+    if request.method == "POST" :
+        update_votechart(request.form.get('update_id'), request.form.get('update_bodysession'), request.form.get('update_columns'), request.form.get('update_width'), request.form.get('update_left'), request.form.get('update_right') )
+    return redirect(url_for('manage_votechart'))
+
 @app.route("/compare/heading/", methods=["GET", "POST"])
 @login_required
 def compare_heading():
