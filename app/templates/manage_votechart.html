@@ -36,7 +36,7 @@
             <input type="text" class="form-control" placeholder="columns" id="columns" name="columns" />
           </div>
           <div class="col">
-            <input type="text" class="form-control" placeholder="width" id="width" name="width" />
+            <input type="text" class="form-control" placeholder="column width" id="width" name="width" />
           </div>
           <div class="col">
             <input type="text" class="form-control" placeholder="left margin" id="left" name="left" />
@@ -69,8 +69,8 @@
           <tr>
             <!-- <th>ID</th> -->
             <th>Body/Session</th>
-            <th>Columns</th>
-            <th>Width</th>
+            <th># of Columns</th>
+            <th>Column Width</th>
             <th>Left Margin</th>
             <th>Right Margin</th>
             <th></th>
@@ -122,24 +122,24 @@
         <div class="modal-body">
           <form id="update_form" method="POST" action="{{url_for('edit_votechart')}}">
             <div class="form-group">
-              <label for="update_bodysession" class="col-form-label">ISO bodysession:</label>
-              <input type="text" class="form-control" placeholder="Enter ISO bodysession" id="update_bodysession" name="update_bodysession" />
+              <label for="update_bodysession" class="col-form-label">Body/Session:</label>
+              <input type="text" class="form-control" placeholder="Body/Session" id="update_bodysession" name="update_bodysession" />
             </div>
             <div class="form-group">
-              <label for="update_columns" class="col-form-label">Member State Name:</label>
-              <input type="text" class="form-control update_columns" placeholder="Enter Member State name" id="update_columns" name="update_columns" />
+              <label for="update_columns" class="col-form-label"># of columns:</label>
+              <input type="text" class="form-control update_columns" placeholder="columns" id="update_columns" name="update_columns" />
             </div>
             <div class="form-group">
-              <label for="update_width" class="col-form-label">ITP width:</label>
-              <input type="text" class="form-control" placeholder="Enter ITP width" id="update_width" name="update_width" />
+              <label for="update_width" class="col-form-label">Column Width:</label>
+              <input type="text" class="form-control" placeholder="column width" id="update_width" name="update_width" />
             </div>
             <div class="form-group">
-              <label for="update_note" class="col-form-label">Note:</label>
-              <input type="text" class="form-control" placeholder="Enter Note" id="update_left" name="update_left" />
+              <label for="update_note" class="col-form-label">Left Margin:</label>
+              <input type="text" class="form-control" placeholder="right margin" id="update_left" name="update_left" />
             </div>
             <div class="form-group">
-              <label for="update_note" class="col-form-label">Verification:</label>
-              <input type="text" class="form-control" placeholder="Enter Verification" id="update_right" name="update_right" />
+              <label for="update_note" class="col-form-label">Right Margin:</label>
+              <input type="text" class="form-control" placeholder="left margin" id="update_right" name="update_right" />
             </div>
             <div class="form-group">
               <input type="text" class="form-control" id="update_id" name="update_id" hidden />

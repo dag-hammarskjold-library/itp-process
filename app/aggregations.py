@@ -2899,7 +2899,7 @@ def itpdsl(bodysession):
         pipeline.append(transform_stage)
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
-
+        
         # execute pipeline
         inputCollection.aggregate(pipeline, collation=collation)
 
