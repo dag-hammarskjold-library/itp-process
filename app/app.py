@@ -2084,12 +2084,15 @@ def compare_details():
                 if "!%entrystyle%!" in line_txt:
                     e = line_txt.replace("--", '—')[14:].strip()
                     e = e.replace("$BboldleftB$ ", '')
+                    e = e.replace(")  ", ') ')
 
                     full_entry['entry'] = e
 
                     
                 if "!%Notearea%!" in line_txt:
-                    full_entry['note'] = line_txt.replace("--", '—')[12:].strip()
+                    n = line_txt.replace("--", '—')[12:].strip()
+                    #n = n.replace(". -", '. –')
+                    full_entry['note'] = n
                 
                 if "%$keepoff$%" in line_txt:
                     entries.append(full_entry)
