@@ -1910,7 +1910,7 @@ def itpsubj(bodysession):
                             'if': {'$ne': ['$summarynote', '']}, 
                             'then': {
                                 '$concat': [
-                                    ' – ', 
+                                    ' - ', 
                                     '$summarynote'
                                 ]}, 
                             'else': ''}}, 
@@ -1930,7 +1930,7 @@ def itpsubj(bodysession):
                     'if': {'$ne': ['$numberingnote', '']}, 
                     'then': {
                         '$concat': [
-                            ' – ', 
+                            ' - ', 
                             '$numberingnote'
                         ]
                     }, 
@@ -1969,7 +1969,7 @@ def itpsubj(bodysession):
                 'head': 1, 
                 'subhead': 1,
                 'docsymbol': 1, 
-                'entry': 1, 
+                'entry': {'$trim': {'input': '$entry'}}, 
                 'note': {
                     '$trim': {
                         'input': {
@@ -2899,7 +2899,7 @@ def itpdsl(bodysession):
         pipeline.append(transform_stage)
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
-
+        
         # execute pipeline
         inputCollection.aggregate(pipeline, collation=collation)
 
