@@ -1429,7 +1429,7 @@ def itpsubj(bodysession):
                     {'$gt': [{ '$indexOfCP': ['$245.b', 'report of the' ]}, -1]}, 
                     {'$and': [
                         { '$gt': [{'$indexOfCP': ['$245.b', 'Committee']}, -1 ]}, 
-                        { '$gt': [{'$indexOfCP': ['$245.b', 'General']}, -1 ]}]}, 
+                        { '$gt': [{'$indexOfCP': ['$245.b', 'General Assembly']}, -1 ]}]}, 
                         {'$or': [
                             { '$eq': ['$code', 'G11' ]}, 
                             { '$eq': ['$code', 'G22' ]}, 
