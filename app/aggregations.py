@@ -1215,7 +1215,8 @@ def itpsubj(bodysession):
                                 'in': {'$cond': {
                                     'if': {'$and': [
                                         {'$eq': [{'$arrayElemAt': ['$191.b', 0  ]  }, fullbody]}, 
-                                        {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}]},
+                                        # {'$eq': [  {  '$arrayElemAt': [  '$191.c', 0  ]  }, session]}
+                                        ]},
                                     'then': '$$first','else': '$$second'}}}},
                         'else': {'$trim': {'input': '$191.9','chars': ' '}}}
                 }
@@ -1239,7 +1240,7 @@ def itpsubj(bodysession):
                             'if': { 
                                 '$and': [
                                     {  '$eq': ['$$a', fullbody  ]}, 
-                                    {  '$eq': ['$$b', session  ]}, 
+                                    # {  '$eq': ['$$b', session  ]}, 
                                     '$$second' ]},
                             'then': { 
                                 '$concat': [
@@ -1252,7 +1253,7 @@ def itpsubj(bodysession):
                                     'if': {
                                         '$and': [
                                             {'$eq': ['$$x', fullbody]}, 
-                                            {'$eq': ['$$y', session]}, 
+                                            # {'$eq': ['$$y', session]}, 
                                             '$$second']
                                     }, 
                                     'then': {
