@@ -12,6 +12,7 @@ myDatabase=myClient.undlFiles
 
 ## establish connections to collection
 wordCollection=myDatabase["itp_sample_output_copy"]
+outputCollection=myDatabase["itp_sample_output"]
 
 def get_heading_comparison(bodysession, section, file_text): 
     
@@ -267,3 +268,54 @@ def get_detail_comparison(bodysession, section, file_text):
     #print(details)
 
     return details
+
+def get_dslist_comparison(bodysession, file_text): 
+    
+
+   #retrieve the list from the database
+    results = list(outputCollection.find({
+        'bodysession': bodysession, 
+        'section': "itpdsl"
+    },
+    {'_id': 0, 'docsymbol': 1}))
+
+    new_script = []
+
+    for r in results:
+        new_script.append(r['docsymbol'])
+
+    new_set = set(new_script)
+    old_set = set(file_text) #set(filter(None, file_text)) 
+
+    old_set.discard(None)
+    new_set.discard(None)
+
+    old_dif = old_set.difference(new_set) #in old but not in new
+    new_dif = new_set.difference(old_set) #in new but not in old
+
+    #sort the set results
+    old_dif_sort = sorted(old_dif)
+    new_dif_sort = sorted(new_dif)
+    
+
+    zipped = zip_longest(old_dif_sort, new_dif_sort, fillvalue='')
+    set_dif = (list(zipped))
+
+    zipped_full = zip_longest(file_text, new_script, fillvalue='')
+    full_list = (list(zipped_full))
+
+    summary = {}
+    summary['o_total_docsymbols'] = len(file_text)
+    summary['n_total_docsymbols'] = len(new_script)
+
+    summary['o_total_dif'] = len(old_dif)
+    summary['n_total_dif'] = len(new_dif)
+
+    summary['o_only'] = old_dif #in old but not in new
+    summary['n_only'] = new_dif #in new but not in old
+
+    summary['differences'] = set_dif
+
+    summary['full_list'] = full_list
+      
+    return summary
