@@ -2085,12 +2085,16 @@ def compare_details():
                     e = line_txt.replace("--", '—')[14:].strip()
                     e = e.replace("$BboldleftB$ ", '')
                     e = e.replace(")  ", ') ')
+                    e = e.replace('<U+2013>', '–') #often found in the text
+                    e = e.replace('<U+2019>', '’')
 
                     full_entry['entry'] = e
 
                     
                 if "!%Notearea%!" in line_txt:
                     n = line_txt.replace("--", '—')[12:].strip()
+                    n = n.replace('<U+2013>', '–')
+                    n = n.replace('<U+2019>', '’')
                     #n = n.replace(". -", '. –')
                     full_entry['note'] = n
                 
