@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 from mongoengine import connect,disconnect
 from app.reports import ReportList, AuthNotFound, InvalidInput, _get_body_session
 from app.aggregations import process_section, lookup_code, lookup_snapshots, section_summary
-from app.comparison import get_heading_comparison, get_sorting_comparison, get_detail_comparison
+from app.comparison import get_heading_comparison, get_sorting_comparison, get_detail_comparison, get_dslist_comparison
 from app.snapshot import Snapshot
 from flask_mongoengine.wtf import model_form
 from wtforms.validators import DataRequired
@@ -2144,6 +2144,42 @@ def compare_details():
 
         bodysessions = snapshotDropdown()
         return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
+
+@app.route("/compare/dslist/", methods=["GET", "POST"])
+@login_required
+def compare_dslist():
+    if request.method == "GET" :
+        bodysessions = snapshotDropdown()
+        
+        summary = {}
+        summary['o_total_docsymbols'] = "XX"
+        summary['n_total_docsymbols'] = "XX"
+        
+        summary['o_total_dif'] = "XX"
+        summary['n_total_dif'] = "XX"
+        summary['differences'] = [('', '')]
+
+        summary['o_only'] = {} #in old but not in new
+        summary['n_only'] = {} #in new but not in old
+
+        summary['full_list'] = []
+        return render_template('compare_dslist.html', bodysessions=bodysessions, summary=summary)
+
+    else :
+        #get the form entries
+
+        bs = request.form.get('bodysession')
+        s = request.form.get('section')
+        file_text = []
+
+        for line in request.files.get('file'):
+            line_txt = str(line, 'ISO-8859-1')
+            file_text.append(line_txt.strip())
+        
+        summary = get_dslist_comparison(bs, file_text)
+
+        bodysessions = lookup_snapshots()
+        return render_template('compare_dslist.html', bodysessions=bodysessions, summary=summary)
 
 @app.route("/snapshot/dashboard", methods=["GET", "POST"])
 @login_required
