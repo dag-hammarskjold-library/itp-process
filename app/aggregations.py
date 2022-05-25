@@ -2546,22 +2546,74 @@ def itpdsl(bodysession):
             }
         }
 
-        add_0['secondary'] = {
+        # add_0['secondary'] = {
+        #     '$cond': {
+        #         'if': {'$isArray': '$191'}, 
+        #         'then': {
+        #             '$cond': {
+        #                 'if': {
+        #                     '$and': [
+        #                         {'$eq': [{'$arrayElemAt': ['$191.b', 1]}, fullbody]}, 
+        #                         {'$eq': [{'$arrayElemAt': ['$191.c', 1]}, session]}
+        #                     ]
+        #                 }, 
+        #                 'then': 0, 
+        #                 'else': 1
+        #             }
+        #         }, 
+        #         'else': 'not an array'
+        #     }
+        # }
+
+        add_0['ds'] = {
             '$cond': {
                 'if': {'$isArray': '$191'}, 
                 'then': {
-                    '$cond': {
-                        'if': {
-                            '$and': [
-                                {'$eq': [{'$arrayElemAt': ['$191.b', 1]}, fullbody]}, 
-                                {'$eq': [{'$arrayElemAt': ['$191.c', 1]}, session]}
-                            ]
+                    '$let': {
+                        'vars': {
+                            'a': {'$arrayElemAt': ['$191.b', 0]}, 
+                            'b': {'$arrayElemAt': ['$191.c', 0]}, 
+                            'x': {'$arrayElemAt': ['$191.b', 1]}, 
+                            'y': {'$arrayElemAt': ['$191.c', 1]}, 
+                            'first': {'$arrayElemAt': ['$191.a', 0]}, 
+                            'second': {'$arrayElemAt': ['$191.a', 1]}
                         }, 
-                        'then': 0, 
-                        'else': 1
+                        'in': {
+                            '$cond': {
+                                'if': {
+                                    '$and': [
+                                        {'$eq': ['$$a', fullbody]}, 
+                                        #{'$eq': ['$$b', session]}, 
+                                        '$$second'
+                                    ]
+                                }, 
+                                'then': {
+                                    '$concat': [
+                                        '$$first', ' (', '$$second', ')'
+                                    ]
+                                }, 
+                                'else': {
+                                    '$cond': {
+                                        'if': {
+                                            '$and': [
+                                                {'$eq': ['$$x', fullbody]}, 
+                                                #{'$eq': ['$$y', session]}, 
+                                                '$$second'
+                                            ]
+                                        }, 
+                                        'then': {
+                                            '$concat': [
+                                                '$$second', ' (', '$$first', ')'
+                                            ]
+                                        }, 
+                                        'else': '$$first'
+                                    }
+                                }
+                            }
+                        }
                     }
                 }, 
-                'else': 'not an array'
+                'else': '$191.a'
             }
         }
 
@@ -2605,22 +2657,23 @@ def itpdsl(bodysession):
         # add a field to concatenate all of the elements of the document symbol string
         add_2['docsymbol'] = {
             '$concat': [
-                {'$cond': {
-                    'if': {'$isArray': '$191'}, 
-                    'then': {
-                        '$concat': [
-                            {'$arrayElemAt': ['$191.a', '$primary']}, 
-                            {'$cond': {
-                                'if': {'$eq': ['$primary', '$secondary']},
-                                'then': {'$concat': [' (', {'$arrayElemAt': ['$191.a', 1]}, ')']}, 
-                                'else': {'$concat': [' (', {'$arrayElemAt': ['$191.a', '$secondary']}, ')']},
-                                }
-                            }
-                        ]
-                    }, 
-                    'else': '$191.a'
-                    }
-                }, 
+                # {'$cond': {
+                #     'if': {'$isArray': '$191'}, 
+                #     'then': {
+                #         '$concat': [
+                #             {'$arrayElemAt': ['$191.a', '$primary']}, 
+                #             {'$cond': {
+                #                 'if': {'$eq': ['$primary', '$secondary']},
+                #                 'then': {'$concat': [' (', {'$arrayElemAt': ['$191.a', 1]}, ')']}, 
+                #                 'else': {'$concat': [' (', {'$arrayElemAt': ['$191.a', '$secondary']}, ')']},
+                #                 }
+                #             }
+                #         ]
+                #     }, 
+                #     'else': '$191.a'
+                #     }
+                # }, 
+                '$ds',
                 {'$cond': {
                     'if': {'$eq': ['$495', '']}, 
                     'then': '', 
