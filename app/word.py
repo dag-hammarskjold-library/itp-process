@@ -3555,7 +3555,8 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             #p.paragraph_format.
         
-            z=p.add_run("(Symbol: " + data1["symbol"]+ ")")
+            if data1["committee1"]!="Credentials Committee":
+                z=p.add_run("(Symbol: " + data1["symbol"]+ ")")
             cursorLine+=1
             z.bold=False
 
