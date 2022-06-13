@@ -3713,11 +3713,6 @@ def itpvot(bodysession):
     except Exception as e:
         return e
 
-        return "itpvot completed successfully"
-
-    except Exception as e:
-        return e
-
 # Suppliments to Official Records #
 def itpsor(bodysession): 
     """
