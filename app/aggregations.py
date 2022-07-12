@@ -3278,8 +3278,8 @@ def itpmeet(bodysession):
         x['sortkey1'] = "01a"
         x['sortkey2'] = "YYYY"
         x['sortkey3'] = "1"
-
-        outputCollection.insert_one(x)
+        if body =='A':
+            outputCollection.insert_one(x)
         ####
 
         group_itpmeet("itpmeet", bodysession)
@@ -3614,6 +3614,13 @@ def itpvot(bodysession):
                     'else': {'$concat': ['*Check ', '$967.e']}
                 }
             }
+            add_1['docsymbol'] = {
+            '$cond': {
+                'if': {'$isArray': ['$791.a']}, 
+                'then': {'$arrayElemAt': ['$791.a', 0]}, 
+                'else': '$791.a'
+            }
+        }
             add_1['vote'] = {
                 '$cond': {
                     'if': '$967.d', 
@@ -3630,14 +3637,19 @@ def itpvot(bodysession):
                 '$group': {
                     '_id': {
                         'r': '$record_id', 
-                        'docsymbol': '$791.a', 
+                        'docsymbol': '$docsymbol', 
                         'resnum': {
-                            '$substrCP': [
-                                '$791.a', 
-                                {'$add': [offset, {'$indexOfCP': ['$791.a', '/', 2]}]}, 
-                                4
-                            ]
+                        '$let': {
+                            'vars': {
+                                'ds': '$docsymbol', 
+                                'len': {'$strLenCP': '$docsymbol'}, 
+                                'start': {'$add': [offset, {'$indexOfCP': ['$docsymbol', '/', 2]}]}
+                            }, 
+                            'in': {
+                                '$substrCP': ['$$ds', '$$start', {'$subtract': ['$$len', '$$start']}]
+                            }
                         }
+                    }
                     }, 
                     'votelist': {
                         '$push': {
@@ -3659,7 +3671,13 @@ def itpvot(bodysession):
             transform['docsymbol'] = '$_id.docsymbol'
             transform['resnum'] = '$_id.resnum'
             transform['votelist'] = 1
-            transform['sortkey1'] = '$_id.resnum'
+            transform['sortkey1'] = {
+            '$replaceAll': {
+                'input': '$_id.resnum', 
+                'find': '[', 
+                'replacement': ''
+            }
+        }
 
             transform_stage = {}
             transform_stage['$project'] = transform
