@@ -35,7 +35,7 @@ jsonschema==3.2.0
 kappa==0.6.0
 lambda-packages==0.20.0
 lazy-object-proxy==1.4.3
-lxml==4.6.3
+lxml==4.9.1
 MarkupSafe==1.1.1
 mccabe==0.6.1
 mongoengine
