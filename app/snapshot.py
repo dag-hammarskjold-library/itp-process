@@ -204,9 +204,9 @@ class Snapshot(object):
         for bib in lbibs[(chunk_no-1)*chunk_size:end_rec]:
             #print(f"bib id is {bib.id}")
             bib_dict={}
-            if "ITS" in bib.get_values('930','a'):
+            if "ITS" in [s.strip() for s in bib.get_values('930','a')]:
                 bib_dict["record_type"]="ITS"
-            elif "VOT" in bib.get_values('930','a'):
+            elif "VOT" in [s.strip() for s in bib.get_values('930','a')]:
                 bib_dict["record_type"]="VOT"
             else:
                 bib_dict["record_type"]="BIB"
