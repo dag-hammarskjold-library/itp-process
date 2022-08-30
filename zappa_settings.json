@@ -20,7 +20,7 @@
         "runtime": "python3.7",
         "slim_handler": "true",
         "s3_bucket": "zappa-7la88m1as",
-        "timeout_seconds": 900,
+        "timeout_seconds": 1200,
         "async_response_table": "itpp-responses",
         "environment_variables": {
             "FLASK_ENV": "production",
