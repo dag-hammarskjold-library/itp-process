@@ -14,6 +14,7 @@ from mongoengine import connect,disconnect
 from app.itp_config import fetch_agenda, fetch_itpcode
 from dateutil import tz
 import pytz
+from zappa.asynchronous import run, task
 
 
 
@@ -235,6 +236,16 @@ class Snapshot(object):
             #query={"record_id":bib_dict["record_id"]}
             query={"snapshot_id":bib_dict["snapshot_id"]}
             self.replace_list_recs.append(ReplaceOne(query, bib_dict, upsert=True))
+
+        #write this replace list_recs into the DB as an asynch task
+        try:
+            start_time_bulk_write=time.time()
+            self.bulk_write_bibs_auths()
+            print(f"--- {time.time() - start_time_bulk_write} seconds for bulk write for chunk {chunk_no}. for {self.body}/{self.session} ---")
+            #clear the replace_list_recs
+            self.replace_list_recs.clear()
+        except:
+            pass
         return len(self.replace_list_recs)
 
 
@@ -271,6 +282,15 @@ class Snapshot(object):
             #query={"record_id":bib_dict["record_id"]}
             query={"snapshot_id":auth_dict["snapshot_id"]}
             self.replace_list_recs.append(ReplaceOne(query, auth_dict, upsert=True))
+        #bulk write replace list recs as an asynch tasks..
+        try:
+            start_time_bulk_write=time.time()
+            self.bulk_write_bibs_auths()
+            print(f"--- {time.time() - start_time_bulk_write} seconds for bulk write for auths for {self.body}/{self.session} ---")
+            #clear the replace_list_recs
+            self.replace_list_recs.clear()
+        except:
+            pass
         return len(self.replace_list_recs)
 
 
@@ -279,13 +299,18 @@ class Snapshot(object):
 
 
     ''' writing data into snapshot collection'''    
+    @task
     def bulk_write_bibs_auths(self):
         try:
-            print("No. of replace_list_bibs_auths records is: {}".format(len(self.replace_list_recs)))
-            snapshot_coll.bulk_write(self.replace_list_recs)
+            temp_l=self.replace_list_recs[:]
+            self.replace_list_recs=[]
+            print("No. of replace_list_bibs_auths records is: {}".format(len(temp_l)))
+            snapshot_coll.bulk_write(temp_l)
         except:
             warning="something went wrong with insert into MDb"    
+        #self.replace_list_recs=[]
     '''asynch function'''
+
     def transform_write(self):
         #start writing snapshot - flag on
         #itpp_doc.snapshot_running=true
@@ -294,23 +319,23 @@ class Snapshot(object):
         lbibs=self.fetch_bib_data(proj_bib_dict)
         no_of_chunks=10
         for i in range(1,no_of_chunks+1):
-            start_time_chunk=time.time()
+            #start_time_chunk=time.time()
             len1=self.process_bib_records(i,no_of_chunks+1,lbibs,itpp_bib_fields)
-            print(f"--- {time.time() - start_time_chunk} seconds for chunk {i} run ---")
-            print(f"chunk No is: {i}; records processed are {len1}")
+           # print(f"--- {time.time() - start_time_chunk} seconds for chunk {i} run ---")
+            #print(f"chunk No is: {i}; records processed are {len1}")
             #print("No. of ITP its records is: {}".format(number_itss))
-        print(f"No. of ITP records is: {len(self.replace_list_recs)}")
+        #print(f"No. of ITP records is: {len(self.replace_list_recs)}")
         
         lauths=self.fetch_auth_data(proj_auth_dict)
-        start_time_auths=time.time()
+        #start_time_auths=time.time()
         len_auths=self.process_auth_records(lauths,itpp_auth_fields)
-        print(f"--- {time.time() - start_time_auths} seconds for auths run ---")
+        #print(f"--- {time.time() - start_time_auths} seconds for auths run ---")
         #print(f"Auth records processed are {len(lauths)}")            #print("No. of ITP its records is: {}".format(number_itss))
-        print(f"No. of ITP records is: {len(self.replace_list_recs)}")
+        #print(f"No. of ITP records is: {len(self.replace_list_recs)}")
 
-        start_time_bulk_write=time.time()
-        self.bulk_write_bibs_auths()
-        print(f"--- {time.time() - start_time_bulk_write} seconds for bulk write for {self.body}/{self.session} ---")
+        #start_time_bulk_write=time.time()
+        #self.bulk_write_bibs_auths()
+        #print(f"--- {time.time() - start_time_bulk_write} seconds for bulk write for {self.body}/{self.session} ---")
         #stop writing snapshot - flag off
         #itpp_doc.snapshot_running=false
 
