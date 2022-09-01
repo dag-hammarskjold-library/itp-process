@@ -39,10 +39,15 @@ def get_heading_comparison(bodysession, section, file_text):
 
     old_dif = old_set.difference(new_set) #in old but not in new
     new_dif = new_set.difference(old_set) #in new but not in old
-
+    new_dif1=[]
+    for i in new_dif:
+        if i is None:
+            i=""#None breaks the code in the app
+        new_dif1.append(i)   
+    new_dif_s=set(new_dif1) 
     #sort the set results
     old_dif_sort = sorted(old_dif)
-    new_dif_sort = sorted(new_dif)
+    new_dif_sort = sorted(new_dif_s)
     
 
     zipped = zip_longest(old_dif_sort, new_dif_sort, fillvalue='')
