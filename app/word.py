@@ -3017,8 +3017,8 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
         add_page_number(document.sections[0].footer.paragraphs[0])
         return document
     
-
-    if (bodysession[0]=="E"):
+    '''
+    if (bodysession[0]=="Er23"):
         
         datas=setOfData
         datas1=setOfData1
@@ -3198,8 +3198,8 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
 
         add_page_number(document.sections[0].footer.paragraphs[0])
         return document
-
-    if (bodysession[0]=="A"):   
+'''
+    if (bodysession[0]=="A") or (bodysession[0]=="E"):   
         datas=setOfData
         datas1=setOfData1
 
