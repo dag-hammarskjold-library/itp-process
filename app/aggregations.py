@@ -1953,10 +1953,6 @@ def itpsubj(bodysession):
 
             ]}
          
-                
-                  
-
-
 
         transform_stage = {}
         transform_stage['$addFields'] = transform
@@ -2022,8 +2018,6 @@ def itpsubj(bodysession):
         pipeline.append(project_stage)
         pipeline.append(sort_stage)
         pipeline.append(merge_stage)
-
-        #print(pipeline)
 
         inputCollection.aggregate(pipeline, collation=collation)
 
@@ -2093,7 +2087,6 @@ def itpsubj(bodysession):
             copyPipeline.append(copyAdd1_stage)
             copyPipeline.append(copyAdd2_stage)
             copyPipeline.append(copyTransform_stage)
-
             copyPipeline.append(project_stage)
             copyPipeline.append(sort_stage)
             copyPipeline.append(merge_stage)
