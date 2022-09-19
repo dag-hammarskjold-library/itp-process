@@ -1,3 +1,4 @@
+from copyreg import constructor
 import logging
 from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash,send_file
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
@@ -1674,8 +1675,11 @@ def get_document_async(document_name, param_title, param_subtitle, body_session,
     try:
         document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
         s3_client = boto3.client('s3')
-        filename = '/tmp/' + key
+        filename = '/tmp/' + key        
         document.save(filename)
+        #windows
+        #filename = key 
+        #document.save("C:{}".format(filename))
         response = s3_client.upload_file(filename, Config.bucket_name, key)
         return True
     except ClientError as e:
