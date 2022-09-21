@@ -1678,8 +1678,8 @@ def get_document_async(document_name, param_title, param_subtitle, body_session,
         filename = '/tmp/' + key        
         document.save(filename)
         #windows
-        #filename = key 
-        #document.save("C:{}".format(filename))
+        # filename = key 
+        # document.save("C:{}".format(filename))
         response = s3_client.upload_file(filename, Config.bucket_name, key)
         return True
     except ClientError as e:

@@ -2450,25 +2450,41 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
     # this function will check if the new entry is already 
     # inside the doc
 
-    def FormatEntry(entries):
-       
-        listWithoutNote=[]
-        listEntryUpdate=entries
+    def formatEntry(entries):
 
          # only if we have to deal with S
         if (bodysession[0]=="S"):
+
+            listWithoutNote=[]
+            listWithoutNote1=[]
+            listEntryUpdate=entries
             
             # retrieve records without note
             for entry in entries:
-                if (entry["note"]=="" ):       
+                if (entry["note"]=="" ):     
                     listWithoutNote.append(entry)
+
+            for entry in entries:        
+                if (entry["note"]==""):      
+                    listWithoutNote1.append(entry)
+                
                     
-            # compare list without note with the entries list 
+            # first user case 
             for withoutNote in listWithoutNote:
                 for entry in listEntryUpdate:
                     if withoutNote["docsymbol"]==entry["docsymbol"] and withoutNote["entry"]==entry["entry"] and withoutNote["note"]!=entry["note"] :
                         # remove this note from the initial list
                         entries.remove(withoutNote)
+            
+
+            # second user case 
+            for WithoutNote1 in listWithoutNote1:
+                occurence=0
+                for entry in listEntryUpdate:
+                    if WithoutNote1["docsymbol"]==entry["docsymbol"] and WithoutNote1["entry"]==entry["entry"] and entry["note"]=="" :
+                        occurence=occurence+1
+                        if occurence>1 :
+                            entries.remove(entry)
 
     # subheader List
     # myDocSymbolList=[]
@@ -2513,7 +2529,7 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
                     insert_its_subhead(itssubhead)
                     dxa_counter+=dxa_counter_subhead(itssubhead)
 
-                FormatEntry(itsentries)
+                formatEntry(itsentries)
                 for entry in itsentries:
                     # insertion of the new function
                     
