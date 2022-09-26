@@ -1978,17 +1978,36 @@ def itpsubj(bodysession):
                         'chars': '- ' #regular dash
                     }
                 }, 
-                'sortkey1': {
+                # 'sortkey1': {
+                #     '$replaceAll': {
+                #         'input': {
+                #             '$replaceAll': {
+                #                 'input': {'$concat': [{'$toUpper': '$agendasubject'}, '—', '$agendanum']},#subject
+                #                 'find': '. ', 
+                #                 'replacement': ' .'
+                #             }
+                #         }, 
+                #         'find': '—', 
+                #         'replacement': ' —'
+                #     }
+                # }
+            'sortkey1': {
                     '$replaceAll': {
-                        'input': {
-                            '$replaceAll': {
-                                'input': {'$concat': [{'$toUpper': '$agendasubject'}, '—', '$agendanum']},#subject
-                                'find': '. ', 
-                                'replacement': ' .'
-                            }
-                        }, 
-                        'find': '—', 
-                        'replacement': ' —'
+                    'input': {
+                        '$replaceAll': {
+                            'input': {
+                                '$replaceAll': {
+                                    'input': {'$concat': [{'$toUpper': '$agendasubject'}, '—', '$agendanum']},#subject
+                                    'find': '. ', 
+                                    'replacement': ' .'
+                                }
+                            }, 
+                            'find': '—', 
+                            'replacement': ' —'
+                        }
+                    }, 
+                    'find': '—2', 
+                    'replacement': ' '    
                     }
                 },
                 'sortkey2': '$code',
@@ -2020,6 +2039,8 @@ def itpsubj(bodysession):
         pipeline.append(merge_stage)
 
         inputCollection.aggregate(pipeline, collation=collation)
+
+        print(pipeline)
 
         ####new####
         if body == "S":
