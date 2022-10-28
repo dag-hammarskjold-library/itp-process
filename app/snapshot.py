@@ -136,7 +136,7 @@ class Snapshot(object):
                     )
                 )
             )
-        #print(query.to_json())
+        print(query.to_json())
         bibset=BibSet.from_query(query, projection=proj_dict, skip=0, limit=0)
         #l_temp=bibset.count
         #self.snapshot_len=l_temp 
@@ -205,13 +205,14 @@ class Snapshot(object):
             #print(f"bib id is {bib.id}")
             bib_dict={}
             #strip entries in 930.a for ITS and VOT
-            if "ITS" in [s.strip() for s in bib.get_values('930','a')]:
+            #if "ITS" in [s.strip() for s in bib.get_values('930','a')]:
+            #    bib_dict["record_type"]="ITS"
+            if "Q" in [s.strip()[0] for s in bib.get_values('035','a')]:
                 bib_dict["record_type"]="ITS"
             elif "VOT" in [s.strip() for s in bib.get_values('930','a')]:
                 bib_dict["record_type"]="VOT"
             else:
                 bib_dict["record_type"]="BIB"
-
             bib_dict["record_id"]=bib.id
             bib_dict["bodysession"]=self.body+'/'+self.session
             bib_dict["snapshot_id"]=str(bib.id)+self.body+self.session
@@ -234,8 +235,14 @@ class Snapshot(object):
                     bib_dict[field]=""
             #snapshot_list_bibs.append(bib_dict)
             #query={"record_id":bib_dict["record_id"]}
-            query={"snapshot_id":bib_dict["snapshot_id"]}
-            self.replace_list_recs.append(ReplaceOne(query, bib_dict, upsert=True))
+            v930a= ''.join(bib.get_values('930','a'))
+            if "ITP" in v930a and self.session not in v930a:
+            #if " " in v930a:
+                #list.pop(idx)
+                print(f'record_id not for {self.body}/{self.session} is:{bib.id}')
+            else:
+                query={"snapshot_id":bib_dict["snapshot_id"]}
+                self.replace_list_recs.append(ReplaceOne(query, bib_dict, upsert=True))
         return len(self.replace_list_recs)
 
 
