@@ -207,6 +207,7 @@ class Snapshot(object):
             #strip entries in 930.a for ITS and VOT
             #if "ITS" in [s.strip() for s in bib.get_values('930','a')]:
             #    bib_dict["record_type"]="ITS"
+            # update criteria for ITS records - addresses issue 353
             if "Q" in [s.strip()[0] for s in bib.get_values('035','a')]:
                 bib_dict["record_type"]="ITS"
             elif "VOT" in [s.strip() for s in bib.get_values('930','a')]:
