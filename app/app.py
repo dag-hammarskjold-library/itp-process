@@ -315,7 +315,7 @@ def displaySnapshot():
     snapshot=Snapshot('ZZZZ','0001')
     return render_template('snapshot.html', snapshots=snapshot.list())
 
-@task
+#@task
 def transform_and_write_snapshot(body, session):
     form = "Select Authority"
     snapshot=Snapshot(body,session) # snapshot class uses A and 72
