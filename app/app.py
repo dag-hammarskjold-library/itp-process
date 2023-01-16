@@ -1976,7 +1976,7 @@ def compare_heading():
                 if file.filename[:2]=="hz":
                     line_txt = str(line, 'ISO-8859-1')
                 else:
-                     line_txt = str(line, 'utf-8')
+                     line_txt = str(line, 'ISO-8859-1')
                 #try:
                 #    line_txt = str(line, 'UTF-8')
                 #except:
@@ -1990,7 +1990,7 @@ def compare_heading():
                 if file.filename[:2]=="hz":
                     line_txt = str(line, 'ISO-8859-1')
                 else:
-                     line_txt = str(line, 'utf-8')
+                     line_txt = str(line, 'ISO-8859-1')
                 if "!%itshead%!" in line_txt and "%$newhead$%" not in line_txt:
                     headstyle = line_txt.replace("--", '—')[11:].strip()
                     file_text.append(headstyle)
@@ -2022,7 +2022,7 @@ def compare_sort():
                 if file.filename[:2]=="hz":
                     line_txt = str(line, 'ISO-8859-1')
                 else:
-                    line_txt = str(line, 'utf-8') 
+                    line_txt = str(line, 'ISO-8859-1') 
                 #line_txt = str(line, 'UTF-8')
                 if "!%headstyle%!" in line_txt and "%$newhead$%" not in line_txt:
                     headstyle = line_txt.replace("--", '—')[13:].strip()
@@ -2033,7 +2033,7 @@ def compare_sort():
                 if file.filename[:2]=="hz":
                     line_txt = str(line, 'ISO-8859-1')
                 else:
-                    line_txt = str(line, 'utf-8') 
+                    line_txt = str(line, 'ISO-8859-1') 
                 if "!%itshead%!" in line_txt and "%$newhead$%" not in line_txt:
                     headstyle = line_txt.replace("--", '—')[11:].strip()
                     file_text.append(headstyle)
@@ -2070,7 +2070,7 @@ def compare_details():
                 if file.filename[:2]=="hz":
                     line_txt = str(line, 'ISO-8859-1')
                 else:
-                     line_txt = str(line, 'utf-8')
+                     line_txt = str(line, 'ISO-8859-1')
                 #new record
                 if "%$newhead$%" in line_txt:
                     if len(record) > 0:
@@ -2139,7 +2139,7 @@ def compare_details():
                 if file.filename[:2]=="hz":
                     line_txt = str(line, 'ISO-8859-1')
                 else:
-                     line_txt = str(line, 'utf-8')
+                     line_txt = str(line, 'ISO-8859-1')
 
                 #new record
                 if "%$newhead$%" in line_txt:
@@ -2213,7 +2213,7 @@ def compare_dslist():
             if file.filename[:2]=="hz":
                 line_txt = str(line, 'ISO-8859-1')
             else:
-                    line_txt = str(line, 'utf-8')
+                    line_txt = str(line, 'ISO-8859-1')
             file_text.append(line_txt.strip())
         
         summary = get_dslist_comparison(bs, file_text)
