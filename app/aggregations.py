@@ -207,23 +207,51 @@ def itpitsc(bodysession):
                         },
                 ]},
                 'sortkey2': {
-                    '$replaceAll': {
-                        'input': {
-                            '$replaceAll': {
-                                'input': {
-                                    '$replaceAll': {
-                                        'input': {'$toUpper': '$itsentry'}, #speaker
-                                        'find': ' ', 
-                                        'replacement': '!'
-                                    }
-                                }, 
-                                'find': ',', 
-                                'replacement': ' '
-                            }
-                        }, 
+                #     '$replaceAll': {
+                #         'input': {
+                #             '$replaceAll': {
+                #                 'input': {
+                #                     '$replaceAll': {
+                #                         'input': {'$toUpper': '$itsentry'}, #speaker
+                #                         'find': ' ', 
+                #                         'replacement': '!'
+                #                     }
+                #                 }, 
+                #                 'find': ',', 
+                #                 'replacement': ' '
+                #             }
+                #         }, 
+                #     'find': '-', 
+                #     'replacement': '^'
+                #     }
+                # },
+                
+                '$replaceAll': {
+                    'input': {                            
+                    
+                        '$replaceAll': {
+                            'input': {
+                                        '$replaceAll': {
+                                            'input': {
+                                                '$replaceAll': {
+                                                    'input': {'$toUpper': '$itsentry'}, #speaker
+                                                    'find': ',', 
+                                                    'replacement': ' '
+                                                }
+                                            }, 
+                                            'find': ' ', 
+                                            'replacement': '!'
+                                        }
+                            }, 
+                            'find': '.', 
+                            'replacement': '!'
+                        },
+                        
+                    }, 
                     'find': '-', 
                     'replacement': '^'
-                    }
+                },   
+  
                 },
                 'sortkey3': '$docsymbol'
             }
@@ -411,42 +439,53 @@ def itpitsp(bodysession):
                 'itssubhead': 1, 
                 'itsentry': 1, 
                 'docsymbol': 1, 
-                'sortkey1': {
-                '$replaceAll': {
-                    'input': {
+                'sortkey1': { 
+                        '$replaceAll': {
+                            'input': {                            
+                            
+                                '$replaceAll': {
+                                    'input': {
+                                                '$replaceAll': {
+                                                    'input': {
+                                                        '$replaceAll': {
+                                                            'input': {'$concat': [{'$toUpper': '$itshead'}, '+']}, 
+                                                            'find': ',', 
+                                                            'replacement': ' '
+                                                        }
+                                                    }, 
+                                                    'find': ' ', 
+                                                    'replacement': '!'
+                                                }
+                                    }, 
+                                    'find': '.', 
+                                    'replacement': '!'
+                                },
+                                
+                            }, 
+                            'find': '-', 
+                            'replacement': '^'
+                        },
+                            
+                            
+                            
+                },
+                'sortkey2': {
                         '$replaceAll': {
                             'input': {
                                 '$replaceAll': {
-                                    'input': {'$concat': [{'$toUpper': '$itshead'}, '+']}, 
-                                    'find': ' ', 
-                                    'replacement': '!'
+                                    'input': {'$concat': [{'$toUpper': '$agendasubject'}, '—', '$agendanum']},#{'$toUpper': '$itssubhead'}, #subject 
+                                    'find': '. ', 
+                                    'replacement': ' .'
                                 }
                             }, 
-                            'find': ',', 
-                            'replacement': ' '
-                        }
-                    }, 
-                    'find': '-', 
-                    'replacement': '^'
-                    }
-                },
-                'sortkey2': {
-                    '$replaceAll': {
-                        'input': {
-                            '$replaceAll': {
-                                'input': {'$concat': [{'$toUpper': '$agendasubject'}, '—', '$agendanum']},#{'$toUpper': '$itssubhead'}, #subject 
-                                'find': '. ', 
-                                'replacement': ' .'
-                            }
-                        }, 
-                        'find': '—', 
-                        'replacement': ' —'
-                    }
+                            'find': '—', 
+                            'replacement': ' —' 
+                        },
                 }, 
                 'sortkey3': '$docsymbol'
             }
         }
-
+        
         sort_stage = {
             '$sort': {
                 'sortkey1': 1, 
@@ -467,10 +506,7 @@ def itpitsp(bodysession):
         pipeline.append(add_stage2)
         pipeline.append(project_stage)
         pipeline.append(sort_stage)
-    
         pipeline.append(merge_stage)
-    
-        #print(pipeline)
 
         inputCollection.aggregate(pipeline, collation=collation)
 
