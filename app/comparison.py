@@ -223,30 +223,32 @@ def get_detail_comparison(bodysession, section, file_text):
         new_details.append(record)
    
     ###################################################################################################
-    for new_detail in new_details:
- 
-        # Mettre a jour n et n+1
-        for nd in new_detail["table_group"]:
- 
-            recup = nd["entries"]
-            for nd_01 in recup:
-               
-                for entry in nd["entries"]:
-            
-                    if nd_01["entry"] == entry["entry"]:
-                           
-                        if nd_01["note"] !="" and entry["note"] =="":
-                            entry["note"] = nd_01["note"]              
- 
- 
- 
-        # Remove duplicate
-        for nd in new_detail["table_group"]:
-            without_duplicate=[]
-            for entry in (nd["entries"]):
-                if entry not in without_duplicate:
-                    without_duplicate.append(entry)
-            nd["entries"]=without_duplicate
+    
+    if section == 'itpsubj':
+        for new_detail in new_details:
+    
+            # Mettre a jour n et n+1
+            for nd in new_detail["table_group"]:
+    
+                recup = nd["entries"]
+                for nd_01 in recup:
+                
+                    for entry in nd["entries"]:
+                
+                        if nd_01["entry"] == entry["entry"]:
+                            
+                            if nd_01["note"] !="" and entry["note"] =="":
+                                entry["note"] = nd_01["note"]              
+    
+    
+    
+            # Remove duplicate
+            for nd in new_detail["table_group"]:
+                without_duplicate=[]
+                for entry in (nd["entries"]):
+                    if entry not in without_duplicate:
+                        without_duplicate.append(entry)
+                nd["entries"]=without_duplicate
                 
  
        
