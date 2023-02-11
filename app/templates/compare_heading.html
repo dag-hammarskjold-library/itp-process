@@ -38,17 +38,17 @@
                 <!-- <label for="bodysession">Body / Session</label> -->
                 <select class="form-control form-select" id="bodysession" name="bodysession">
                   {% for bodysession in bodysessions %}
-                  <option>{{bodysession}}</option>
+                  <option value={{bodysession}} {% if bodysession==ch_bs %} selected {% endif %}>{{bodysession}}</option>
                   {% endfor %}
                 </select>
             </div>
             <div class="col">
                 <!-- <label for="section">Section</label> -->
                 <select class="form-control form-select" id="section" name="section">
-                  <option>itpsubj</option>
-                  <option>itpitsc</option>
-                  <option>itpitsp</option>
-                  <option>itpitss</option>
+                  <option value ="itpsubj" {% if "itpsubj"==ch_s %} selected {% endif %}>itpsubj</option>
+                  <option value ="itpitsc" {% if "itpitsc"==ch_s %} selected {% endif %}>itpitsc</option>
+                  <option value ="itpitsp" {% if "itpitsp"==ch_s %} selected {% endif %}>itpitsp</option>
+                  <option value ="itpitss" {% if "itpitss"==ch_s %} selected {% endif %}>itpitss</option>
                 </select>
             </div>
             <div class="col">

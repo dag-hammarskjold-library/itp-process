@@ -1,6 +1,6 @@
 from copyreg import constructor
 import logging
-from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash,send_file
+from flask import Flask, render_template, request, abort, jsonify, Response, session,url_for,redirect,flash,send_file,make_response
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from requests import get
 import boto3, re, os, pymongo
@@ -1836,7 +1836,16 @@ def wordGeneration():
         generateWordFile(request.form.get('paramTitle'),request.form.get('paramSubTitle'),request.form.get('bodysession'),request.form.get('paramSection'))
 
         # Returning the view
-        return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
+        #return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
+    
+        # make the response object
+        resp=make_response(render_template('wordgeneration.html',sections=sections, bodysessions=bodysessions,wg_bs=bodysessions ,wg_s=sections))
+        resp.set_cookie("wg_bs",bodysessions)
+        resp.set_cookie("wg_s",sections)
+        
+        return(resp)
+    
+    
 
 @app.route("/snapshot/configure", methods=["GET", "POST"])
 @login_required
@@ -1961,6 +1970,7 @@ def compare_heading():
         summary['n_only'] = {} #in new but not in old
 
         summary['full_list'] = []
+        
         return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
 
     else :
@@ -1998,7 +2008,16 @@ def compare_heading():
         summary = get_heading_comparison(bs, s, file_text)
 
         bodysessions = lookup_snapshots()
-        return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
+        
+                
+        # make the response object
+        resp=make_response(render_template('compare_heading.html', bodysessions=bodysessions, summary=summary, ch_bs=bs ,ch_s=s))
+        resp.set_cookie("ch_bs",bs)
+        resp.set_cookie("ch_s",s)
+        
+        return(resp)
+    
+        #return render_template('compare_heading.html', bodysessions=bodysessions, summary=summary)
 
 @app.route("/compare/sort/", methods=["GET", "POST"])
 @login_required
@@ -2041,7 +2060,14 @@ def compare_sort():
         differences = get_sorting_comparison(bs, s, file_text)
 
         bodysessions = snapshotDropdown()
-        return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
+        #return render_template('compare_sort.html', bodysessions=bodysessions, differences=differences)
+    
+        # make the response object
+        resp=make_response(render_template('compare_sort.html', bodysessions=bodysessions, differences=differences, cs_bs=bs ,cs_s=s))
+        resp.set_cookie("cs_bs",bs)
+        resp.set_cookie("cs_s",s)
+        
+        return(resp)
 
 
 @app.route("/compare/details/", methods=["GET", "POST"])
@@ -2133,7 +2159,9 @@ def compare_details():
             table_group.append(subheading)
             record['table_group'] = table_group
             file_text.append(record)
+            
         else:
+            
             file=request.files.get('file')
             for line in file:
                 if file.filename[:2]=="hz":
@@ -2179,7 +2207,15 @@ def compare_details():
         details = get_detail_comparison(bs, s, file_text)
 
         bodysessions = snapshotDropdown()
-        return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
+        #return render_template('compare_detail.html', bodysessions=bodysessions, details=details)
+    
+        # make the response object
+        resp=make_response(render_template('compare_detail.html', bodysessions=bodysessions, details=details, cdc_bs=bs ,cdc_s=s))
+        resp.set_cookie("cdc_bs",bs)
+        resp.set_cookie("cdc_s",s)
+        
+        return(resp)
+
 
 @app.route("/compare/dslist/", methods=["GET", "POST"])
 @login_required
@@ -2219,7 +2255,15 @@ def compare_dslist():
         summary = get_dslist_comparison(bs, file_text)
 
         bodysessions = lookup_snapshots()
-        return render_template('compare_dslist.html', bodysessions=bodysessions, summary=summary)
+        #return render_template('compare_dslist.html', bodysessions=bodysessions, summary=summary)
+    
+        # make the response object
+        resp=make_response(render_template('compare_dslist.html', bodysessions=bodysessions, summary=summary, cld_bs=bs ,cld_s=s))
+        resp.set_cookie("cld_bs",bs)
+        resp.set_cookie("cld_s",s)
+        
+        return(resp)
+
 
 @app.route("/snapshot/dashboard", methods=["GET", "POST"])
 @login_required
