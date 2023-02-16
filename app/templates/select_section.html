@@ -45,7 +45,7 @@
                         <div class="col-auto">
                             <select class="form-control form-select mr-3" id="bodysession" name="bodysession">
                                 {% for bodysession in bodysessions %}
-                                <option>{{bodysession}}</option>
+                                <option value={{bodysession}} {% if bodysession==ss_bs %} selected {% endif %}>{{bodysession}}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -55,7 +55,7 @@
                         <div class="col-auto">
                             <select class="form-control form-select mr-3" id="paramSection" name="paramSection">
                                 {% for section in sections %}
-                                <option>{{section['code']}}</option>
+                                <option {% if section["code"]==ss_s %} selected {% endif %}>{{section["code"]}}</option>
                                 {% endfor %}
                               </select>
                         </div>
