@@ -1785,6 +1785,8 @@ def newDownload(filename):
 def selectSection():
     sections= lookup_code("section")
     bodysessions = snapshotDropdown()
+    bs = request.form.get('bodysession')
+    s = request.form.get('paramSection')
     
 
     if request.method == "GET" :
@@ -1803,17 +1805,12 @@ def selectSection():
 
         flash(msg)
         
-        ss_bs=
-        ss_s=
-
         # return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
     
         # make the response object
-        resp=make_response(render_template('select_section.html',sections=sections, bodysessions=bodysessions,resultsSearch = results,ss_bs=bodysessions ,ss_s=sections))
-        print(bodysessions)
-        print(sections)
-        resp.set_cookie("ss_bs",str(bodysessions))
-        resp.set_cookie("ss_s",str(sections))
+        resp=make_response(render_template('select_section.html',sections=sections, bodysessions=bodysessions,resultsSearch = results,ss_bs=bs,ss_s=s))
+        resp.set_cookie("ss_bs",bs)
+        resp.set_cookie("ss_s",s)
         
         return(resp)
 
@@ -1830,6 +1827,8 @@ def wordGeneration():
     myCollection=myDatabase['itp_sample_output_copy']
     listOfBodySession=[]
     listOfSection=[]
+    bs = request.form.get('bodysession')
+    s = request.form.get('paramSection')
 
     # Queries to fill some data
 
@@ -1852,9 +1851,9 @@ def wordGeneration():
         # return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
     
         # make the response object
-        resp=make_response(render_template('wordgeneration.html',sections=sections, bodysessions=bodysessions,wg_bs=bodysessions ,wg_s=sections))
-        resp.set_cookie("wg_bs",str(bodysessions))
-        resp.set_cookie("wg_s",str(sections))
+        resp=make_response(render_template('wordgeneration.html',sections=sections, bodysessions=bodysessions,wg_bs=bs ,wg_s=s))
+        resp.set_cookie("wg_bs",bs)
+        resp.set_cookie("wg_s",s)
         
         return(resp)
     
