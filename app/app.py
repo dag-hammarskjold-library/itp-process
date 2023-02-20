@@ -1785,17 +1785,18 @@ def newDownload(filename):
 def selectSection():
     sections= lookup_code("section")
     bodysessions = snapshotDropdown()
+    bs = request.form.get('bodysession')
+    s = request.form.get('paramSection')
     
 
     if request.method == "GET" :
     
         # Returning the view
         results = section_summary()
-        
         return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
 
     else :
-         # Calling the logic to generate the section      
+        # Calling the logic to generate the section      
         
         msg = process_section(request.form.get('bodysession'),request.form.get('paramSection')) 
 
@@ -1804,7 +1805,14 @@ def selectSection():
 
         flash(msg)
         
-        return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
+        # return render_template('select_section.html',sections=sections,bodysessions=bodysessions,resultsSearch = results)
+    
+        # make the response object
+        resp=make_response(render_template('select_section.html',sections=sections, bodysessions=bodysessions,resultsSearch = results,ss_bs=bs,ss_s=s))
+        resp.set_cookie("ss_bs",bs)
+        resp.set_cookie("ss_s",s)
+        
+        return(resp)
 
     
 @app.route("/wordGeneration",methods=["POST","GET"])
@@ -1819,11 +1827,15 @@ def wordGeneration():
     myCollection=myDatabase['itp_sample_output_copy']
     listOfBodySession=[]
     listOfSection=[]
+    bs = request.form.get('bodysession')
+    s = request.form.get('paramSection')
 
     # Queries to fill some data
 
-    bodysessions=myCollection.find({}, {'bodysession': 1}).distinct('bodysession')
-    sections=myCollection.find({}, {'section': 1 }).distinct('section')
+    # bodysessions=myCollection.find({}, {'bodysession': 1}).distinct('bodysession')
+    # sections=myCollection.find({}, {'section': 1 }).distinct('section')
+    sections= lookup_code("section")
+    bodysessions = snapshotDropdown()
     if request.method == "GET" :
     
 
@@ -1836,12 +1848,12 @@ def wordGeneration():
         generateWordFile(request.form.get('paramTitle'),request.form.get('paramSubTitle'),request.form.get('bodysession'),request.form.get('paramSection'))
 
         # Returning the view
-        #return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
+        # return render_template('wordgeneration.html',sections=sections,bodysessions=bodysessions)
     
         # make the response object
-        resp=make_response(render_template('wordgeneration.html',sections=sections, bodysessions=bodysessions,wg_bs=bodysessions ,wg_s=sections))
-        resp.set_cookie("wg_bs",bodysessions)
-        resp.set_cookie("wg_s",sections)
+        resp=make_response(render_template('wordgeneration.html',sections=sections, bodysessions=bodysessions,wg_bs=bs ,wg_s=s))
+        resp.set_cookie("wg_bs",bs)
+        resp.set_cookie("wg_s",s)
         
         return(resp)
     
