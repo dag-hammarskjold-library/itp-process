@@ -14,6 +14,7 @@ from mongoengine import connect,disconnect
 from app.itp_config import fetch_agenda, fetch_itpcode
 from dateutil import tz
 import pytz
+import certifi
 
 
 
@@ -21,8 +22,11 @@ DB.connect(Config.connect_string)
 connect(host=Config.connect_string,db=Config.dbname)
 db_client=MongoClient(Config.connect_string)
 db=db_client['undlFiles']
-rules_coll = db['dev_Itpp_document']
-snapshot_coll=db['itpp_snapshot_test3']
+#rules_coll = db['dev_Itpp_document']
+client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+db_dev_atlas=client_dev_atlas['itpp']
+rules_coll = db_dev_atlas['dev_Itpp_document']
+snapshot_coll=db_dev_atlas['itpp_snapshot_test3']
 itp_bib_fields=[]
 
 local_tz = pytz.timezone('UTC')
@@ -208,6 +212,7 @@ class Snapshot(object):
             #if "ITS" in [s.strip() for s in bib.get_values('930','a')]:
             #    bib_dict["record_type"]="ITS"
             # update criteria for ITS records - addresses issue 353
+            #print(bib.get_values('035','a'))
             if "Q" in [s.strip()[0] for s in bib.get_values('035','a')]:
                 bib_dict["record_type"]="ITS"
             elif "VOT" in [s.strip() for s in bib.get_values('930','a')]:

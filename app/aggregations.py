@@ -5,11 +5,15 @@ import re
 from datetime import datetime
 import json
 from app.itp_config import fetch_agenda, fetch_itpcode
+import certifi
 
 ### connection
 myMongoURI=Config.connect_string
 myClient = MongoClient(myMongoURI)
 myDatabase=myClient.undlFiles
+
+client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+db_dev_atlas=client_dev_atlas['itpp']
 
 ## collections used
 snapshot = "itpp_snapshot_test3"
@@ -18,12 +22,19 @@ wordOutput = "itp_sample_output_copy"
 lookup = "itp_codes"
 snapshot_status = "dev_Itpp_snapshot"
 
-## establish connections to collections
-inputCollection=myDatabase[snapshot]
-outputCollection=myDatabase[editorOutput]
-copyCollection=myDatabase[wordOutput]
-lookupCollection=myDatabase[lookup]
-statusCollection=myDatabase[snapshot_status]
+## establish connections to collections db_dev_atlas
+#inputCollection=myDatabase[snapshot]
+#outputCollection=myDatabase[editorOutput]
+#copyCollection=myDatabase[wordOutput]
+#lookupCollection=myDatabase[lookup]
+#statusCollection=myDatabase[snapshot_status]
+
+inputCollection=db_dev_atlas[snapshot]
+outputCollection=db_dev_atlas[editorOutput]
+copyCollection=db_dev_atlas[wordOutput]
+lookupCollection=db_dev_atlas[lookup]
+statusCollection=db_dev_atlas[snapshot_status]
+
 
 
 #### Data transformations for each section ####

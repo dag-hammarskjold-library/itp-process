@@ -35,12 +35,25 @@ class ProductionConfig(object):
     bucket_name = 'itpp-zappa-bucket'
     url_prefix="https://undocs.org/"
     RPP = 10
-    
-class DevelopmentConfig(ProductionConfig):
-    # Provide overrides for production settings here.
-    context='development'
+
+class DevAtlasConfig(object):
+    context = 'development'
+    client = boto3.client('ssm')
+    connect_string = client.get_parameter(Name='connect-string')['Parameter']['Value']
+    dbname = client.get_parameter(Name='dbname')['Parameter']['Value']
+    connect_string_dev_atlas = client.get_parameter(Name='dev-itpp-connect-string')['Parameter']['Value']
+    #dbname_dev_atlas = client.get_parameter(Name='dbname')['Parameter']['Value']
+    dbname_dev_atlas = 'itpp'
     collection_prefix = 'dev_'
-    DEBUG = True
+    bucket_name = 'itpp-zappa-bucket'
+    url_prefix="https://undocs.org/"
+    RPP = 10
+    
+##class DevelopmentConfig(ProductionConfig):
+    # Provide overrides for production settings here.
+##    context='development'
+##    collection_prefix = 'dev_'
+##    DEBUG = True
 
 class TestConfig(ProductionConfig):
     context = 'test'
@@ -57,7 +70,8 @@ def get_config():
     if flask_env == 'production':
         return ProductionConfig
     elif flask_env == 'development':
-        return DevelopmentConfig
+        return DevAtlasConfig
+
     else:
         raise Exception('Environment variable "FLASK_ENV" set to invalid value "{}"'.format(flask_env))
 

@@ -30,6 +30,7 @@ from docx.enum.text import WD_LINE_SPACING
 import itertools
 import math
 import time
+import certifi
 
 
 s3_client = boto3.client('s3')
@@ -170,8 +171,10 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
@@ -401,8 +404,10 @@ def generateWordDocITPITSC(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle=paramSubTitle
@@ -853,8 +858,10 @@ def generateWordDocITPITSP(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle=paramSubTitle
@@ -1254,8 +1261,10 @@ def generateWordDocITPITSS(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle=paramSubTitle
@@ -1759,8 +1768,10 @@ def generateWordDocITPRES(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle1=paramSubTitle
@@ -2110,8 +2121,10 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle=paramSubTitle
@@ -2560,8 +2573,10 @@ def generateWordDocITPDSL(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
@@ -2794,8 +2809,10 @@ def generateWordDocITPMEET(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
@@ -3415,8 +3432,10 @@ def generateWordDocITPAGE(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection})
@@ -4291,8 +4310,10 @@ def generateWordDocITPVOT(paramTitle,paramSubTitle,bodysession,paramSection,para
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     config_coll=myDatabase['itp_config']
     myTitle=paramTitle
@@ -5107,8 +5128,10 @@ def generateWordDocITPREPS(paramTitle,paramSubTitle,bodysession,paramSection,par
     # Setting some Variables
 
     myMongoURI=Config.connect_string
-    myClient = MongoClient(myMongoURI)
-    myDatabase=myClient.undlFiles
+    #myClient = MongoClient(myMongoURI)
+    #myDatabase=myClient.undlFiles
+    client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+    myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
     mySubTitle1=paramSubTitle

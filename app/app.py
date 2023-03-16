@@ -34,6 +34,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
+import certifi
 #from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config, snapshot_summary, deleteSnapshot, snapshotDropdown
 from app.itp_config import *
 
@@ -48,7 +49,10 @@ app = Flask(__name__)
 # setting up the secret key and connect to the database
 
 app.secret_key=b'a=pGw%4L1tB{aK6'
-connect(host=Config.connect_string,db=Config.dbname)
+#connect(host=Config.connect_string,db=Config.dbname)
+disconnect()
+connect(host=Config.connect_string_dev_atlas,db='itpp', tlsCAFile=certifi.where())
+
 URL_BY_DEFAULT = Config.url_prefix
 
 
