@@ -48,7 +48,7 @@
                         <label for="exampleFormControlInput1">Body / Session</label>
                         <select class="form-control form-select" id="bodysession" name="bodysession">
                             {% for bodysession in bodysessions %}
-                            <option>{{bodysession}}</option>
+                            <option value={{bodysession}} {% if bodysession==wg_bs %} selected {% endif %}>{{bodysession}}</option>
                             {% endfor %}
                         </select>
                       </div>
@@ -56,7 +56,7 @@
                         <label for="exampleFormControlInput1">Section</label>
                         <select class="form-control form-select" id="paramSection" name="paramSection">
                             {% for section in sections %}
-                            <option>{{section}}</option>
+                            <option {% if section["code"]==wg_s %} selected {% endif %}>{{section["code"]}}</option>
                             {% endfor %}
                           </select>
                       </div>

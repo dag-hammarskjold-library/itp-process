@@ -26,14 +26,14 @@
                 <!-- <label for="bodysession">Body / Session</label> -->
                 <select class="form-control form-select" id="bodysession" name="bodysession">
                   {% for bodysession in bodysessions %}
-                  <option>{{bodysession}}</option>
+                  <option value={{bodysession}} {% if bodysession==cld_bs %} selected {% endif %}>{{bodysession}}</option>
                   {% endfor %}
                 </select>
             </div>
             <div class="col">
                 <!-- <label for="section">Section</label> -->
                 <select class="form-control form-select" id="section" name="section">
-                  <option>itpdsl</option>
+                  <option value ="itpdsl" {% if "itpdsl"==cld_s %} selected {% endif %}>itpdsl</option>
                 </select>
             </div>
             <div class="col">
