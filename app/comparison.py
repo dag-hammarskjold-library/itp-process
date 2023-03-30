@@ -4,6 +4,7 @@ from app.config import Config
 from pymongo import MongoClient
 from itertools import zip_longest, groupby
 from unidecode import unidecode
+import certifi
 
 ### connection
 myMongoURI=Config.connect_string
