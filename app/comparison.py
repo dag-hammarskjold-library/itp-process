@@ -4,19 +4,22 @@ from app.config import Config
 from pymongo import MongoClient
 from itertools import zip_longest, groupby
 from unidecode import unidecode
- 
- 
+
+import certifi
+
 ### connection
 myMongoURI=Config.connect_string
 myClient = MongoClient(myMongoURI)
 myDatabase=myClient.undlFiles
- 
+
+
+client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+db_dev_atlas=client_dev_atlas['itpp']
 ## establish connections to collection
-wordCollection=myDatabase["itp_sample_output_copy"]
-outputCollection=myDatabase["itp_sample_output"]
- 
+wordCollection=db_dev_atlas["itp_sample_output_copy"]
+outputCollection=db_dev_atlas["itp_sample_output"]
+
 def get_heading_comparison(bodysession, section, file_text):
-    
     if section == 'itpsubj':
         heading = "head"
  
@@ -106,7 +109,7 @@ def get_sorting_comparison(bodysession, section, file_text):
         }
  
     new_script = wordCollection.aggregate(pipeline, collation=collation)
- 
+
     an_iterator = itertools.groupby(file_text, lambda x : unidecode(x[0][0]))
  
     old_script = []
@@ -115,8 +118,10 @@ def get_sorting_comparison(bodysession, section, file_text):
     for key, group in an_iterator:
  
         record['_id'] =  key
+
         record['head'] = list(group)
  
+
         old_script.append(record)
         record = {}
  

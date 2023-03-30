@@ -3,17 +3,22 @@ from pymongo import MongoClient
 from pymongo.collation import Collation
 from bson.objectid import ObjectId
 import re
+import certifi
 
 
 ### connection
-myMongoURI=Config.connect_string
-myClient = MongoClient(myMongoURI)
-myDatabase=myClient.undlFiles
+#myMongoURI=Config.connect_string
+#myClient = MongoClient(myMongoURI)
+#myDatabase=myClient.undlFiles
 
+client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
+db_dev_atlas=client_dev_atlas.itpp
+#snapshot_coll=db_dev_atlas['itpp_snapshot_test3']
 ## establish connections to collection
-configCollection=myDatabase["itp_config"]
-snapshotCollection=myDatabase["itpp_snapshot_test3"]
-devSnaphotCollection=myDatabase["dev_Itpp_snapshot"]
+#configCollection=myDatabase["itp_config"]
+configCollection=db_dev_atlas["itp_config"]
+snapshotCollection=db_dev_atlas['itpp_snapshot_test3']
+devSnaphotCollection=db_dev_atlas["dev_Itpp_snapshot"]
 
 def update_snapshot_config(id, bodysession, agenda_symbol, product_code):
     """
