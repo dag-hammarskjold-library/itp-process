@@ -33,7 +33,7 @@
           <input type="text" class="form-control" name="authority" id="authority" placeholder="Enter the authority ID" />
           <br />
           <br />
-          <button id="execute" type="submit" class="btn btn-primary mb-5" onclick="loading();" disabled> Execute </button>
+          <button id="execute" type="submit" class="btn btn-primary mb-5 mt-2" onclick="loading();" disabled> Execute </button>
         </div>
       </form>
     </div>
@@ -92,7 +92,7 @@
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
               <!-- Implement the loop for generating the links for the reports -->
               {% if snapshot[0][0]=="S" %}
-              <li> <span class="text-dark"> * {{snapshot[0]}} @ {{snapshot[1] }}</span></li>
+              <li> <span class="text-dark"> *  {{snapshot[0]}}  @ {{snapshot[1] }}</span></li>
               {% endif %}
             </ul>
             {% endfor %}

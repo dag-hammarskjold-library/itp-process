@@ -1,0 +1,144 @@
+{% extends 'base.html' %} {% block content %}
+
+<style type="text/css">
+  .customize {
+    height: 200px;
+    width: 600px;
+  }
+</style>
+
+</style>
+<style>
+  div#loading {
+    position: fixed;
+    width: 1000px;
+    height: 10000px;
+    display: none;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0.5;
+  }
+</style>
+
+
+  <div id="loading">
+    <img src="{{ url_for('static', filename='img/ajax-loader.gif') }}" />
+  </div>
+
+  {% if message %}
+  <div class="alert alert-success" role="alert">
+      <p class="text-center"> <strong>  {{ message }} </strong>   
+  </div>
+{% endif %}
+
+{% if error %}
+  <div class="alert alert-danger" role="alert">
+      <p class="text-center"> <strong>  {{ error }} </strong>   
+  </div>
+{% endif %}
+<div id="content" class="container">
+  <div class="container customize shadow">
+   
+    <div class="container mt-4 mb-1">
+      <h1>Extract iso/mrc files</h1>
+      <hr />
+      <form class="mt-0 form-group" method="POST" action="">
+        <div class="Row">
+          <input type="text" class="form-control" name="bodysession" id="bodysession" placeholder="Enter the Body / Session" />
+          <button id="execute" type="submit" class="btn btn-primary btn-lg btn-block mt-2 " onclick="loading();" disabled> Execute </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <br />
+  <div id="output" class="container">
+
+    <div class="card mb-12 shadow-sm">
+      <div class="card-header">
+        <h4 class="my-0 font-weight-normal">Existing iso files</h4>
+      </div>
+      <div class="row mt-2">
+        <div class="col-sm-3">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">ECOSOC</h4>
+          </div>
+          <div class="card-body">
+          {% for data in myData %}
+            <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+              {% if data[0][0]=="E" %}
+              <li> <a href=data[0] download/> {{ data[0] }}</a> @ {{ data[1] }} </li>
+              {% endif %} 
+            </ul>
+          {% endfor %}
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">General Assembly</h4>
+          </div>
+          <div class="card-body">
+            {% for data in myData %}
+            <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+            {% if data[0][0]=="A" %}
+            <li> <a href=data[0] download/> {{ data[0] }}</a> @ {{ data[1] }} </li>
+            {% endif %}   
+          </ul>
+          {% endfor %}         
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Security Council</h4>
+          </div>
+          <div class="card-body">
+            {% for data in myData  %}
+            <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+            {% if data[0][0]=="S" %}
+            <li> <a href=data[0] download/> {{ data[0] }} </a> @ {{ data[1] }} </li>
+          {% endif %} 
+        </ul>
+        {% endfor %}
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="card-header">
+            <h4 class="my-0 font-weight-normal">Trusteeship Council</h4>
+          </div>
+          <div class="card-body">
+            {% for data in myData %}
+            <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
+            {% if data[0][0]=="T" %}
+            <li> <a href=data[0] download/>{{ data[0] }}</a> @ {{ data[1] }} </li>
+            {% endif %} 
+          </ul>
+          {% endfor %}
+          </div>
+        </div>
+      </div>
+    <br />
+  </div>
+
+  <script type="text/javascript">
+    function loading() {
+      $("#loading").show();
+    }
+  </script>
+  <script type="text/javascript">
+    function hide() {
+      $("#loading").hide();
+    }
+  </script>
+  </script>
+  <script type="text/javascript">
+    var someInput = document.querySelector(".form-control");
+    someInput.addEventListener("input", function () {
+      if (this.value.length > 0) {
+        document.getElementById("execute").disabled = false;
+      } else {
+        document.getElementById("execute").disabled = true;
+      }
+    });
+  </script>
+
+  {% endblock %}</div
+>
