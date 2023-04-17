@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from docopt import docopt
+# from docopt import docopt
 from collections import OrderedDict
 from pymarc import Record, JSONReader
 from app.config import Config
