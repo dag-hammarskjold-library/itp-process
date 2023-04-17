@@ -37,6 +37,8 @@ import platform
 import certifi
 #from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config, snapshot_summary, deleteSnapshot, snapshotDropdown
 from app.itp_config import *
+from app.extract_iso import *
+
 
 ###############################################################################################
 # Create FLASK APPLICATION
@@ -1752,23 +1754,23 @@ def list_files():
         return date.astimezone(tz.gettz('America/New York')).replace(tzinfo=None) if date.tzinfo else date
 
     for obj in myList:
-        #myRecord.clear()
-        myRecord=[]
-        myName= obj["Key"]
-        myRecord.append(myName)
+        if obj["Key"].endswith('.docx'): 
+            myRecord=[]
+            myName= obj["Key"]
+            myRecord.append(myName)
 
-        myLastModified=obj["LastModified"]
-        myLastModified=datetime_to_utc(myLastModified)
-        myLastModified=myLastModified.strftime("%Y-%m-%d %H:%M")
-        myRecord.append(myLastModified)
+            myLastModified=obj["LastModified"]
+            myLastModified=datetime_to_utc(myLastModified)
+            myLastModified=myLastModified.strftime("%Y-%m-%d %H:%M")
+            myRecord.append(myLastModified)
 
-        mySize=obj["Size"]
-        myRecord.append(mySize)
+            mySize=obj["Size"]
+            myRecord.append(mySize)
 
-        myFilesNumber+=1
+            myFilesNumber+=1
 
-        # Add the record to the dataList
-        myData.append(myRecord)
+            # Add the record to the dataList
+            myData.append(myRecord)
 
     return render_template('generatedfiles.html',myData=Sort(myData),myFilesNumber=myFilesNumber)
 
@@ -1782,7 +1784,45 @@ def newDownload(filename):
     except:
         abort(404)
 
-    return send_file(s3_file['Body'], as_attachment=True, attachment_filename=filename)
+    return send_file(s3_file['Body'], as_attachment=True, download_name=filename)
+
+@app.route("/files/delete/<filename>")
+@login_required
+def deleteFile(filename):    
+
+    s3 = boto3.client('s3')
+    try:
+        s3.delete_object(Bucket=Config.bucket_name, Key=filename)
+    except:
+        abort(404)
+
+    return redirect("/files")
+
+@app.route("/iso/download/<filename>")
+@login_required
+def newDownloadIso(filename):    
+
+    s3 = boto3.client('s3')
+    try:
+        s3_file = s3.get_object(Bucket=Config.bucket_name, Key=filename)
+    except:
+        abort(404)
+
+    return send_file(s3_file['Body'], as_attachment=True, download_name=filename)
+    # return send_file(s3_file['Body'], as_attachment=True, attachment_filename=filename)
+
+@app.route("/iso/delete/<filename>")
+@login_required
+def deleteIso(filename):    
+
+    s3 = boto3.client('s3')
+    try:
+        s3.delete_object(Bucket=Config.bucket_name, Key=filename)
+    except:
+        abort(404)
+
+    return redirect("/iso")
+
 
 @app.route('/itp/selectSection/',methods=["GET", "POST"])
 @login_required
@@ -1967,6 +2007,180 @@ def edit_votechart():
     if request.method == "POST" :
         update_votechart(request.form.get('update_id'), request.form.get('update_bodysession'), request.form.get('update_columns'), request.form.get('update_width'), request.form.get('update_left'), request.form.get('update_right') )
     return redirect(url_for('manage_votechart'))
+
+
+def return_content_s3(extension):
+    ############ PROCESS AWS (files created during the period)
+
+    # assign the s3 object
+
+    myS3 = Config.client
+
+    # assign the appropiate bucket
+    try:
+        myList=s3.list_objects_v2(Bucket=Config.bucket_name)["Contents"]
+    except KeyError:
+        myList = []
+
+    # definition of some variables
+    myData=[]
+    
+    # function to sort the record 
+    def Sort(sub_li): 
+        l = len(sub_li) 
+        for i in range(0, l): 
+            for j in range(0, l-i-1): 
+                if (sub_li[j][1] > sub_li[j + 1][1]): 
+                    tempo = sub_li[j] 
+                    sub_li[j]= sub_li[j + 1] 
+                    sub_li[j + 1]= tempo 
+        return sub_li 
+    
+
+    from dateutil import tz
+
+    def datetime_to_utc(date):
+        """yls comment: the tz can be used as a parameter"""
+        return date.astimezone(tz.gettz('America/New York')).replace(tzinfo=None) if date.tzinfo else date
+
+    for obj in myList:
+        if obj["Key"].endswith(extension): 
+            myRecord=[]
+            myName= obj["Key"]
+            myRecord.append(myName)
+
+            myLastModified=obj["LastModified"]
+            myLastModified=datetime_to_utc(myLastModified)
+            myLastModified=myLastModified.strftime("%Y-%m-%d %H:%M")
+            myRecord.append(myLastModified)
+
+            mySize=obj["Size"]
+            myRecord.append(mySize)
+
+            # Add the record to the dataList
+            myData.append(myRecord)
+    
+    return Sort(myData)
+
+####################################################################################################################################
+# @app.route("/extraction_iso", methods=["GET", "POST"])
+# @login_required
+# def extraction_iso():
+    
+#     error=""
+#     myData=return_content_s3(".mrc")
+
+#     if request.method == "GET" :
+#         return render_template('extraction_iso.html',myData=myData)
+    
+#     if request.method == "POST" :
+#         try:
+#             extract_iso(request.form.get("bodysession"))
+#             myData=return_content_s3(".mrc")
+#             return render_template('extraction_iso.html',myData=myData,error=error)
+
+#         except:
+#             error="Oups something wrong,please try again!!!"
+#             return render_template('extraction_iso.html',myData=myData,error=error)
+            
+@app.route("/extraction_iso", methods=["GET", "POST"])
+@login_required
+def extraction_iso():
+    
+    error=""
+    myData=return_content_s3(".mrc")
+
+    if request.method == "GET" :
+        return render_template('extraction_iso.html',myData=myData)
+    
+    if request.method == "POST" :
+        try:
+            if os.environ.get('ZAPPA') == "true":
+                process_iso(request.form.get("bodysession").upper())
+                message = "Extraction ISO files in progress....Please wait few seconds"
+                return render_template('extraction_iso.html',myData=myData,message=message)
+            else:
+                extract_iso(request.form.get("bodysession").upper())
+                myData=return_content_s3(".mrc")
+                return render_template('extraction_iso.html',myData=myData)
+
+        except:
+            error="Oups something wrong,please try again!!!"
+            return render_template('extraction_iso.html',myData=myData,error=error)        
+        
+
+@task(capture_response=True)
+def process_iso(bodysession):    
+    try:
+        extract_iso(bodysession)
+        myData=return_content_s3(".mrc")
+        return render_template('extraction_iso.html',myData=myData),True
+    except:
+        return False
+
+###################################################################################################################################### 
+    
+@app.route("/iso")
+@login_required
+def list_iso():
+ 
+    ############ PROCESS AWS (files created during the period)
+
+    # assign the s3 object
+
+    myS3 = Config.client
+
+    # assign the appropiate bucket
+    try:
+        myList=s3.list_objects_v2(Bucket=Config.bucket_name)["Contents"]
+    except KeyError:
+        myList = []
+
+    # definition of some variables
+
+    myFilesNumber=0
+    myData=[]
+
+    # function to sort the record 
+    def Sort(sub_li): 
+        l = len(sub_li) 
+        for i in range(0, l): 
+            for j in range(0, l-i-1): 
+                if (sub_li[j][1] > sub_li[j + 1][1]): 
+                    tempo = sub_li[j] 
+                    sub_li[j]= sub_li[j + 1] 
+                    sub_li[j + 1]= tempo 
+        return sub_li 
+    
+
+    from dateutil import tz
+
+    def datetime_to_utc(date):
+        """yls comment: the tz can be used as a parameter"""
+        return date.astimezone(tz.gettz('America/New York')).replace(tzinfo=None) if date.tzinfo else date
+
+    for obj in myList:
+        if obj["Key"].endswith('.mrc'): 
+            #myRecord.clear()
+            myRecord=[]
+            myName= obj["Key"]
+            myRecord.append(myName)
+
+            myLastModified=obj["LastModified"]
+            myLastModified=datetime_to_utc(myLastModified)
+            myLastModified=myLastModified.strftime("%Y-%m-%d %H:%M")
+            myRecord.append(myLastModified)
+
+            mySize=obj["Size"]
+            myRecord.append(mySize)
+
+            myFilesNumber+=1
+
+            # Add the record to the dataList
+            myData.append(myRecord)
+
+    return render_template('generatediso.html',myData=Sort(myData),myFilesNumber=myFilesNumber)
+
 
 @app.route("/compare/heading/", methods=["GET", "POST"])
 @login_required
