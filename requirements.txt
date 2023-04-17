@@ -28,7 +28,7 @@ hjson==3.0.1
 idna==2.8
 importlib-metadata==0.23
 isort==4.3.21
-itsdangerous==1.1.0
+itsdangerous==2.0
 Jinja2==3.0
 jmespath==0.9.4
 jsonschema==3.2.0
