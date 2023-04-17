@@ -2,18 +2,15 @@
 
 # from docopt import docopt
 from collections import OrderedDict
-from pymarc import Record, JSONReader
+from pymarc import Record
 from app.config import Config
 from bson.son import SON
-from tqdm import tqdm
 import re
 from dlx import DB
-from dlx.marc import Bib, Auth, BibSet, AuthSet, QueryDocument,Condition,Or, Query
+from dlx.marc import Bib, Auth, BibSet, AuthSet,Condition,Or, Query
 from datetime import datetime
-from dateutil import parser
 from pymongo import MongoClient
 from pymongo.collation import Collation
-from unidecode import unidecode
 from app.itp_config import fetch_agenda,fetch_itpcode
 import boto3
 import os.path
