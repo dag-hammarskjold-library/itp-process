@@ -66,7 +66,7 @@
           {% for data in myData %}
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
               {% if data[0][0]=="E" %}
-              <li> <a href=data[0] download/> {{ data[0] }}</a> @ {{ data[1] }} </li>
+              <li> <a href="{{url_for('newDownloadIso', filename=data[0])}}" download/> {{ data[0] }}</a> @ {{ data[1] }} </li>
               {% endif %} 
             </ul>
           {% endfor %}
@@ -80,7 +80,7 @@
             {% for data in myData %}
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
             {% if data[0][0]=="A" %}
-            <li> <a href=data[0] download/> {{ data[0] }}</a> @ {{ data[1] }} </li>
+            <li> <a href="{{url_for('newDownloadIso', filename=data[0])}}" download/> {{ data[0] }}</a> @ {{ data[1] }} </li>
             {% endif %}   
           </ul>
           {% endfor %}         
@@ -94,7 +94,7 @@
             {% for data in myData  %}
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
             {% if data[0][0]=="S" %}
-            <li> <a href=data[0] download/> {{ data[0] }} </a> @ {{ data[1] }} </li>
+            <li> <a href="{{url_for('newDownloadIso', filename=data[0])}}" download/> {{ data[0] }} </a> @ {{ data[1] }} </li>
           {% endif %} 
         </ul>
         {% endfor %}
@@ -108,7 +108,7 @@
             {% for data in myData %}
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
             {% if data[0][0]=="T" %}
-            <li> <a href=data[0] download/>{{ data[0] }}</a> @ {{ data[1] }} </li>
+            <li> <a href="{{url_for('newDownloadIso', filename=data[0])}}" download/>{{ data[0] }}</a> @ {{ data[1] }} </li>
             {% endif %} 
           </ul>
           {% endfor %}
