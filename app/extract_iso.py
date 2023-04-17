@@ -2,7 +2,6 @@
 
 # from docopt import docopt
 from collections import OrderedDict
-from pymarc import Record
 from app.config import Config
 from bson.son import SON
 import re
