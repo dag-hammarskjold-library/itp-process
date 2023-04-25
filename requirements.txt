@@ -1,4 +1,5 @@
-﻿aiofiles==0.4.0
+﻿
+aiofiles==0.4.0
 aiohttp==3.6.2
 argcomplete==1.11.1
 astroid==2.3.3
@@ -11,13 +12,13 @@ certifi==2019.9.11
 cffi==1.14.5
 cfn-flip==1.2.2
 chardet==3.0.4
-Click==7.1.2
+Click==7.0
 colorama==0.4.1
 cryptography==3.4.7
 dlx @ git+https://github.com/dag-hammarskjold-library/dlx@61135403f12d234d166d3173700b24a040a6a832
 docutils==0.15.2
 durationpy==0.5
-Flask==2.0.3
+Flask==1.1.1
 Flask-Login==0.4.1
 flask-mongoengine==0.9.5
 Flask-WTF==0.14.2
@@ -28,8 +29,8 @@ hjson==3.0.1
 idna==2.8
 importlib-metadata==0.23
 isort==4.3.21
-itsdangerous==2.0
-Jinja2==3.0
+itsdangerous==1.1.0
+Jinja2==2.10.3
 jmespath==0.9.4
 jsonschema==3.2.0
 kappa==0.6.0
@@ -72,7 +73,7 @@ troposphere
 typed-ast==1.4.1
 Unidecode==1.0.23
 urllib3==1.25.6
-Werkzeug==2.0.3
+Werkzeug==2.2.3
 wrapt==1.11.2
 wsgi-request-logger==0.4.6
 WTForms==2.2.1
@@ -82,4 +83,3 @@ xmltodict==0.12.0
 yarl==1.4.2
 zappa==0.49.0
 zipp==0.6.0
-
