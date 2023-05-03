@@ -2088,7 +2088,7 @@ def return_content_s3(extension):
 def extraction_iso():
     
     error=""
-    myData=return_content_s3(".mrc")
+    myData=return_content_s3(".zip")
 
     if request.method == "GET" :
         return render_template('extraction_iso.html',myData=myData)
@@ -2101,7 +2101,7 @@ def extraction_iso():
                 return render_template('extraction_iso.html',myData=myData,message=message)
             else:
                 extract_iso(request.form.get("bodysession").upper())
-                myData=return_content_s3(".mrc")
+                myData=return_content_s3(".zip")
                 return render_template('extraction_iso.html',myData=myData)
 
         except:
@@ -2160,7 +2160,7 @@ def list_iso():
         return date.astimezone(tz.gettz('America/New York')).replace(tzinfo=None) if date.tzinfo else date
 
     for obj in myList:
-        if obj["Key"].endswith('.mrc'): 
+        if obj["Key"].endswith('.zip'): 
             #myRecord.clear()
             myRecord=[]
             myName= obj["Key"]

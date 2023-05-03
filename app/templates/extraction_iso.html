@@ -63,7 +63,7 @@
             <h4 class="my-0 font-weight-normal">ECOSOC</h4>
           </div>
           <div class="card-body">
-          {% for data in myData %}
+          {% for data in myData|reverse %}
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
               {% if data[0][0]=="E" %}
               <li> <a href="{{url_for('newDownloadIso', filename=data[0])}}" download/> {{ data[0] }}</a> @ {{ data[1] }} </li>
@@ -77,7 +77,7 @@
             <h4 class="my-0 font-weight-normal">General Assembly</h4>
           </div>
           <div class="card-body">
-            {% for data in myData %}
+            {% for data in myData|reverse %}
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
             {% if data[0][0]=="A" %}
             <li> <a href="{{url_for('newDownloadIso', filename=data[0])}}" download/> {{ data[0] }}</a> @ {{ data[1] }} </li>
@@ -91,7 +91,7 @@
             <h4 class="my-0 font-weight-normal">Security Council</h4>
           </div>
           <div class="card-body">
-            {% for data in myData  %}
+            {% for data in myData |reverse %}
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
             {% if data[0][0]=="S" %}
             <li> <a href="{{url_for('newDownloadIso', filename=data[0])}}" download/> {{ data[0] }} </a> @ {{ data[1] }} </li>
@@ -105,7 +105,7 @@
             <h4 class="my-0 font-weight-normal">Trusteeship Council</h4>
           </div>
           <div class="card-body">
-            {% for data in myData %}
+            {% for data in myData|reverse %}
             <ul class="list-unstyled mt-3 mb-4 text-left font-weight-bold">
             {% if data[0][0]=="T" %}
             <li> <a href="{{url_for('newDownloadIso', filename=data[0])}}" download/>{{ data[0] }}</a> @ {{ data[1] }} </li>

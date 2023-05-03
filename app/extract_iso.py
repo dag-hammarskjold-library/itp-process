@@ -1,28 +1,91 @@
 #!/usr/bin/env python
 
-# from docopt import docopt
-from collections import OrderedDict
 from app.config import Config
-from bson.son import SON
 import re
 from dlx import DB
-from dlx.marc import Bib, Auth, BibSet, AuthSet,Condition,Or, Query
+from dlx.marc import BibSet, AuthSet,Condition,Or, Query
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.collation import Collation
-from app.itp_config import fetch_agenda,fetch_itpcode
 import boto3
 import os.path
-from pathlib import Path
 import glob
 import os
-
+from zipfile import ZIP_LZMA, ZipFile
 
 DB.connect(Config.connect_string)
 myMongoURI=Config.connect_string
 myClient = MongoClient(myMongoURI)
 myDatabase=myClient.undlFiles
 configCollection=myDatabase["itp_config"]
+
+
+def fetch_agenda(body, session):
+    """
+    Return the agenda for a particular body and session
+    """
+    #result = configCollection.find_one( { "type": "snapshot", "bodysession": body + '/' + session }, {"_id": 0, "agenda_symbol": 1} )
+    result=None
+    match_criteria = ""
+
+    if result == None:
+
+        if body == "A":
+            sp = re.search("sp", session)
+            em = re.search("em", session)
+
+            if em:
+                match_criteria = "A/ES-" + session[:-4] + "/2"
+            elif sp:
+                match_criteria = "A/S-" + session[:-2] + "/1"
+            else:
+                match_criteria = "A/" + session + "/251"
+        
+        if body == "S":
+            match_criteria = body + "/" +session
+
+        if body == "E":
+            year = session.split("-")
+            
+            if year[1] == "0":
+                match_criteria = "E/" + year[0] + "/2"
+            else:
+                match_criteria = "E/" + year[0] + "/100"
+
+    else:
+        match_criteria = result['agenda_symbol']
+
+    return match_criteria
+
+
+def fetch_itpcode(body, session):
+
+    result = configCollection.find_one( { "type": "snapshot", "bodysession": body + '/' + session }, {"_id": 0, "product_code": 1} )
+    
+    itpcode= ""
+
+    if result == None:
+
+        itpcode = 'ITP' + body + session
+
+        sp = re.search("sp", session)
+        em = re.search("em", session)
+
+        if body == "E" :
+            itpcode = 'ITP' + body + session[2:4] + session[-1]
+
+        if body == "A":
+            if em:
+                itpcode = 'ITP' + body + session[0:2] + "E"
+            elif sp:
+                itpcode = 'ITP' + body + session[0:2] + "S"
+        if body == "T":
+            if sp:
+                itpcode = 'ITP' + body + session[0:2] + "S"
+    else:
+        itpcode = result['product_code']
+
+    return itpcode
 
 def extract_iso(param):
     
@@ -32,7 +95,9 @@ def extract_iso(param):
     auth_out = re.sub('/','',str(body)) + str(session) + 'auth'
     a191_out = re.sub('/','',str(body)) + str(session) + '191'
     
-    print(auth_out)
+    print("bib: " + bib_out)
+    print("auth: " + auth_out)
+    print("a191: " + a191_out)
 
     auths = DB.auths
     bibs = DB.bibs
@@ -52,12 +117,12 @@ def extract_iso(param):
     
     for auth in AuthSet.from_query(query):
         found_auth=auth.get_value("001")
-    # print(f"auth id for {body+session} is {found_auth}")
+    print(f"auth id for {body+session} is {found_auth}")
 
     # Get the bib records for the target body/session authority id
 
     print("Fetching bib records...")
-    with open(bib_out + '-utf8.mrc', 'wb') as f:
+    with open(bib_out + '-utf8.iso', 'wb') as f:
         bibs_query = Query(
             Or(
                 Condition(
@@ -141,6 +206,10 @@ def extract_iso(param):
                 pass
             
             f.write(bib.to_mrc().encode('utf-8'))
+        
+        # more fine-grained control over ZIP files
+        with ZipFile(bib_out + ".zip", "w",compression=ZIP_LZMA,allowZip64=True) as newzip:
+            newzip.write(bib_out + '-utf8.iso')
             
         # Instanciate s3 client            
         s3_client = boto3.client('s3')
@@ -148,8 +217,7 @@ def extract_iso(param):
         # Set some variables
         bucket = Config.bucket_name
         cur_path = os.getcwd()
-        print(cur_path)
-        file = bib_out + '-utf8.mrc'
+        file = bib_out + ".zip"
         filename =  os.path.join(cur_path,file)
         
         # load the data into s3
@@ -160,8 +228,9 @@ def extract_iso(param):
     print(f"agenda_id is {agenda_id}")
     # Get the agenda authorities for the body/session bib records
     
-    # print("Fetching agenda authorities...")
-    with open(auth_out + '-utf8.mrc', 'wb') as f:
+    ##################################################################################################
+    print("Fetching agenda authorities...")
+    with open(auth_out + '-utf8.iso', 'wb') as f:
         agenda_query=Query(Condition(
                 '191',
                 {'a':agenda_id}
@@ -170,17 +239,21 @@ def extract_iso(param):
         for agenda in agendas:
             #print (f"agenda auth is {agenda.get_value('191','a')} - {agenda.get_value('191','b')}")
             f.write(agenda.to_mrc().encode('utf-8'))
+                        
+        # more fine-grained control over ZIP files
+        with ZipFile(auth_out + ".zip", "w",compression=ZIP_LZMA,allowZip64=True) as newzip:
+            newzip.write(auth_out + '-utf8.iso')
         
         # upload the file    
-        file = auth_out + '-utf8.mrc'
+        file = auth_out + ".zip"
         filename =  os.path.join(cur_path,file)
         # load the data into s3
         response=s3_client.upload_file(filename,bucket,file)
-        # os.remove(file)
+
             
-    
+    ##################################################################################################
     print("Fetching 191 agenda authorities...")
-    with open(a191_out + '-utf8.mrc', 'wb') as f:
+    with open(a191_out + '-utf8.iso', 'wb') as f:
         agenda_query=Query(Condition(
                 '191',
                 {'a':agenda_id}
@@ -188,16 +261,23 @@ def extract_iso(param):
         agendas = AuthSet.from_query(agenda_query)
         for agenda in agendas:
             f.write(agenda.to_mrc().encode('utf-8'))
+            
+        # more fine-grained control over ZIP files
+        with ZipFile(a191_out + ".zip", "w",compression=ZIP_LZMA,allowZip64=True) as newzip:
+            newzip.write(a191_out + '-utf8.iso')
         
         # upload the file    
-        file = a191_out + '-utf8.mrc'
+        file = a191_out + ".zip"
         filename =  os.path.join(cur_path,file)
         # load the data into s3
         response=s3_client.upload_file(filename,bucket,file)
-        # os.remove(file)    
+
         
     # cleaning directory removing *.mrc files
-    for file in glob.glob("*.mrc"):
+    for file in glob.glob("*.iso"):
+        os.remove(file)
+        
+    for file in glob.glob("*.zip"):
         os.remove(file)
 
     return
