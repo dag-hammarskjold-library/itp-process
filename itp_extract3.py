@@ -107,7 +107,7 @@ def fetch_itpcode(body, session):
 if __name__ == '__main__':
 
     body="S/"
-    session="75"
+    session="73"
     bib_out = re.sub('/','',str(body)) + str(session)
     auth_out = re.sub('/','',str(body)) + str(session) + 'auth'
     a191_out = re.sub('/','',str(body)) + str(session) + '191'
