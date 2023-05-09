@@ -1796,7 +1796,7 @@ def deleteFile(filename):
     except:
         abort(404)
 
-    return redirect("/files")
+    return redirect(url_for('list_files'))
 
 @app.route("/iso/download/<filename>")
 @login_required
@@ -1821,7 +1821,7 @@ def deleteIso(filename):
     except:
         abort(404)
 
-    return redirect("/iso")
+    return redirect(url_for('list_iso'))
 
 
 @app.route('/itp/selectSection/',methods=["GET", "POST"])
