@@ -118,7 +118,7 @@ def extract_iso(param):
     # Get the bib records for the target body/session authority id
 
     print("Fetching bib records...")
-    with open(bib_out + '-utf8.iso', 'wb') as f:
+    with open(bib_out + '.mrc', 'wb') as f:
         bibs_query = Query(
             Or(
                 Condition(
@@ -205,7 +205,7 @@ def extract_iso(param):
         
         # more fine-grained control over ZIP files
         with ZipFile(bib_out + ".zip", "w",compression=ZIP_LZMA,allowZip64=True) as newzip:
-            newzip.write(bib_out + '-utf8.iso')
+            newzip.write(bib_out + '.mrc')
             
         # Instanciate s3 client            
         s3_client = boto3.client('s3')
@@ -226,7 +226,7 @@ def extract_iso(param):
     
     ##################################################################################################
     print("Fetching agenda authorities...")
-    with open(auth_out + '-utf8.iso', 'wb') as f:
+    with open(auth_out + '.mrc', 'wb') as f:
         agenda_query=Query(Condition(
                 '191',
                 {'a':agenda_id}
@@ -238,7 +238,7 @@ def extract_iso(param):
                         
         # more fine-grained control over ZIP files
         with ZipFile(auth_out + ".zip", "w",compression=ZIP_LZMA,allowZip64=True) as newzip:
-            newzip.write(auth_out + '-utf8.iso')
+            newzip.write(auth_out + '.mrc')
         
         # upload the file    
         file = auth_out + ".zip"
@@ -249,7 +249,7 @@ def extract_iso(param):
             
     ##################################################################################################
     print("Fetching 191 agenda authorities...")
-    with open(a191_out + '-utf8.iso', 'wb') as f:
+    with open(a191_out + '.mrc', 'wb') as f:
         agenda_query=Query(Condition(
                 '191',
                 {'a':agenda_id}
@@ -260,7 +260,7 @@ def extract_iso(param):
             
         # more fine-grained control over ZIP files
         with ZipFile(a191_out + ".zip", "w",compression=ZIP_LZMA,allowZip64=True) as newzip:
-            newzip.write(a191_out + '-utf8.iso')
+            newzip.write(a191_out + '.mrc')
         
         # upload the file    
         file = a191_out + ".zip"
@@ -270,7 +270,7 @@ def extract_iso(param):
 
         
     # cleaning directory removing *.mrc files
-    for file in glob.glob("*.iso"):
+    for file in glob.glob("*.mrc"):
         os.remove(file)
         
     for file in glob.glob("*.zip"):
