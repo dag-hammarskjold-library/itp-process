@@ -2089,9 +2089,20 @@ def extraction_iso():
     
     error=""
     myData=return_content_s3(".zip")
+    listDates=set()
+    myData1={}
 
     if request.method == "GET" :
-        return render_template('extraction_iso.html',myData=myData)
+        # retrieve all the different dates
+        listDates= set([ myValue[1] for myValue in myData ])
+        # create entries for a dict based on the differents dates
+        for myDate in listDates:
+            temp=[]
+            for data in myData:
+                if data[1]==myDate:
+                    temp.append(data)
+            myData1[myDate]=temp
+        return render_template('extraction_iso.html',myData=myData,myData1=myData1)
     
     if request.method == "POST" :
         try:
@@ -2102,6 +2113,7 @@ def extraction_iso():
             else:
                 extract_iso(request.form.get("bodysession"))
                 myData=return_content_s3(".zip")
+                
                 return render_template('extraction_iso.html',myData=myData)
 
         except:
