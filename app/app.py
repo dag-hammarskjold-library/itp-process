@@ -2096,11 +2096,11 @@ def extraction_iso():
     if request.method == "POST" :
         try:
             if os.environ.get('ZAPPA') == "true":
-                process_iso(request.form.get("bodysession").upper())
+                process_iso(request.form.get("bodysession"))
                 message = "Extraction ISO files in progress....Please wait few seconds"
                 return render_template('extraction_iso.html',myData=myData,message=message)
             else:
-                extract_iso(request.form.get("bodysession").upper())
+                extract_iso(request.form.get("bodysession"))
                 myData=return_content_s3(".zip")
                 return render_template('extraction_iso.html',myData=myData)
 
