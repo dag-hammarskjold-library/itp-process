@@ -95,10 +95,6 @@ def extract_iso(param):
     auth_out = re.sub('/','',str(body)) + str(session) + 'auth'
     a191_out = re.sub('/','',str(body)) + str(session) + '191'
     
-    print("bib: " + bib_out)
-    print("auth: " + auth_out)
-    print("a191: " + a191_out)
-
     auths = DB.auths
     bibs = DB.bibs
 
@@ -146,7 +142,7 @@ def extract_iso(param):
             v269=bib.get_value('269','a')
             v992=bib.get_value('992','a')
             v992b=bib.get_value('992','b')
-            if "00" not in v269 and v269!="":
+            if "-00" not in v269 and v269!="":
                 try:
                     v269_new=datetime.strptime(v269, '%Y-%m-%d').date().strftime('%Y%m%d')
                     if any(word in v269_new for word in list_t):
@@ -160,14 +156,14 @@ def extract_iso(param):
                         v269_new=datetime.strptime(v269, '%Y-%m').date().strftime('%Y%m')
                         if any(word in v269_new for word in list_t):
                             v269_new=datetime.strptime(v269, '%Y-%m').date().strftime('%Y%m')
-                        print (v269_new)
+                        #print (v269_new)
                     except:
                         print("can't convert !!!")
                 finally:
                     bib.set('269','a',v269_new)
             else:
                 print(f"v269 is{v269}")
-            if "00" not in v992 and v992!="":
+            if "-00" not in v992 and v992!="":
                 try:
                     v992_new=datetime.strptime(v992, '%Y-%m-%d').date().strftime('%Y%m%d')
                     if any(word in v992_new for word in list_t):
@@ -185,7 +181,7 @@ def extract_iso(param):
                     bib.set('992','a',v992_new)
             else:
                 pass
-            if "00" not in v992b and v992b!="":
+            if "-00" not in v992b and v992b!="":
                 try:
                     v992b_new=datetime.strptime(v992b, '%Y-%m-%d').date().strftime('%Y%m%d')
                     if any(word in v992b_new for word in list_t):
