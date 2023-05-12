@@ -496,12 +496,12 @@ class BibIncorrect793Plen(BibReport):
     def __init__(self):
         self.name = 'bib_incorrect_793_plenary'
         self.title = 'Incorrect and/or missing field – 793 (Plenary)'
-        self.description = '191 starts with "A/RES" or "A/<session>/L." and 793$a does not equal with "PL"'
+        self.description = '191 starts with "A/RES" or "A/<session>/L." or "A/<session>/PV." and 793$a does not equal "PL"'
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
         
-        self.field_names = ['Document Symbol']
+        self.field_names = ['Document Symbol', '793$a']
         
         BibReport.__init__(self)
         
@@ -518,9 +518,9 @@ class BibIncorrect793Plen(BibReport):
         results = []
         
         for bib in BibSet.from_query(query, projection={'191': 1,'793': 1}):
-            if re.match(r'^A/RES/', bib.symbol()) or re.match(r'^A/' + session + r'/L\.', bib.symbol()):
+            if re.match(r'^A/RES/', bib.symbol()) or re.match(r'^A/' + session + r'/(L|PV)\.', bib.symbol()):
                 if bib.get_value('793', 'a') != 'PL':
-                    results.append([bib.get_value('191', 'a')]) 
+                    results.append([bib.get_value('191', 'a'), bib.get_value('793', 'a')]) 
 
         return results
 
