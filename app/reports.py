@@ -1,7 +1,7 @@
 import re
 from warnings import warn
 from app.forms import MissingFieldReportForm, MissingSubfieldReportForm, SelectAuthority, SelectAgendaAuthority, SelectPVRangeAuthority
-from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition, Or
+from dlx.marc import Bib, Auth, Matcher, OrMatch, BibSet, AuthSet, QueryDocument, Condition, Raw, Or
 from dlx.file import File, Identifier
 from bson.regex import Regex
 from natsort import natsorted
@@ -757,7 +757,50 @@ class BibDuplicateAgenda(BibReport, DuplicateAgenda):
     def __init__(self):
         BibReport.__init__(self)
         DuplicateAgenda.__init__(self)
-  
+
+class BibRepeated515_520(BibReport):
+    def __init__(self):
+        self.name = 'bib_repeated_515_520'
+        self.title = 'Duplicate 515 and 520'
+        self.description = 'Bibs with 515 or 520 repeated'
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+       
+        self.field_names = ['Record ID', '191$a', '515', '520']
+        
+        BibReport.__init__(self)
+
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+
+        bibset = BibSet.from_query(
+            QueryDocument(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('930', {'a': Regex('^UND')}),
+                # detect fields that have more than one element in the array
+                Or(
+                    Raw({'515.1': {'$exists': True}}),
+                    Raw({'520.1': {'$exists': True}}),
+                )
+            ),
+            projection={'191': 1, '515': 1, '520': 1}
+        )
+
+        results = []
+
+        for bib in bibset:
+            results.append(
+                [
+                    bib.id, bib.get_value('191', 'a'), 
+                    '; '.join(bib.get_values('515', 'a')),
+                    '; '.join(bib.get_values('520', 'a')),
+                ]
+            )
+
+        return results
+
 ### Speech reports
 # These reports are on records that have 791 and 930="ITS"
 class SpeechReport(Report):
@@ -1373,6 +1416,8 @@ class ReportList(object):
         BibMissingSubfield('991', 'd'),
         # (11) Missing field - 992
         BibMissingField('992'),
+        # (11.1) Duplicate 515 and 520
+        BibRepeated515_520(),
         # (12) Incorrect field - 793 (Committees)
         BibIncorrect793Comm(),
         # (13) Incorrect field - 793 (Plenary)
