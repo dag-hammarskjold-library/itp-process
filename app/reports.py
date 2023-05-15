@@ -1203,6 +1203,52 @@ class SpeechParens700(SpeechReport):
                     
         return results
 
+class SpeechIdentical700_710_791(SpeechReport):
+    def __init__(self):    
+        SpeechReport.__init__(self)
+        self.name = 'speech_identical_700_710_791'
+        self.title = 'Identical 700 + 710 + 791'
+        self.description = 'Speech records where 700, 710, or 791 exists more than once in the same record with the same value'
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+        self.field_names = ['Record ID', f'791', '700', '710']
+
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+
+        #query = QueryDocument.from_string(f"791__b:'{body}' AND 791__c:'{session}'")
+        query = QueryDocument(
+            Condition(self.symbol_field, ('b', body), ('c', session)),
+            Condition('930', ('a', Regex(f'^{self.type_code}'))),
+            # records where these fields have more than one element in the field array
+            Raw({'$or': [{'700.1': {'$exists': True}}, {'710.1': {'$exists': True}}, {'791.1': {'$exists': True}}]}),
+        )
+
+        results = []
+
+        for bib in BibSet.from_query(query, projection={'700': 1, '710': 1, '791': 1}):
+            for tag in ('700', '710', '791'):
+                fields = [x.to_mrk() for x in bib.get_fields(tag)]
+
+                for field in fields:
+                    # the number of times this field serialized to mrk is repeated
+                    count = len(list(filter(lambda x: x == field, fields)))
+                    
+                    if count > 1:
+                        results.append(
+                            [
+                                bib.id,
+                                bib.get_values('791', 'a'),
+                                bib.get_values('700', 'a'),
+                                bib.get_values('710', 'a')
+                            ]
+                        )
+
+                        continue
+
+        return results
+
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
 
@@ -1478,14 +1524,14 @@ class ReportList(object):
         
         # (1) Duplicate speech records
         SpeechDuplicateRecord(),
+        # 1.1  Identical 700 + 710 + 791
+        SpeechIdentical700_710_791(),
         # (2) Incorrect session - 791
         SpeechIncorrectSession791(),
         # (3) Missing fields - 700 + 710
-        #SpeechMissingFields(['700', '710']),
         SpeechMissingFields_700_710(),
         # (New Report) Speeches with parentheses in 700 field
         SpeechParens700(),
-        
         # (4) Incomplete authorities - mother record
         SpeechIncompleteAuthMother(),
         # Incomplete authorities # *** split into two reports below as per VW
