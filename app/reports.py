@@ -496,12 +496,12 @@ class BibIncorrect793Plen(BibReport):
     def __init__(self):
         self.name = 'bib_incorrect_793_plenary'
         self.title = 'Incorrect and/or missing field – 793 (Plenary)'
-        self.description = '191 starts with "A/RES" or "A/<session>/L." and 793$a does not equal with "PL"'
+        self.description = '191 starts with "A/RES" or "A/<session>/L." or "A/<session>/PV." and 793$a does not equal "PL"'
         
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
         
-        self.field_names = ['Document Symbol']
+        self.field_names = ['Document Symbol', '793$a']
         
         BibReport.__init__(self)
         
@@ -518,9 +518,9 @@ class BibIncorrect793Plen(BibReport):
         results = []
         
         for bib in BibSet.from_query(query, projection={'191': 1,'793': 1}):
-            if re.match(r'^A/RES/', bib.symbol()) or re.match(r'^A/' + session + r'/L\.', bib.symbol()):
+            if re.match(r'^A/RES/', bib.symbol()) or re.match(r'^A/' + session + r'/(L|PV)\.', bib.symbol()):
                 if bib.get_value('793', 'a') != 'PL':
-                    results.append([bib.get_value('191', 'a')]) 
+                    results.append([bib.get_value('191', 'a'), bib.get_value('793', 'a')]) 
 
         return results
 
@@ -758,12 +758,54 @@ class BibDuplicateAgenda(BibReport, DuplicateAgenda):
         BibReport.__init__(self)
         DuplicateAgenda.__init__(self)
 
+class BibRepeated515_520(BibReport):
+    def __init__(self):
+        self.name = 'bib_repeated_515_520'
+        self.title = 'Duplicate 515 and 520'
+        self.description = 'Bibs with 515 or 520 repeated'
+        
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+       
+        self.field_names = ['Record ID', '191$a', '515', '520']
+        
+        BibReport.__init__(self)
+
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+
+        bibset = BibSet.from_query(
+            QueryDocument(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('930', {'a': Regex('^UND')}),
+                # detect fields that have more than one element in the array
+                Or(
+                    Raw({'515.1': {'$exists': True}}),
+                    Raw({'520.1': {'$exists': True}}),
+                )
+            ),
+            projection={'191': 1, '515': 1, '520': 1}
+        )
+
+        results = []
+
+        for bib in bibset:
+            results.append(
+                [
+                    bib.id, bib.get_value('191', 'a'), 
+                    '; '.join(bib.get_values('515', 'a')),
+                    '; '.join(bib.get_values('520', 'a')),
+                ]
+            )
+
+        return results
+          
 class BibEndingWithPeriod515_520(BibReport):
     def __init__(self):
         self.name = 'bib_ending_with_period_515_520'
         self.title = '515 or 520 not ending with period'
         self.description = 'Bibs with 515 or 520 repeated'
-        
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
        
@@ -1415,6 +1457,8 @@ class ReportList(object):
         BibMissingSubfield('991', 'd'),
         # (11) Missing field - 992
         BibMissingField('992'),
+        # (11.1) Duplicate 515 and 520
+        BibRepeated515_520(),
         # (12) Incorrect field - 793 (Committees)
         BibIncorrect793Comm(),
         # 515 520 missing period
