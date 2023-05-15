@@ -800,6 +800,47 @@ class BibRepeated515_520(BibReport):
             )
 
         return results
+          
+class BibEndingWithPeriod515_520(BibReport):
+    def __init__(self):
+        self.name = 'bib_ending_with_period_515_520'
+        self.title = '515 or 520 not ending with period'
+        self.description = 'Bibs with 515 or 520 repeated'
+        self.form_class = SelectAuthority
+        self.expected_params = ['authority']
+       
+        self.field_names = ['Record ID', '191$a', '515', '520']
+        
+        BibReport.__init__(self)
+
+    def execute(self, args):
+        self.validate_args(args)
+        body, session = _get_body_session(args['authority'])
+
+        bibset = BibSet.from_query(
+            QueryDocument(
+                Condition('191', {'b': body, 'c': session}),
+                Condition('930', {'a': Regex('^UND')}),
+                Or(
+                    Raw({'$and': [{'515': {'$exists': True}}, {'515.subfields.value': Regex('[^\.]$')}]}),
+                    Raw({'$and': [{'520': {'$exists': True}}, {'520.subfields.value': Regex('[^\.]$')}]})
+                )
+            ),
+            projection={'191': 1, '515': 1, '520': 1}
+        )
+
+        results = []
+
+        for bib in bibset:
+            results.append(
+                [
+                    bib.id, bib.get_value('191', 'a'), 
+                    '; '.join(bib.get_values('515', 'a')),
+                    '; '.join(bib.get_values('520', 'a')),
+                ]
+            )
+
+        return results
 
 ### Speech reports
 # These reports are on records that have 791 and 930="ITS"
@@ -1420,6 +1461,8 @@ class ReportList(object):
         BibRepeated515_520(),
         # (12) Incorrect field - 793 (Committees)
         BibIncorrect793Comm(),
+        # 515 520 missing period
+        BibEndingWithPeriod515_520(),
         # (13) Incorrect field - 793 (Plenary)
         BibIncorrect793Plen(),
         # (14) Missing subfield value - 991$f X27
