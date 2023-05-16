@@ -1226,40 +1226,24 @@ class SpeechIdentical700_710_791(SpeechReport):
         results = []
         symbols = {}
 
+        # group bibs by symbol
         for bib in BibSet.from_query(query, projection={'700': 1, '710': 1, '711': 1, '791': 1}):
             symbol = bib.get_value('791', 'a')
             symbols.setdefault(symbol, [])
             symbols[symbol].append(bib)
 
-            continue
-
-            for tag in ('700', '710', '711', '791'):
-                fields = [x.to_mrk() for x in bib.get_fields(tag)]
-
-                for field in fields:
-                    # the number of times this field serialized to mrk is repeated
-                    count = len(list(filter(lambda x: x == field, fields)))
-                    
-                    if count > 1:
-                        results.append(
-                            [
-                                bib.id,
-                                bib.get_values('791', 'a'),
-                                bib.get_values('700', 'a'),
-                                bib.get_values('710', 'a')
-                            ]
-                        )
-
-                        continue
-            
         def to_match(bib):
-                return [subfield.xref for field in bib.get_fields('700') for subfield in field.subfields] \
-                + [subfield.xref for field in bib.get_fields('710') for subfield in field.subfields] \
-                + [subfield.xref for field in bib.get_fields('711') for subfield in field.subfields]
+            values = []
+
+            for tag in ('700', '710', '711'):
+                values += [subfield.xref if hasattr(subfield, 'xref') else subfield.value for field in bib.get_fields(tag) for subfield in field.subfields]
+
+            return values
 
         for symbol, bibs in symbols.items():
             for bib in bibs:
-                if len(list(filter(lambda x: to_match(bib) == to_match(x), bibs))) != 1:
+                if len(list(filter(lambda x: to_match(bib) == to_match(x), bibs))) > 1:
+                    # the the field values match the field values of another record with the same symbol
                     results.append(
                         [
                             bib.id, 
@@ -1270,6 +1254,7 @@ class SpeechIdentical700_710_791(SpeechReport):
                         ]
                     )
 
+        # sort by col 3 (700)
         return sorted(results, key=lambda x: x[2])
 
 ### Vote reports
