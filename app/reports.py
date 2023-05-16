@@ -1208,10 +1208,10 @@ class SpeechIdentical700_710_791(SpeechReport):
         SpeechReport.__init__(self)
         self.name = 'speech_identical_700_710_791'
         self.title = 'Identical 700 + 710 + 791'
-        self.description = 'Speech records where 700, 710, or 791 exists more than once in the same record with the same value'
+        self.description = 'Speech records that have the same 700, 710/711, and 791 as another record'
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
-        self.field_names = ['Record ID', f'791', '700', '710']
+        self.field_names = ['Record ID', f'791', '700', '710', '711']
 
     def execute(self, args):
         self.validate_args(args)
@@ -1221,14 +1221,19 @@ class SpeechIdentical700_710_791(SpeechReport):
         query = QueryDocument(
             Condition(self.symbol_field, ('b', body), ('c', session)),
             Condition('930', ('a', Regex(f'^{self.type_code}'))),
-            # records where these fields have more than one element in the field array
-            Raw({'$or': [{'700.1': {'$exists': True}}, {'710.1': {'$exists': True}}, {'791.1': {'$exists': True}}]}),
         )
 
         results = []
+        symbols = {}
 
-        for bib in BibSet.from_query(query, projection={'700': 1, '710': 1, '791': 1}):
-            for tag in ('700', '710', '791'):
+        for bib in BibSet.from_query(query, projection={'700': 1, '710': 1, '711': 1, '791': 1}):
+            symbol = bib.get_value('791', 'a')
+            symbols.setdefault(symbol, [])
+            symbols[symbol].append(bib)
+
+            continue
+
+            for tag in ('700', '710', '711', '791'):
                 fields = [x.to_mrk() for x in bib.get_fields(tag)]
 
                 for field in fields:
@@ -1246,8 +1251,26 @@ class SpeechIdentical700_710_791(SpeechReport):
                         )
 
                         continue
+            
+        def to_match(bib):
+                return [subfield.xref for field in bib.get_fields('700') for subfield in field.subfields] \
+                + [subfield.xref for field in bib.get_fields('710') for subfield in field.subfields] \
+                + [subfield.xref for field in bib.get_fields('711') for subfield in field.subfields]
 
-        return results
+        for symbol, bibs in symbols.items():
+            for bib in bibs:
+                if len(list(filter(lambda x: to_match(bib) == to_match(x), bibs))) != 1:
+                    results.append(
+                        [
+                            bib.id, 
+                            symbol, 
+                            '; '.join(bib.get_values('700', 'a')),
+                            '; '.join(bib.get_values('710', 'a')),
+                            '; '.join(bib.get_values('711', 'a'))
+                        ]
+                    )
+
+        return sorted(results, key=lambda x: x[2])
 
 ### Vote reports
 # These reports are on records that have 791 and 930="VOT"
@@ -1505,7 +1528,7 @@ class ReportList(object):
         BibMissingField('992'),
         # (11.1) Duplicate 515 and 520
         BibRepeated515_520(),
-        # 515 520 missing period
+        # (11.2) 515 520 missing period
         BibEndingWithPeriod515_520(),
         # (12) Incorrect field - 793 (Committees)
         BibIncorrect793Comm(),
