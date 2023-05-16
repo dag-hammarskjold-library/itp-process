@@ -805,7 +805,7 @@ class BibEndingWithPeriod515_520(BibReport):
     def __init__(self):
         self.name = 'bib_ending_with_period_515_520'
         self.title = '515 or 520 not ending with period'
-        self.description = 'Bibs with 515 or 520 repeated'
+        self.description = 'Bibs with 515 or 520 not ending with period'
         self.form_class = SelectAuthority
         self.expected_params = ['authority']
        
@@ -1505,10 +1505,10 @@ class ReportList(object):
         BibMissingField('992'),
         # (11.1) Duplicate 515 and 520
         BibRepeated515_520(),
-        # (12) Incorrect field - 793 (Committees)
-        BibIncorrect793Comm(),
         # 515 520 missing period
         BibEndingWithPeriod515_520(),
+        # (12) Incorrect field - 793 (Committees)
+        BibIncorrect793Comm(),
         # (13) Incorrect field - 793 (Plenary)
         BibIncorrect793Plen(),
         # (14) Missing subfield value - 991$f X27
