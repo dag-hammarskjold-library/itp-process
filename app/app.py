@@ -318,8 +318,18 @@ def create_snapshot():
 @app.route("/displaySnapshot")
 @login_required
 def displaySnapshot():
-    snapshot=Snapshot('ZZZZ','0001')
-    return render_template('snapshot.html', snapshots=snapshot.list())
+    
+    #snapshot=Snapshot('ZZZZ','0001')
+    summary_E = snapshot_summary("E")
+    summary_A = snapshot_summary("A")
+    summary_S = snapshot_summary("S")
+    summary_T = snapshot_summary("T")
+    
+    #return render_template('snapshot.html', snapshots=snapshot.list())
+    
+    dropdown = snapshotDropdown()
+    return render_template('snapshot.html', summary_A=summary_A, summary_S=summary_S, summary_E=summary_E, summary_T=summary_T,dropdown=dropdown)
+   
 
 @task
 def transform_and_write_snapshot(body, session):
