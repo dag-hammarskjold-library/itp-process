@@ -13,7 +13,7 @@ import glob
 import os
 from zipfile import ZIP_LZMA, ZipFile
 
-DB.connect(Config.connect_string)
+DB.connect(Config.connect_string, database='undlFiles')
 myMongoURI=Config.connect_string
 myClient = MongoClient(myMongoURI)
 myDatabase=myClient.undlFiles
