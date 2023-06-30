@@ -18,7 +18,7 @@ import certifi
 
 
 
-DB.connect(Config.connect_string)
+DB.connect(Config.connect_string, database='undlFiles')
 connect(host=Config.connect_string,db=Config.dbname)
 db_client=MongoClient(Config.connect_string)
 db=db_client['undlFiles']
