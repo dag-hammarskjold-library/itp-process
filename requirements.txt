@@ -1,4 +1,4 @@
-﻿argcomplete==3.0.8
+argcomplete==3.0.8
 attrs==23.1.0
 blinker==1.6.2
 boto3==1.26.119
@@ -15,7 +15,7 @@ dnspython==2.3.0
 docx==0.2.4
 durationpy==0.5
 email-validator==2.0.0.post2
-Flask==2.2.3
+Flask==2.2.5
 Flask-Login==0.6.2
 flask-mongoengine==1.0.0
 Flask-WTF==1.1.1
