@@ -931,22 +931,24 @@ class SpeechIncompleteAuthSubfieldG(SpeechReport):
             Condition('791', {'b': body, 'c': session}),
             Condition('930', {'a': Regex('^ITS')})
         )
-        
+
+        collation = {'locale':'en', 'strength': 1, 'numericOrdering': True}
         auth_ids = []
         
-        for bib in BibSet.from_query(query, projection={'700': 1, '710': 1, '711': 1}):
+        for bib in BibSet.from_query(query, projection={'700': 1, '710': 1, '711': 1, '791': 1}, collation=collation):
             auth_ids += bib.get_xrefs('700') + bib.get_xrefs('710') + bib.get_xrefs('711')
             
         query = {'_id': {'$in': auth_ids}}
         results = []
-        
-        for auth in AuthSet.from_query(query, projection={'100': 1, '110': 1, '111': 1, '905': 1, '915': 1}):
+
+        for auth in AuthSet.from_query(query, projection={'100': 1, '110': 1, '111': 1, '905': 1, '915': 1}, collation=collation):
             if auth.heading_field.get_value('g'):
                 mother = Auth.find_one(
                     QueryDocument(
-                        Condition(auth.heading_field.tag, {'a': auth.heading_value('a')}),
-                        Condition(auth.heading_field.tag, {'g': auth.heading_value('g')}, modifier='not')
-                    ).compile()
+                        Condition(auth.heading_field.tag, {'a': auth.heading_value('a')}, record_type='auth'),
+                        Condition(auth.heading_field.tag, {'g': auth.heading_value('g')}, modifier='not', record_type='auth')
+                    ).compile(),
+                    collation = collation
                 )
                    
                 if mother is None:
