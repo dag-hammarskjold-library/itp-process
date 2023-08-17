@@ -327,7 +327,11 @@ class Incorrect992(Report):
             if sym in check:
                 date2 = check[sym].get_value('992', 'a')
             else:
-                to_check = Bib.find_one(QueryDocument(Condition('191', {'a': sym})).compile(), {'992': 1})
+                to_check = Bib.find_one(
+                    QueryDocument(Condition('191', {'a': sym})).compile(), 
+                    projection={'992': 1},
+                    collation={'locale': 'en', 'strength': 1, 'numericOrdering': True}
+                )
                 
                 if to_check:
                     date2 = to_check.get_value('992', 'a')
