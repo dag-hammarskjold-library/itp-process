@@ -2413,20 +2413,27 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
         
             p2.add_run(" ")
-            p2.add_run(entry["entry"])
+            my_string_with_only_one_period = get_note_with_one_periode(entry["entry"])
+            p2.add_run(my_string_with_only_one_period)
             #print(f"No of characters in entry for {entry['docsymbol']} is: {len(entry['entry'])}")
-            count1=1+((len(entry['docsymbol'])+len(entry['entry']))//52)
+            count1=1+((len(entry['docsymbol'])+len(my_string_with_only_one_period))//52)
             #print(f"No of lines in entry for {entry['docsymbol']} is: {count1}")
 
     def insert_note(entry):
-            p3=document.add_paragraph(entry["note"],style=stlNote)
-            #print(f"No of characters in note for {entry['docsymbol']} is: {len(entry['note'])}")
-            count2=1+(len(entry['note'])//52)
-            #print(f"No of lines in note for {entry['docsymbol']} is: {count2}")
-            #Breaks management
-            paragraph_format = p3.paragraph_format
-            paragraph_format.keep_together = True
+        p3=document.add_paragraph(entry["note"],style=stlNote)
+        #print(f"No of characters in note for {entry['docsymbol']} is: {len(entry['note'])}")
+        count2=1+(len(entry['note'])//52)
+        #print(f"No of lines in note for {entry['docsymbol']} is: {count2}")
+        #Breaks management
+        paragraph_format = p3.paragraph_format
+        paragraph_format.keep_together = True
 
+    def get_note_with_one_periode(myString):
+        my_lenght=len(myString)
+        if (myString[my_lenght-1]==myString[my_lenght-2]) and (myString[my_lenght-1]=="."):
+            return myString[:-1]
+        return myString    
+            
 
     # to break columns .. 
     nextPage={}
