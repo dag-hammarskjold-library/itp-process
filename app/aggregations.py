@@ -8,9 +8,9 @@ from app.itp_config import fetch_agenda, fetch_itpcode
 import certifi
 
 ### connection
-myMongoURI=Config.connect_string
-myClient = MongoClient(myMongoURI)
-myDatabase=myClient.undlFiles
+# myMongoURI=Config.connect_string
+# myClient = MongoClient(myMongoURI)
+# myDatabase=myClient.undlFiles
 
 client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
 db_dev_atlas=client_dev_atlas['itpp']

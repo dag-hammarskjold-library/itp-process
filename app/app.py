@@ -1691,12 +1691,17 @@ def get_document_async(document_name, param_title, param_subtitle, body_session,
     try:
         document = globals()[document_name](param_title, param_subtitle, body_session, param_section, param_name_file_output)
         s3_client = boto3.client('s3')
-        filename = '/tmp/' + key        
-        document.save(filename)
-        #windows
-        # filename = key 
-        # document.save("C:{}".format(filename))
-        response = s3_client.upload_file(filename, Config.bucket_name, key)
+        
+        if os.name in ("posix","Linux","Linux2","Darwin","darwin"): # Mac OS , Linux
+            filename = '/tmp/' + key        
+            document.save(filename)
+            response = s3_client.upload_file(filename, Config.bucket_name, key)
+            
+        if os.name in ("nt","Win32","Windows"): # windows
+            filename = key 
+            document.save("C:\{}".format(filename))
+            
+       
         return True
     except ClientError as e:
         print(e)
