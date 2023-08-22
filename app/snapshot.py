@@ -22,7 +22,6 @@ DB.connect(Config.connect_string, database='undlFiles')
 connect(host=Config.connect_string,db=Config.dbname)
 db_client=MongoClient(Config.connect_string)
 db=db_client['undlFiles']
-#rules_coll = db['dev_Itpp_document']
 client_dev_atlas=MongoClient(Config.connect_string_dev_atlas, tlsCAFile=certifi.where())
 db_dev_atlas=client_dev_atlas['itpp']
 rules_coll = db_dev_atlas['dev_Itpp_document']

@@ -254,8 +254,14 @@ def get_detail_comparison(bodysession, section, file_text):
                     if entry not in without_duplicate:
                         without_duplicate.append(entry)
                 nd["entries"]=without_duplicate
-                
- 
+            
+            # cleaning doble periods issues
+            for nd in new_detail["table_group"]:    
+                for data in (nd["entries"]):
+                    data1=data
+                    if (data1["entry"][len(data1["entry"])-1]==data1["entry"][len(data1["entry"])-2]) and (data1["entry"][len(data1["entry"])-1]=="."):
+                        data["entry"]=data1["entry"][:-1]
+
        
     details = []
  
