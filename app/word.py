@@ -2508,8 +2508,66 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
     # subheader List
     # myDocSymbolList=[]
+    
+    def check_presence_value(my_array,my_value):
+        return_value=False
+        for value in my_array:
+            if (value["docsymbol"]==my_value):
+                return_value=True
+        return return_value
+        
+    
+    def sort_entry(my_array_of_entries):
+
+        array_Add=[] # Array with Add.XXXX 
+        array_Corr=[] # Array with Corr.XXX
+        array_Final=[] # Final Array with Add and Corr
+        array_already_processed=[]
+        
+        
+        # retrieving Add. and copy inside array_Add
+        for value_add in my_array_of_entries:
+            if (value_add["docsymbol"].find("Add.")!= -1):
+                array_Add.append(value_add)
+                
+        # retrieving Add. and copy inside array_Add
+        for value_corr in my_array_of_entries:
+            if (value_corr["docsymbol"].find("Corr.")!= -1):
+                array_Corr.append(value_corr)
+                
+        # building final array
+        for value in my_array_of_entries:
+
+            if value not in array_Final:
+                array_Final.append(value)
+                array_already_processed.append(value)
+
+                # look inside the ".Corr" table
+                for value_corr in array_Corr:
+                    
+                    #building the value to find
+                    value_to_find=value["docsymbol"]+"/Corr."
+                    if (value_corr["docsymbol"].find(value_to_find)!= -1):
+                        array_Final.append(value_corr)
+                            
+                # look inside the ".Add" table
+                for value_add in array_Add:
+                    
+                    #building the value to find
+                    value_to_find=value["docsymbol"]+"/Add."
+                    if (value_add["docsymbol"].find(value_to_find)!= -1):
+                        array_Final.append(value_add)
+                                
+
+        # return the new array
+        return array_Final
+        
+        
+        
+                
 
     for record in myRecords:
+        
         try :
             itshead= record['head']            
             # Adding itshead content
@@ -2535,7 +2593,8 @@ def generateWordDocITPSUBJ(paramTitle,paramSubTitle,bodysession,paramSection,par
 
                 # Adding itssubhead content
                 
-                itsentries=mysubhead["entries"]
+                itsentries1=mysubhead["entries"]
+                itsentries=sort_entry(itsentries1)
                 dxa_len_entry_note=dxa_counter_entry_note(itsentries[0])
                 if (dxa_counter+dxa_counter_subhead(itssubhead)+dxa_counter_entry_note(itsentries[0]))>dxa_page_length:# and entries_counter<=len(itsentries):#Inches(11-0.61-1-1-1)*1440
                     #print(f"dxa_counter BEFORE column break is {dxa_counter}")
