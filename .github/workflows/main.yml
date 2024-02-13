@@ -33,4 +33,4 @@ jobs:
       - name: Deploy with Zappa
         run: | 
           . venv/bin/activate
-          zappa update -s dev
+          zappa update dev
