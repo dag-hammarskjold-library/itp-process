@@ -1,0 +1,22 @@
+name: ITPP Zappa CI
+on:
+  push:
+    branches:
+      - master
+
+#install:
+#- pip install -r requirements.txt
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.8']
+    steps:
+      - run: pip install -r requirements.txt
+      - run: zappa update dev
+  
+# - zappa update -s zappa_settings.json dev
+
+# - zappa update -s zappa_settings.json prod
