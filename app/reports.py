@@ -48,7 +48,7 @@ class MissingField(Report):
         
         query = QueryDocument(
             Condition(self.symbol_field, ('b', body), ('c', session)),
-            Condition('930', ('a', Regex('^' + self.type_code))),
+            *self.type_conditions,
             Condition(self.tag, modifier='not_exists'),
         )
         
@@ -82,7 +82,7 @@ class MissingFields(Report):
         
         query = QueryDocument(
             Condition(self.symbol_field, ('b', body), ('c', session)),
-            Condition('930', ('a', Regex('^' + self.type_code))),
+            *self.type_conditions
         )
         
         query.add_condition(Or(*[Condition(tag, modifier='not_exists') for tag in self.tags]))
@@ -122,7 +122,7 @@ class MissingSubfield(Report):
         
         query = QueryDocument(
             Condition(self.symbol_field, ('b', body), ('c', session)),
-            Condition('930', ('a', Regex('^' + self.type_code))),
+            *self.type_conditions,
             Condition(self.tag, modifier='exists'),
         )
         
@@ -163,7 +163,7 @@ class IncorrectSession(Report):
         bibset = BibSet.from_query(
             QueryDocument(
                 Condition(self.symbol_field, {'b': body, 'c': session}),
-                Condition('930', {'a': Regex(f'^{self.type_code}')}),
+                *self.type_conditions
             ),
             projection={self.symbol_field: 1}
         )
@@ -219,7 +219,7 @@ class FieldMismatch(Report):
         
         query = QueryDocument(
             Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^{}'.format(self.type_code))})
+            *self.type_conditions
         )
         
         results = []
@@ -249,7 +249,7 @@ class Incorrect991(Report):
         
         query = QueryDocument(
             Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('930', {'a': Regex(f'^{self.type_code}')}),
+            *self.type_conditions,
             Condition('991', modifier='exists')
         )
         
@@ -313,7 +313,7 @@ class Incorrect992(Report):
         
         query = QueryDocument(
             Condition('791', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^{}'.format(self.type_code))})
+            *self.type_conditions
         )
         
         results = []
@@ -364,7 +364,7 @@ class DuplicateAgenda(Report):
        
         query = QueryDocument(
             Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^' + self.type_code)})
+            *self.type_conditions
         )
        
         results = []
@@ -398,7 +398,7 @@ class MissingFiles(Report):
         
         query = QueryDocument(
             Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^' + self.type_code)})
+            *self.type_conditions
         )
         
         results, seen = [], {}
@@ -462,6 +462,7 @@ class BibReport(Report):
         self.category = 'BIB'
         self.type_code = 'UND'
         self.symbol_field = '191'
+        self.type_conditions = [Condition('089', ('b', 'B22'), modifier='not'), Condition('089', ('b', 'B23'), modifier='not')]
      
 class BibIncorrect793Comm(Report):
     def __init__(self):
@@ -483,7 +484,7 @@ class BibIncorrect793Comm(Report):
         
         query = QueryDocument(
             Condition('191', ('b',body), ('c',session)),
-            Condition('930', ('a', Regex('^UND'))),
+            *self.type_conditions
         )
         
         results = []
@@ -516,7 +517,7 @@ class BibIncorrect793Plen(BibReport):
         
         query = QueryDocument(
             Condition('191', ('b',body), ('c',session)),
-            Condition('930', ('a', Regex('^UND'))),
+            *self.type_conditions,
         )
         
         results = []
@@ -561,7 +562,7 @@ class BibMissingSubfield991_d(BibMissingSubfield):
         
         query = QueryDocument(
             Condition(self.symbol_field, ('b', body), ('c', session)),
-            Condition('930', ('a', Regex('^' + self.type_code))),
+            *self.type_conditions,
             Condition('991', modifier='exists')
         )
         
@@ -606,7 +607,7 @@ class BibIncorrectSubfield191_9(BibReport):
         bibset = BibSet.from_query(
             QueryDocument(
                 Condition('191', {'b': body, 'c': session}),
-                Condition('930', {'a': Regex('^UND')})
+                *self.type_conditions
             ),
             projection={'191': 1}
         )
@@ -653,7 +654,7 @@ class BibMissing999_c_t(BibReport):
         bibset = BibSet.from_query(
             QueryDocument(
                 Condition('191', {'b': body, 'c': session}),
-                Condition('930', {'a': Regex('^UND')})
+                *self.type_conditions
             ),
             projection={'191': 1, '999': 1}
         )
@@ -693,7 +694,7 @@ class BibMissingSubfieldValue(BibReport):
         
         query = QueryDocument(
             Condition('191', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^UND')}),
+            *self.type_conditions,
             Condition(self.tag, modifier='exists'),
             #Condition(self.tag, {self.code: self.value}, modifier='not')
         )
@@ -744,7 +745,7 @@ class BibMissingAgendaIndicator(BibReport):
         
         query = QueryDocument(
             Condition('191', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^UND')})
+            *self.type_conditions
         )
         
         results = []
@@ -782,7 +783,7 @@ class BibRepeated515_520(BibReport):
         bibset = BibSet.from_query(
             QueryDocument(
                 Condition('191', {'b': body, 'c': session}),
-                Condition('930', {'a': Regex('^UND')}),
+                *self.type_conditions,
                 # detect fields that have more than one element in the array
                 Or(
                     Raw({'515.1': {'$exists': True}}),
@@ -824,7 +825,7 @@ class BibEndingWithPeriod515_520(BibReport):
         bibset = BibSet.from_query(
             QueryDocument(
                 Condition('191', {'b': body, 'c': session}),
-                Condition('930', {'a': Regex('^UND')}),
+                *self.type_conditions,
                 Or(
                     Raw({'$and': [{'515': {'$exists': True}}, {'515.subfields.value': Regex('[^\.]$')}]}),
                     Raw({'$and': [{'520': {'$exists': True}}, {'520.subfields.value': Regex('[^\.]$')}]})
@@ -854,6 +855,7 @@ class SpeechReport(Report):
         self.type = 'speech'
         self.type_code = 'ITS'
         self.symbol_field = '791'
+        self.type_conditions = [Condition('089', ('b', 'B22'))]
     
 class SpeechMissingField(SpeechReport, MissingField):
     def __init__(self, tag):
@@ -883,7 +885,7 @@ class SpeechDuplicateRecord(SpeechReport):
         
         query = QueryDocument(
             Condition('791', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^ITS')})
+            *self.type_conditions
         )
         
         seen = {}
@@ -933,7 +935,7 @@ class SpeechIncompleteAuthSubfieldG(SpeechReport):
         
         query = QueryDocument(
             Condition('791', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^ITS')})
+            *self.type_conditions
         )
 
         collation = {'locale':'en', 'strength': 1, 'numericOrdering': True}
@@ -989,7 +991,7 @@ class SpeechIncompleteAuthMother(SpeechReport):
         
         query = QueryDocument(
             Condition('791', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^ITS')})
+            *self.type_conditions
         )
         
         auth_ids = []
@@ -1053,7 +1055,7 @@ class SpeechMissingAgendaIndicator(SpeechReport):
         
         query = QueryDocument(
             Condition('791', {'b': body, 'c': session}),
-            Condition('930', {'a': Regex('^ITS')})
+            *self.type_conditions
         )
         
         results = []
@@ -1090,7 +1092,7 @@ class Speech039_930(SpeechReport):
         
         query = QueryDocument(
             Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('039', {'a': Regex('^{}'.format(self.type_code))})
+            *self.type_conditions
         )
         
         results = []
@@ -1122,7 +1124,7 @@ class Speech700g(SpeechReport):
         
         query = QueryDocument(
             Condition(self.symbol_field, {'b': body, 'c': session}),
-            Condition('039', {'a': Regex('^{}'.format(self.type_code))}),
+            *self.type_conditions,
             Condition('700', {'g': Regex('^.')})
         )
         
@@ -1160,7 +1162,7 @@ class SpeechMissingFields_700_710(SpeechReport):
         
         query = QueryDocument(
             Condition(self.symbol_field, ('b', body), ('c', session)),
-            Condition('930', ('a', Regex('^' + self.type_code))),
+            *self.type_conditions,
         )
         
         query.add_condition(Or(*[Condition(tag, modifier='exists') for tag in self.tags]))
@@ -1193,7 +1195,7 @@ class SpeechParens700(SpeechReport):
         
         query = QueryDocument(
             Condition(self.symbol_field, ('b', body), ('c', session)),
-            Condition('930', ('a', Regex('^' + self.type_code))),
+            *self.type_conditions,
             Or (
                 Condition('700', ('a', Regex(r'\('))),
                 #Condition('700', ('g', Regex(r'\(')))
@@ -1226,7 +1228,7 @@ class SpeechIdentical700_710_791(SpeechReport):
         #query = QueryDocument.from_string(f"791__b:'{body}' AND 791__c:'{session}'")
         query = QueryDocument(
             Condition(self.symbol_field, ('b', body), ('c', session)),
-            Condition('930', ('a', Regex(f'^{self.type_code}'))),
+            *self.type_conditions
         )
 
         results = []
@@ -1272,6 +1274,7 @@ class VoteReport(Report):
         self.category = 'VOTING'
         self.type_code = 'VOT'
         self.symbol_field = '791'
+        self.type_conditions = [Condition('089', ('b', 'B23'))]
 
 class VoteIncorrectSession(VoteReport, IncorrectSession):
     def __init__(self):
@@ -1321,7 +1324,8 @@ class Vote039_930(VoteReport):
         body, session = _get_body_session(args['authority'])
         
         query = QueryDocument(
-            Condition(self.symbol_field, {'b': body, 'c': session})
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            *self.type_conditions
         )
         
         results = []
@@ -1383,17 +1387,21 @@ class AnyMissingField(Report):
         
         return list(map(lambda row: [row[0], row[1], row[2] + row[3]], results))
 
-class VoteAnyMissing930(Report):
+class VoteMissing930(VoteReport):
     def __init__(self):
-        self.name = 'any_missing_930'
+        VoteReport.__init__(self)
+
+        self.name = f'{self.type}_missing_930'
         self.tag = '930'
         self.title = 'Missing field - ' + self.tag
-        self.description = 'Any records from the given body/session that do not contain a value in 930$a starting with "UND", "ITS", or "VOT".'
+        self.description = 'Vote records from the given body/session that do not contain a value in 930$a starting with "VOT".'
         self.category = "VOTING"
         self.form_class = SelectAuthority
         
         self.expected_params = ['authority']    
         self.field_names = ['Record ID', 'Document Symbol', '930$a']
+
+        print(self.type_conditions)
         
     def execute(self, args):
         self.validate_args(args)
@@ -1401,13 +1409,9 @@ class VoteAnyMissing930(Report):
         body,session = _get_body_session(args['authority'])
         
         query = QueryDocument(
-            Or(
-                Condition('191', {'b': body, 'c': session}),
-                Condition('791', {'b': body, 'c': session})
-            ),
-            Condition('040', {'a': 'NNUN'}),
-            Condition('040', {'a': 'DHC'}, modifier='not'),
-            Condition('930', {'a': Regex('^(UND|ITS|VOT)')}, modifier='not')
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            *self.type_conditions,
+            Condition('930', {'a': Regex('^VOT')}, modifier='not')
         )
 
         results = []
@@ -1417,12 +1421,14 @@ class VoteAnyMissing930(Report):
             
         return results
 
-class BibAnyMissing930(Report):
+class BibMissing930(BibReport):
     def __init__(self):
-        self.name = 'any_missing_930'
+        BibReport.__init__(self)
+
+        self.name = f'{self.type}_missing_930'
         self.tag = '930'
         self.title = 'Missing field - ' + self.tag
-        self.description = 'Any records from the given body/session that do not contain a value in 930$a starting with "UND", "ITS", or "VOT".'
+        self.description = 'Bib records from the given body/session that do not contain a value in 930$a starting with "UND".'
         self.category = "BIB"
         self.form_class = SelectAuthority
         
@@ -1435,28 +1441,26 @@ class BibAnyMissing930(Report):
         body,session = _get_body_session(args['authority'])
         
         query = QueryDocument(
-            Or(
-                Condition('191', {'b': body, 'c': session}),
-                Condition('791', {'b': body, 'c': session})
-            ),
-            Condition('040', {'a': 'NNUN'}),
-            Condition('040', {'a': 'DHC'}, modifier='not'),
-            Condition('930', {'a': Regex('^(UND|ITS|VOT)')}, modifier='not')
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            *self.type_conditions,
+            Condition('930', {'a': Regex('^UND')}, modifier='not')
         )
 
         results = []
         
-        for bib in BibSet.from_query(query, projection={'191': 1, '791': 1, '930': 1}):
+        for bib in BibSet.from_query(query, projection={self.symbol_field: 1, '930': 1}):
             results.append([bib.id, bib.get_value('191', 'a') or bib.get_value('791', 'a'), '; '.join(bib.get_values('930', 'a'))])
             
         return results
 
-class SpeechAnyMissing930(Report):
+class SpeechMissing930(SpeechReport):
     def __init__(self):
-        self.name = 'any_missing_930'
+        SpeechReport.__init__(self)
+
+        self.name = f'{self.type}_missing_930'
         self.tag = '930'
         self.title = 'Missing field - ' + self.tag
-        self.description = 'Any records from the given body/session that do not contain a value in 930$a starting with "UND", "ITS", or "VOT".'
+        self.description = 'Speech records from the given body/session that do not contain a value in 930$a starting with "ITS".'
         self.category = "SPEECH"
         self.form_class = SelectAuthority
         
@@ -1469,13 +1473,9 @@ class SpeechAnyMissing930(Report):
         body,session = _get_body_session(args['authority'])
         
         query = QueryDocument(
-            Or(
-                Condition('191', {'b': body, 'c': session}),
-                Condition('791', {'b': body, 'c': session})
-            ),
-            Condition('040', {'a': 'NNUN'}),
-            Condition('040', {'a': 'DHC'}, modifier='not'),
-            Condition('930', {'a': Regex('^(UND|ITS|VOT)')}, modifier='not')
+            Condition(self.symbol_field, {'b': body, 'c': session}),
+            *self.type_conditions,
+            Condition('930', {'a': Regex('^ITS')}, modifier='not')
         )
 
         results = []
@@ -1509,7 +1509,7 @@ class ReportList(object):
         # (7) Agenda item misisng indicator
         BibMissingAgendaIndicator(),
         # (8) Missing field - 930
-        BibAnyMissing930(),
+        BibMissing930(),
         # (9) Incorrect field - 991
         BibIncorrect991(),
         # (10) Missing subfield - 991$d
@@ -1557,7 +1557,7 @@ class ReportList(object):
         # (7) Missing field - 039
         SpeechMissingField('039'),
         # (8) Missing field - 930
-        SpeechAnyMissing930(),
+        SpeechMissing930(),
         # (9) Field mismatch - 039 & 930
         #SpeechMismatch('039', '930'),
         Speech039_930(),
@@ -1590,7 +1590,7 @@ class ReportList(object):
         # (2) Missing field - 039
         VoteMissingField('039'),
         # (3) Missing field - 930
-        VoteAnyMissing930(),
+        VoteMissing930(),
         # (4) Field mismatch - 039 & 930
         #VoteMismatch('039', '930'),
         Vote039_930(),
