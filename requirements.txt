@@ -38,7 +38,7 @@ nltk==3.6.7
 Pillow==10.3.0
 placebo==0.9.0
 pycparser==2.21
-pymongo==3.12.3
+pymongo==4.6.3
 pyrsistent==0.19.3
 python-dateutil==2.8.2
 python-docx==0.8.11
