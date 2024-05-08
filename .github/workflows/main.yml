@@ -1,8 +1,7 @@
 name: ITPP Zappa CI
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [ released ]
 
 jobs:
   deploy-flask-serverless:
