@@ -34,7 +34,7 @@ mongoengine==0.27.0
 mongomock==4.1.2
 moto==2.3.1
 natsort==8.3.1
-nltk==3.6.7
+nltk==3.9
 Pillow==10.3.0
 placebo==0.9.0
 pycparser==2.21
