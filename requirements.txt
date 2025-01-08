@@ -23,7 +23,7 @@ hjson==3.1.0
 idna==3.7
 importlib-metadata==6.6.0
 itsdangerous==2.1.2
-Jinja2==3.1.4
+Jinja2==3.1.5
 jmespath==1.0.1
 joblib==1.2.0
 jsonschema==4.0.0
