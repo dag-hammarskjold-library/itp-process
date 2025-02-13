@@ -26,5 +26,5 @@ types-PyYAML==6.0.12.9
 Unidecode==1.3.6
 WTForms==3.0.1
 xmltodict==0.14.2
-zappa==0.59.0
+zappa @ git+https://github.com/zappa/Zappa.git@71d834a60a4af8e62d2795f17093798af66914b0
 zipp==3.21.0
