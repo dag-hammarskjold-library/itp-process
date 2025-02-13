@@ -35,7 +35,6 @@ from email.mime.multipart import MIMEMultipart
 from boto3 import client
 import platform
 import certifi
-#from app.itp_config import create_snapshot_config, delete_snapshot_config, get_snapshot_configs, get_all_votedec, delete_votedec, update_votedec, insert_votedec, update_snapshot_config, snapshot_summary, deleteSnapshot, snapshotDropdown
 from app.itp_config import *
 from app.extract_iso import *
 
