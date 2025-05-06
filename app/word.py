@@ -177,7 +177,7 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
     myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
-    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sort",1)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sortkey1",1)
 
     # Creation of the word document
 
