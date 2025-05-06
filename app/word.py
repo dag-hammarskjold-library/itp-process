@@ -8,6 +8,7 @@ import os
 import io
 import uuid
 import boto3
+import re
 from app.config import Config
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -177,7 +178,7 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
     myDatabase=client_dev_atlas.itpp
     myCollection=myDatabase['itp_sample_output_copy']
     myTitle=paramTitle
-    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sortkey2",1)
+    setOfData=myCollection.find({'bodysession': bodysession,'section': paramSection}).sort("sortkey1",1)
 
     # Creation of the word document
 
@@ -306,8 +307,13 @@ def generateWordDocITPSOR(paramTitle,paramSubTitle,bodysession,paramSection,para
     
     #footer = document.sections[0].footer
     #paragraph=footer.add_paragraph("No footer defined",style="New Heading")
+    def sortMyRecords(e):
+        return int(e['sortkey1'][-2:])
+    def natural_key(s):
+        s = str(s['sortkey1'])
+        return [int(text) if text.isdigit() else text for text in re.split(r'(\d+)', s)]
 
-    myRecords=setOfData
+    myRecords=sorted(list(setOfData),key=natural_key)
 
     for record in myRecords:
         print(record)
