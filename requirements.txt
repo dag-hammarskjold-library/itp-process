@@ -14,7 +14,7 @@ hjson==3.1.0
 importlib-metadata==8.6.1
 itsdangerous==2.2.0
 mongoengine==0.29.1
-natsort==8.3.1
+natsort==8.4.0
 Pillow==11.1.0
 pyrsistent==0.20.0
 python-docx==1.1.2
