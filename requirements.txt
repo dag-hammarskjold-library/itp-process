@@ -15,7 +15,7 @@ importlib-metadata==8.6.1
 itsdangerous==2.2.0
 mongoengine==0.29.1
 natsort==8.3.1
-Pillow==11.1.0
+Pillow==11.2.1
 pyrsistent==0.20.0
 python-docx==1.1.2
 python-slugify==8.0.1
